@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 
+type Tema = "claro" | "escuro";
+
 export default function AlternadorTema() {
-  const [tema, setTema] = useState<"claro" | "escuro" | null>(null);
+  const [tema, setTema] = useState<Tema>("claro");
 
   useEffect(() => {
     setTema(document.documentElement.classList.contains("dark") ? "escuro" : "claro");
   }, []);
 
-  function alternar() {
-    const novo = tema === "escuro" ? "claro" : "escuro";
+  function escolher(novo: Tema) {
     setTema(novo);
     document.documentElement.classList.toggle("dark", novo === "escuro");
     try {
@@ -20,15 +21,35 @@ export default function AlternadorTema() {
     }
   }
 
+  const base =
+    "px-2.5 py-1 text-xs font-medium transition-colors first:rounded-l-md last:rounded-r-md";
+  const ativo = "bg-accent text-onaccent";
+  const inativo = "bg-surface text-soft hover:bg-hoverbg border border-line";
+
   return (
-    <button
-      type="button"
-      onClick={alternar}
-      aria-label={tema === "escuro" ? "Mudar para tema claro" : "Mudar para tema escuro"}
-      title="Alternar tema"
-      className="rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm text-soft hover:bg-hoverbg"
+    <div
+      role="radiogroup"
+      aria-label="Escolher tema"
+      className="flex overflow-hidden rounded-md shadow-sm"
     >
-      {tema === "escuro" ? "Claro" : "Escuro"}
-    </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={tema === "claro"}
+        onClick={() => escolher("claro")}
+        className={`${base} ${tema === "claro" ? ativo : inativo}`}
+      >
+        Claro
+      </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={tema === "escuro"}
+        onClick={() => escolher("escuro")}
+        className={`${base} ${tema === "escuro" ? ativo : inativo}`}
+      >
+        Escuro
+      </button>
+    </div>
   );
 }
