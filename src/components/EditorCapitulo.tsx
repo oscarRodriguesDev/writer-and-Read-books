@@ -170,12 +170,12 @@ export function EditorCapitulo({
     setPreview((m) => ({ ...m, [cenaId]: "" }));
     setGerando((g) => ({ ...g, [cenaId]: true }));
     try {
-      // Salva o resumo antes, para a IA ler o valor mais recente do banco
-      await patchJson(`/api/cenas/${cenaId}`, {
-        conteudo: dados.conteudo,
-        objetivo: dados.objetivo,
+      const res = await fetch(`/api/cenas/${cenaId}/gerar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Envia o resumo atual da tela (o banco pode estar 1 clique atrás do autosave)
+        body: JSON.stringify({ resumo: dados.objetivo }),
       });
-      const res = await fetch(`/api/cenas/${cenaId}/gerar`, { method: "POST" });
       const corpo = (await res.json().catch(() => null)) as
         | { texto?: string; erro?: string }
         | null;

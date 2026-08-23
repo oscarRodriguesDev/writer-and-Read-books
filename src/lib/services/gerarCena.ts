@@ -17,14 +17,19 @@ DIRETRIZES:
 2. Respeite EXCLUSIVAMENTE o contexto fornecido: personagens, relações, ambientes, linha do tempo, informações canônicas e regras da obra. NÃO invente elementos novos que contradigam o contexto; se precisar de um detalhe não estabelecido, mantenha-o genérico e discreto.
 3. Garanta transição natural com a cena anterior e a próxima (quando existirem no contexto).
 4. Escreva prosa literária contínua: sem títulos, sem cabeçalhos, sem marcações, sem comentários sobre a escrita.
-5. Extensão sugerida: 300 a 800 palavras, ajustando ao que o resumo pede. Um resumo curto pode pedir menos; desenvolva com qualidade, não com enchimento.
+5. Extensão sugerida: 300 a 600 palavras, ajustando ao que o resumo pede. Um resumo curto pode pedir menos; desenvolva com qualidade, não com enchimento.
 6. Se a cena já possui conteúdo, produza uma nova versão completa que cumpra o resumo, aproveitando o que já existe quando fizer sentido.
 
 Responda EXCLUSIVAMENTE com um JSON válido, sem markdown nem texto extra:
 { "texto": "<conteúdo da cena em prosa>" }`;
 
-/** Redige o conteúdo de uma cena a partir do resumo (campo objetivo) — RF-46. */
-export async function gerarTextoCena(cenaId: string): Promise<string> {
+/** Redige o conteúdo de uma cena a partir do resumo (RF-46).
+ *  O resumo pode vir no corpo da requisição (valor mais recente da tela) —
+ *  se ausente, cai para o objetivo já salvo no banco. */
+export async function gerarTextoCena(
+  cenaId: string,
+  resumoEnviado?: string,
+): Promise<string> {
   const cena = await prisma.cena.findUnique({
     where: { id: cenaId },
     select: {
@@ -42,12 +47,16 @@ export async function gerarTextoCena(cenaId: string): Promise<string> {
   });
   if (!cena) throw new ErroAplicacao("Cena não encontrada", 404);
 
-  const resumo = cena.objetivo?.trim();
+  const resumo = (resumoEnviado ?? cena.objetivo)?.trim();
   if (!resumo)
     throw new ErroAplicacao(
       "Escreva primeiro um breve resumo da cena no campo “Objetivo da cena”.",
       400,
     );
+
+  // Persiste o resumo enviado para manter banco e tela sincronizados
+  if (resumoEnviado !== undefined && resumoEnviado.trim() !== (cena.objetivo ?? "").trim())
+    await prisma.cena.update({ where: { id: cenaId }, data: { objetivo: resumo } });
 
   const contexto = await montarContextoCena(cenaId);
   const rotuloParte =
@@ -85,9 +94,11 @@ ${contexto.texto}
 
 Responda somente com o JSON {"texto": "..."}.`;
 
+  // Geração de prosa é longa: timeout maior + teto de tokens
   const bruto = await criarProviderNvidia().completarJson(
     PROMPT_SISTEMA_GERACAO,
     usuario,
+    { timeoutMs: 300_000, maxTokens: 4_096 },
   );
   const { texto } = respostaGeracaoCenaSchema.parse(bruto);
   return texto;

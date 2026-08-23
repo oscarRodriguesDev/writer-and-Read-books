@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { ErroAplicacao } from "@/lib/erros";
 
 export function respostaErro(mensagem: string, status = 400) {
   return Response.json({ erro: mensagem }, { status });
@@ -26,6 +27,11 @@ export async function validarCorpo<T extends z.ZodType>(
 }
 
 export function tratarErroDesconhecido(e: unknown) {
+  // Erros de aplicação já têm mensagem amigável e status adequado (RNF-07)
+  if (e instanceof ErroAplicacao) {
+    console.error("[API]", e.message);
+    return respostaErro(e.message, e.status);
+  }
   console.error("[API]", e);
   return respostaErro("Erro interno do servidor", 500);
 }

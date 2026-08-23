@@ -1,5 +1,5 @@
 import { ErroAplicacao } from "@/lib/erros";
-import type { IaProvider } from "./provider";
+import type { OpcoesCompletar, IaProvider } from "./provider";
 
 /** Modelo padrão da NVIDIA NIM (troque aqui se necessário). */
 export const MODELO_PADRAO = "meta/llama-3.3-70b-instruct";
@@ -41,7 +41,8 @@ export function criarProviderNvidia(): IaProvider {
     );
 
   return {
-    async completarJson(system, user) {
+    async completarJson(system, user, opts?: OpcoesCompletar) {
+      const timeoutMs = opts?.timeoutMs ?? TIMEOUT_MS;
       let res: Response;
       try {
         res = await fetch(`${BASE_URL}/chat/completions`, {
@@ -53,13 +54,14 @@ export function criarProviderNvidia(): IaProvider {
           body: JSON.stringify({
             model: MODELO_PADRAO,
             temperature: TEMPERATURA,
+            max_tokens: opts?.maxTokens,
             response_format: { type: "json_object" },
             messages: [
               { role: "system", content: system },
               { role: "user", content: user },
             ],
           }),
-          signal: AbortSignal.timeout(TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
         });
       } catch (e) {
         if (e instanceof Error && e.name === "TimeoutError")
