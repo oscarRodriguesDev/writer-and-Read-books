@@ -1,0 +1,289 @@
+// Schema — book-writer-and-reader
+// Nota: SQLite não suporta enums Prisma. Campos de enumeração são String
+// e validados com Zod em src/lib/validators/.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Obra {
+  id           String   @id @default(cuid())
+  titulo       String
+  genero       String?
+  subgenero    String?
+  tema         String?
+  publicoAlvo  String?
+  descricao    String?
+  // PLANEJAMENTO | ESCRITA | REVISAO | CONCLUIDA
+  status       String   @default("PLANEJAMENTO")
+  arquivada    Boolean  @default(false)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  esqueleto   Esqueleto?
+  capitulos   Capitulo[]
+  personagens Personagem[]
+  ambientes   Ambiente[]
+  eventos     EventoLinhaDoTempo[]
+  analises    AnaliseIA[]
+  canonInfos  CanonInfo[]
+  regras      RegraObra[]
+  importacoes ImportacaoArquivo[]
+}
+
+model Esqueleto {
+  id                        String  @id @default(cuid())
+  obraId                    String  @unique
+  premissa                  String?
+  conflitoPrincipal         String?
+  conflitosSecundarios      String?
+  objetivoProtagonista      String?
+  transformacaoProtagonista String?
+  eventosPrincipais         String?
+  pontosVirada              String?
+  climax                    String?
+  desfecho                  String?
+
+  obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
+}
+
+model Capitulo {
+  id             String   @id @default(cuid())
+  obraId         String
+  titulo         String
+  objetivo       String?
+  ordemEscrita   Int
+  ordemNarrativa Int?
+  // PLANEJADO | RASCUNHO | REVISAO | FINAL
+  status         String   @default("PLANEJADO")
+  criadoEm       DateTime @default(now())
+  atualizadoEm   DateTime @updatedAt
+
+  obra    Obra      @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  partes  Parte[]
+  achados AchadoIA[] @relation("AchadoCapitulo")
+  eventos EventoLinhaDoTempo[]
+
+  @@unique([obraId, ordemNarrativa])
+  @@index([obraId, ordemNarrativa])
+}
+
+model Parte {
+  id         String @id @default(cuid())
+  capituloId String
+  // INICIO | MEIO | FIM
+  tipo       String
+
+  capitulo Capitulo @relation(fields: [capituloId], references: [id], onDelete: Cascade)
+  cenas    Cena[]
+  achados  AchadoIA[] @relation("AchadoParte")
+
+  @@unique([capituloId, tipo])
+}
+
+model Cena {
+  id           String   @id @default(cuid())
+  parteId      String
+  // INICIO | MEIO | FIM
+  tipo         String
+  titulo       String?
+  conteudo     String   @default("")
+  objetivo     String?
+  atualizadoEm DateTime @updatedAt
+
+  parte       Parte            @relation(fields: [parteId], references: [id], onDelete: Cascade)
+  personagens CenaPersonagem[]
+  ambientes   CenaAmbiente[]
+  achados     AchadoIA[]       @relation("AchadoCena")
+  versoes     VersaoCena[]
+
+  @@unique([parteId, tipo])
+}
+
+model Personagem {
+  id            String   @id @default(cuid())
+  obraId        String
+  nome          String
+  // PROTAGONISTA | ANTAGONISTA | SECUNDARIO | COADJUVANTE
+  papel         String   @default("SECUNDARIO")
+  fisico        String?
+  psicologico   String?
+  historia      String?
+  comportamento String?
+  observacoes   String?
+  criadoEm      DateTime @default(now())
+
+  obra            Obra                 @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  cenas           CenaPersonagem[]
+  relacoesOrigem  RelacaoPersonagem[]  @relation("RelacaoOrigem")
+  relacoesDestino RelacaoPersonagem[]  @relation("RelacaoDestino")
+
+  @@index([obraId])
+}
+
+model RelacaoPersonagem {
+  id         String  @id @default(cuid())
+  origemId   String
+  destinoId  String
+  tipo       String
+  descricao  String?
+
+  origem  Personagem @relation("RelacaoOrigem", fields: [origemId], references: [id], onDelete: Cascade)
+  destino Personagem @relation("RelacaoDestino", fields: [destinoId], references: [id], onDelete: Cascade)
+
+  @@index([origemId])
+  @@index([destinoId])
+}
+
+model Ambiente {
+  id                    String  @id @default(cuid())
+  obraId                String
+  nome                  String
+  localizacao           String?
+  descricao             String?
+  epoca                 String?
+  importanciaNarrativa  String?
+
+  obra    Obra           @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  cenas   CenaAmbiente[]
+
+  @@index([obraId])
+}
+
+model EventoLinhaDoTempo {
+  id               String  @id @default(cuid())
+  obraId           String
+  titulo           String
+  descricao        String?
+  // ANO | MES | DIA | HORA | INDEFINIDO
+  escalaTemporal   String  @default("INDEFINIDO")
+  dataInicio       Json?
+  dataFim          Json?
+  ordemCronologica Int
+  capituloId       String?
+
+  obra     Obra      @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  capitulo Capitulo? @relation(fields: [capituloId], references: [id], onDelete: SetNull)
+
+  @@unique([obraId, ordemCronologica])
+}
+
+model CenaPersonagem {
+  cenaId       String
+  personagemId String
+
+  cena       Cena       @relation(fields: [cenaId], references: [id], onDelete: Cascade)
+  personagem Personagem @relation(fields: [personagemId], references: [id], onDelete: Cascade)
+
+  @@id([cenaId, personagemId])
+}
+
+model CenaAmbiente {
+  cenaId     String
+  ambienteId String
+
+  cena     Cena     @relation(fields: [cenaId], references: [id], onDelete: Cascade)
+  ambiente Ambiente @relation(fields: [ambienteId], references: [id], onDelete: Cascade)
+
+  @@id([cenaId, ambienteId])
+}
+
+model CanonInfo {
+  id             String   @id @default(cuid())
+  obraId         String
+  categoria      String
+  titulo         String
+  conteudo       String
+  ehSegredoAutor Boolean  @default(false)
+  criadoEm       DateTime @default(now())
+  atualizadoEm   DateTime @updatedAt
+
+  obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  @@index([obraId])
+}
+
+model RegraObra {
+  id        String  @id @default(cuid())
+  obraId    String
+  descricao String
+  ativa     Boolean @default(true)
+
+  obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
+}
+
+model AnaliseIA {
+  id       String   @id @default(cuid())
+  obraId   String
+  // OBRA | CAPITULO | CENA | TRECHO
+  escopo   String
+  modeloIA String?
+  resumo   String?
+  // PENDENTE | EM_ANDAMENTO | CONCLUIDA | ERRO
+  status   String   @default("PENDENTE")
+  criadoEm DateTime @default(now())
+
+  obra    Obra      @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  achados AchadoIA[]
+}
+
+model AchadoIA {
+  id                 String    @id @default(cuid())
+  analiseId          String
+  // BAIXA | MEDIA | ALTA | CRITICA
+  severidade         String
+  // CONTINUIDADE | CRONOLOGIA | PERSONAGEM | AMBIENTE | CAUSALIDADE | ESTRUTURA | CONHECIMENTO | CANON | CONTRADICAO
+  categoria          String
+  trecho             String
+  evidencia          String?
+  explicacao         String
+  sugestao           String?
+  capituloId         String?
+  parteId            String?
+  cenaId             String?
+  offsetInicio       Int?
+  offsetFim          Int?
+  // NOVO | EM_ANALISE | RESOLVIDO | IGNORADO | INTENCIONAL
+  status             String    @default("NOVO")
+  justificativaAutor String?
+  resolvidoEm        DateTime?
+  criadoEm           DateTime  @default(now())
+
+  analise  AnaliseIA @relation(fields: [analiseId], references: [id], onDelete: Cascade)
+  capitulo Capitulo? @relation("AchadoCapitulo", fields: [capituloId], references: [id], onDelete: SetNull)
+  parte    Parte?    @relation("AchadoParte", fields: [parteId], references: [id], onDelete: SetNull)
+  cena     Cena?     @relation("AchadoCena", fields: [cenaId], references: [id], onDelete: SetNull)
+
+  @@index([analiseId, severidade])
+  @@index([status])
+}
+
+model VersaoCena {
+  id       String   @id @default(cuid())
+  cenaId   String
+  conteudo String
+  criadoEm DateTime @default(now())
+
+  cena Cena @relation(fields: [cenaId], references: [id], onDelete: Cascade)
+
+  @@index([cenaId, criadoEm])
+}
+
+model ImportacaoArquivo {
+  id                String   @id @default(cuid())
+  obraId            String
+  nomeArquivo       String
+  // TXT | PDF
+  formato           String
+  tamanhoBytes      Int
+  conteudoImportado String?
+  mapeadoParaObra   Boolean  @default(false)
+  criadoEm          DateTime @default(now())
+
+  obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
+}
