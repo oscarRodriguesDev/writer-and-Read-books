@@ -2,7 +2,14 @@ import { ErroAplicacao } from "@/lib/erros";
 import type { OpcoesCompletar, IaProvider } from "./provider";
 
 /** Modelo padrão da NVIDIA NIM (troque aqui se necessário). */
-export const MODELO_PADRAO = "meta/llama-3.3-70b-instruct";
+export const MODELO_PADRAO = "nvidia/nemotron-3-ultra-550b-a55b";
+
+/**
+ * Nemotron 3 Ultra é um modelo de raciocínio: com thinking ligado ele gera
+ * uma trilha de raciocínio antes da resposta (mais lento e consome tokens).
+ * Para nossas tarefas (JSON de análise e prosa de cena) desligamos o thinking.
+ */
+const CHAT_TEMPLATE_KWARGS = { enable_thinking: false };
 
 const BASE_URL = "https://integrate.api.nvidia.com/v1";
 const TIMEOUT_MS = 120_000;
@@ -55,6 +62,7 @@ export function criarProviderNvidia(): IaProvider {
             model: MODELO_PADRAO,
             temperature: TEMPERATURA,
             max_tokens: opts?.maxTokens,
+            chat_template_kwargs: CHAT_TEMPLATE_KWARGS,
             response_format: { type: "json_object" },
             messages: [
               { role: "system", content: system },
