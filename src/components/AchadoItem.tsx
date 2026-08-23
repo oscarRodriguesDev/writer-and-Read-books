@@ -18,6 +18,7 @@ export type AchadoApi = {
   trecho: string;
   status: string;
   justificativaAutor?: string | null;
+  cenaId?: string | null;
 };
 
 const CORES_GRAVIDADE: Record<string, string> = {
@@ -37,6 +38,61 @@ export function AchadoItem({
 }) {
   const [justificativa, setJustificativa] = useState("");
   const [expandido, setExpandido] = useState(false);
+
+  // ---- Correção assistida pelo achado (RF-40 + RF-49) ----
+  const [corrigindo, setCorrigindo] = useState(false);
+  const [painelCorrecao, setPainelCorrecao] = useState(false);
+  const [instrucaoCorrecao, setInstrucaoCorrecao] = useState("");
+  const [previewCorrecao, setPreviewCorrecao] = useState<string | null>(null);
+  const [erroCorrecao, setErroCorrecao] = useState<string | null>(null);
+
+  async function gerarCorrecao() {
+    setErroCorrecao(null);
+    setPreviewCorrecao(null);
+    setCorrigindo(true);
+    try {
+      const res = await fetch(`/api/achados/${achado.id}/corrigir`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(instrucaoCorrecao.trim()
+            ? { instrucao: instrucaoCorrecao.trim() }
+            : {}),
+        }),
+      });
+      const corpo = (await res.json().catch(() => null)) as
+        | { texto?: string; erro?: string }
+        | null;
+      if (!res.ok || !corpo?.texto)
+        throw new Error(corpo?.erro ?? "Falha na correção.");
+      setPreviewCorrecao(corpo.texto);
+    } catch (e) {
+      setErroCorrecao(e instanceof Error ? e.message : "Falha na correção.");
+    } finally {
+      setCorrigindo(false);
+    }
+  }
+
+  async function aplicarCorrecao() {
+    if (!previewCorrecao || !achado.cenaId) return;
+    setCorrigindo(true);
+    try {
+      // Aplica o texto corrigido na cena e marca o achado como resolvido
+      await fetch(`/api/cenas/${achado.cenaId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conteudo: previewCorrecao }),
+      });
+      aoAtualizar(achado.id, { status: "RESOLVIDO" });
+      setPreviewCorrecao(null);
+      setPainelCorrecao(false);
+      setInstrucaoCorrecao("");
+    } catch {
+      setErroCorrecao("Não foi possível aplicar a correção na cena.");
+    } finally {
+      setCorrigindo(false);
+    }
+  }
 
   // Primeira linha do texto salvo é o título
   const [titulo, ...resto] = achado.explicacao.split("\n");
@@ -93,6 +149,16 @@ export function AchadoItem({
       )}
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        {achado.cenaId && (
+          <button
+            type="button"
+            onClick={() => setPainelCorrecao((v) => !v)}
+            className={btnSecundario}
+            title="A IA reescreve a cena resolvendo este problema — você revisa antes de aplicar"
+          >
+            🔧 Corrigir com IA
+          </button>
+        )}
         {encerrado ? (
           <button type="button" onClick={() => agir("EM_ANALISE")} className={btnSecundario}>
             ↩︎ Reabrir
@@ -118,6 +184,74 @@ export function AchadoItem({
           {expandido ? "sem justificativa" : "+ justificativa (opcional)"}
         </button>
       </div>
+
+      {painelCorrecao && achado.cenaId && (
+        <div className="mt-2 rounded-md border border-line p-2">
+          <label className="mb-1 block text-xs text-muted">
+            Como quer a correção? (opcional — sem instrução, a IA segue a
+            sugestão da análise)
+          </label>
+          <textarea
+            value={instrucaoCorrecao}
+            onChange={(e) => setInstrucaoCorrecao(e.target.value)}
+            rows={2}
+            maxLength={2000}
+            placeholder="Ex.: resolva fazendo João descobrir a carta antes, mantenha o tom sombrio…"
+            aria-label="Instrução de correção"
+            className="w-full resize-y rounded-md border border-line bg-surface p-2 text-sm outline-none focus:border-faint"
+          />
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={gerarCorrecao}
+              disabled={corrigindo}
+              className={btnSecundario}
+            >
+              {corrigindo && !previewCorrecao
+                ? "⏳ Corrigindo… pode levar até 5 min"
+                : previewCorrecao
+                  ? "🔄 Gerar outra versão"
+                  : "🛠️ Gerar correção"}
+            </button>
+          </div>
+          {erroCorrecao && (
+            <p className="mt-1 text-xs text-red-600">{erroCorrecao}</p>
+          )}
+          {previewCorrecao && (
+            <div className="mt-2">
+              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">
+                Cena corrigida — revise antes de aplicar (RF-48)
+              </p>
+              <textarea
+                value={previewCorrecao}
+                readOnly
+                rows={8}
+                aria-label="Prévia da cena corrigida"
+                className="w-full resize-y rounded-md border border-line bg-surface p-2 text-sm leading-relaxed outline-none"
+              />
+              <div className="mt-1.5 flex gap-2">
+                <button
+                  type="button"
+                  onClick={aplicarCorrecao}
+                  disabled={corrigindo}
+                  className={btnSecundario}
+                  title="Substitui o conteúdo da cena e marca este achado como resolvido"
+                >
+                  ✅ Aplicar na cena e resolver
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewCorrecao(null)}
+                  disabled={corrigindo}
+                  className={btnSecundario}
+                >
+                  ✖ Descartar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {expandido && (
         <textarea
