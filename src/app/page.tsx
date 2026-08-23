@@ -21,9 +21,17 @@ export default async function Dashboard() {
               : `${obras.length} obra(s) em andamento.`}
           </p>
         </div>
-        <Link href="/obras/nova" className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-onaccent hover:bg-accenthover">
-          Nova Obra
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/importar"
+            className="rounded-md border border-inputline bg-surface px-4 py-2 text-sm font-medium text-soft hover:bg-hoverbg"
+          >
+            Importar História
+          </Link>
+          <Link href="/obras/nova" className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-onaccent hover:bg-accenthover">
+            Nova Obra
+          </Link>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
