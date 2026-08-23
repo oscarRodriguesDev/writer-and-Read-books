@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { cardCls } from "@/components/ui";
+import { BotaoExcluirObra } from "@/components/BotaoExcluirObra";
 
 export const dynamic = "force-dynamic";
 
@@ -36,13 +37,18 @@ export default async function Dashboard() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {obras.map((obra) => (
-          <Link key={obra.id} href={`/obras/${obra.id}`} className={`${cardCls} transition hover:border-faint`}>
-            <h2 className="mb-1 font-semibold">{obra.titulo}</h2>
-            <p className="text-sm text-muted">{obra.genero ?? "Sem gênero"}</p>
-            <span className="mt-3 inline-block rounded-full bg-chipbg px-2 py-0.5 text-xs text-soft">
-              {obra.status}
-            </span>
-          </Link>
+          <div key={obra.id} className={`${cardCls} relative`}>
+            <div className="absolute right-2 top-2 z-10">
+              <BotaoExcluirObra obraId={obra.id} titulo={obra.titulo} />
+            </div>
+            <Link href={`/obras/${obra.id}`} className="block transition hover:border-faint">
+              <h2 className="mb-1 font-semibold">{obra.titulo}</h2>
+              <p className="text-sm text-muted">{obra.genero ?? "Sem gênero"}</p>
+              <span className="mt-3 inline-block rounded-full bg-chipbg px-2 py-0.5 text-xs text-soft">
+                {obra.status}
+              </span>
+            </Link>
+          </div>
         ))}
       </div>
     </main>
