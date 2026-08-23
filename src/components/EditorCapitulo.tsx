@@ -1,10 +1,14 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import Link from "next/link";
 import { ROTULO_PARTE } from "@/lib/constants";
 import type { ParteTipo } from "@/lib/constants";
 import { inputCls, labelCls, btnSecundario } from "@/components/ui";
-import Link from "next/link";
+import {
+  PainelAssociacoesCena,
+  type SelecaoCena,
+} from "@/components/PainelAssociacoesCena";
 
 export type CenaDados = {
   id: string;
@@ -12,6 +16,8 @@ export type CenaDados = {
   titulo: string | null;
   conteudo: string;
   objetivo: string | null;
+  personagensIds: string[];
+  ambientesIds: string[];
 };
 
 export type ParteDados = {
@@ -87,9 +93,13 @@ const CORES_ESTADO: Record<EstadoSave, string> = {
 export function EditorCapitulo({
   obraId,
   capitulo,
+  elenco,
+  ambientesObra,
 }: {
   obraId: string;
   capitulo: CapituloEditorDados;
+  elenco: Array<{ id: string; nome: string }>;
+  ambientesObra: Array<{ id: string; nome: string }>;
 }) {
   const { agendar, estado } = useAutosave();
 
@@ -97,12 +107,22 @@ export function EditorCapitulo({
   const [tituloCap, setTituloCap] = useState(capitulo.titulo);
   const [objetivoCap, setObjetivoCap] = useState(capitulo.objetivo ?? "");
 
-  // Conteúdo das cenas, indexado por id
+  // Conteúdo e associações das cenas, indexados por id
   const [cenas, setCenas] = useState(() => {
-    const mapa: Record<string, { conteudo: string; objetivo: string }> = {};
+    const mapa: Record<
+      string,
+      { conteudo: string; objetivo: string; associacoes: SelecaoCena }
+    > = {};
     for (const parte of capitulo.partes)
       for (const cena of parte.cenas)
-        mapa[cena.id] = { conteudo: cena.conteudo, objetivo: cena.objetivo ?? "" };
+        mapa[cena.id] = {
+          conteudo: cena.conteudo,
+          objetivo: cena.objetivo ?? "",
+          associacoes: {
+            personagens: cena.personagensIds,
+            ambientes: cena.ambientesIds,
+          },
+        };
     return mapa;
   });
 
@@ -203,6 +223,18 @@ export function EditorCapitulo({
                     placeholder="Objetivo da cena"
                     aria-label={`Objetivo da cena ${i + 1}`}
                     className={inputCls}
+                  />
+                  <PainelAssociacoesCena
+                    cenaId={cena.id}
+                    selecao={cenas[cena.id].associacoes}
+                    personagens={elenco}
+                    ambientes={ambientesObra}
+                    aoAlterar={(associacoes) =>
+                      setCenas((m) => ({
+                        ...m,
+                        [cena.id]: { ...m[cena.id], associacoes },
+                      }))
+                    }
                   />
                 </div>
               ))}

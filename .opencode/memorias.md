@@ -26,3 +26,8 @@ Registro de decisões e alterações do projeto.
 | 2026-08-22 | Tema claro/escuro: tokens semânticos em `globals.css` + classe `.dark` + `AlternadorTema` com persistência localStorage | VIBECODE |
 | 2026-08-22 | Commit `0bdc7dd` na branch `vibecode`. Push pendente: repositório sem remote configurado | VIBECODE |
 | 2026-08-22 | Importação de histórias (.txt/.pdf, múltiplos arquivos): detecção de capítulos por marcador + distribuição nas 9 cenas; extração de PDF via `unpdf`; TXT com fallback Latin-1. Commit `fc55f18` | VIBECODE |
+| 2026-08-23 | Fase 2: APIs de eventos da linha do tempo (`/api/obras/[obraId]/eventos`, `/api/eventos/[id]`), associações de cena (`PUT /api/cenas/[id]/associacoes`) e GET de cena com personagens/ambientes incluídos | VIBECODE |
+| 2026-08-23 | Datas do evento em Json livre `{ano?, mes?, dia?, hora?}`; campos exibidos conforme escala (ANO→1 campo … HORA→4); escala INDEFINIDO não envia datas | VIBECODE |
+| 2026-08-23 | Conflito de `ordemCronologica`: POST sem ordem usa max+1; POST com ordem ocupada retorna 409; PATCH com colisão troca posições entre os dois eventos (transação com valor temporário -1) | VIBECODE |
+| 2026-08-23 | UI: página `/obras/[obraId]/linha-do-tempo` (timeline vertical + CRUD), aba "Linha do Tempo" no `NavegacaoObra`, painel "Elenco / Ambientes" com checkboxes em cada cena do editor (salva via PUT imediato) | VIBECODE |
+| 2026-08-23 | Commit `68f6bc3` na branch `vibecode`. Push pendente: repositório sem remote configurado | VIBECODE |

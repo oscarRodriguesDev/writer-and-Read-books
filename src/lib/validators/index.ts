@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PAPEIS } from "@/lib/constants";
+import { PAPEIS, ESCALAS_TEMPORAIS } from "@/lib/constants";
 
 /** String que vira null quando vazia (campos opcionais de formulário). */
 const textoOpcional = (max: number) =>
@@ -73,9 +73,38 @@ export const cenaPatchSchema = z
     { message: "Informe ao menos um campo" },
   );
 
+/** Data livre da linha do tempo: {ano?, mes?, dia?, hora?} — campos ausentes são omitidos. */
+export const dataTemporalSchema = z
+  .object({
+    ano: z.number().int().min(-8000).max(8000).optional(),
+    mes: z.number().int().min(1).max(12).optional(),
+    dia: z.number().int().min(1).max(31).optional(),
+    hora: z.number().int().min(0).max(23).optional(),
+  })
+  .nullish();
+
+export const eventoSchema = z.object({
+  titulo: z.string().trim().min(1, "Título é obrigatório").max(200),
+  descricao: textoOpcional(5000),
+  escalaTemporal: z.enum(ESCALAS_TEMPORAIS).default("INDEFINIDO"),
+  dataInicio: dataTemporalSchema,
+  dataFim: dataTemporalSchema,
+  ordemCronologica: z.number().int().min(0).max(1_000_000).optional(),
+  capituloId: textoOpcional(50),
+});
+
+export const atualizarEventoSchema = eventoSchema.partial();
+
+/** Associações de personagens/ambientes a uma cena (substituição completa). */
+export const associacoesCenaSchema = z.object({
+  personagensIds: z.array(z.string()).max(500).default([]),
+  ambientesIds: z.array(z.string()).max(500).default([]),
+});
+
 // Exportados para tipagem dos services
 export type CriarObraInput = z.infer<typeof criarObraSchema>;
 export type EsqueletoInput = z.infer<typeof esqueletoSchema>;
 export type PersonagemInput = z.infer<typeof personagemSchema>;
 export type AmbienteInput = z.infer<typeof ambienteSchema>;
 export type CriarCapituloInput = z.infer<typeof criarCapituloSchema>;
+export type EventoInput = z.infer<typeof eventoSchema>;

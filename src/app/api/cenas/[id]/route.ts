@@ -4,6 +4,24 @@ import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-he
 
 type Ctx = { params: Promise<{ id: string }> };
 
+/** GET — retorna a cena com personagens e ambientes associados. */
+export async function GET(_req: Request, { params }: Ctx) {
+  try {
+    const { id } = await params;
+    const cena = await prisma.cena.findUnique({
+      where: { id },
+      include: {
+        personagens: { include: { personagem: true } },
+        ambientes: { include: { ambiente: true } },
+      },
+    });
+    if (!cena) return respostaErro("Cena não encontrada", 404);
+    return Response.json(cena);
+  } catch (e) {
+    return tratarErroDesconhecido(e);
+  }
+}
+
 export async function PATCH(req: Request, { params }: Ctx) {
   try {
     const { id } = await params;

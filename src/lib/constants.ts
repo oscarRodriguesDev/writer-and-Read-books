@@ -6,6 +6,17 @@ export type ParteTipo = (typeof PARTES_TIPOS)[number];
 export const CENAS_TIPOS = ["INICIO", "MEIO", "FIM"] as const;
 export type CenaTipo = (typeof CENAS_TIPOS)[number];
 
+export const ESCALAS_TEMPORAIS = ["ANO", "MES", "DIA", "HORA", "INDEFINIDO"] as const;
+export type EscalaTemporal = (typeof ESCALAS_TEMPORAIS)[number];
+
+export const ROTULO_ESCALA_TEMPORAL: Record<string, string> = {
+  ANO: "Ano",
+  MES: "Mês",
+  DIA: "Dia",
+  HORA: "Hora",
+  INDEFINIDO: "Indefinido",
+};
+
 export const PAPEIS = [
   "PROTAGONISTA",
   "ANTAGONISTA",

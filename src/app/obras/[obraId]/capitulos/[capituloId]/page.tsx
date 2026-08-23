@@ -13,11 +13,31 @@ export default async function EditorCapituloPage({
   params: Promise<{ obraId: string; capituloId: string }>;
 }) {
   const { obraId, capituloId } = await params;
-  const capitulo = await prisma.capitulo.findUnique({
-    where: { id: capituloId },
-    include: { partes: { include: { cenas: true } } },
-  });
-  if (!capitulo || capitulo.obraId !== obraId) notFound();
+  const [capitulo, obra] = await Promise.all([
+    prisma.capitulo.findUnique({
+      where: { id: capituloId },
+      include: {
+        partes: {
+          include: {
+            cenas: {
+              include: {
+                personagens: true,
+                ambientes: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+    prisma.obra.findUnique({
+      where: { id: obraId },
+      select: {
+        personagens: { select: { id: true, nome: true }, orderBy: { nome: "asc" } },
+        ambientes: { select: { id: true, nome: true }, orderBy: { nome: "asc" } },
+      },
+    }),
+  ]);
+  if (!capitulo || capitulo.obraId !== obraId || !obra) notFound();
 
   // Ordena pelos tipos canônicos INICIO → MEIO → FIM
   capitulo.partes.sort(
@@ -55,9 +75,13 @@ export default async function EditorCapituloPage({
               titulo: cena.titulo,
               conteudo: cena.conteudo,
               objetivo: cena.objetivo,
+              personagensIds: cena.personagens.map((cp) => cp.personagemId),
+              ambientesIds: cena.ambientes.map((ca) => ca.ambienteId),
             })),
           })),
         }}
+        elenco={obra.personagens}
+        ambientesObra={obra.ambientes}
       />
     </>
   );

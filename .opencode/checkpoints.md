@@ -71,3 +71,15 @@ Consulte no início de cada interação para saber onde parou.
 - **Build**: `npm run build` passando
 - **Commit**: `0bdc7dd` na branch `vibecode` — push pendente (sem remote)
 - **Próximos passos sugeridos**: Fase 2 (linha do tempo UI, associações cena↔personagem/ambiente, importação txt/pdf) e Fase 3 (IA: análise de furos de roteiro)
+
+## 2026-08-23 — Fase 2 (Linha do Tempo + Associações de Cena)
+
+- **APIs novas**: `GET/POST /api/obras/[obraId]/eventos`, `PATCH/DELETE /api/eventos/[id]`, `PUT /api/cenas/[id]/associacoes`
+- **API ajustada**: `GET /api/cenas/[id]` agora inclui `personagens` e `ambientes` com dados completos
+- **Validação**: `eventoSchema`, `atualizarEventoSchema`, `associacoesCenaSchema` e `dataTemporalSchema` em `src/lib/validators`; escalas temporais em `src/lib/constants`
+- **Ordem cronológica**: sem ordem → max+1; ordem ocupada no POST → 409 amigável; colisão no PATCH → troca de posições em transação
+- **UI Linha do Tempo**: `/obras/[obraId]/linha-do-tempo` + `GerenciadorLinhaDoTempo` (timeline vertical, CRUD completo) + aba nova em `NavegacaoObra`
+- **UI Editor**: `PainelAssociacoesCena` com checkboxes de personagens/ambientes por cena; página do capítulo carrega associações + elenco da obra
+- **Build**: `npm run build` passando
+- **Commit/push**: pendente
+- **Próximos passos sugeridos**: Fase 3 (análise IA de furos de roteiro), testes automatizados para as novas APIs
