@@ -182,6 +182,47 @@ export const respostaSugestaoEsqueletoSchema = z
   })
   .strip();
 
+/** Busca semântica de personagens com base no texto da obra. */
+export const pedidoBuscaPersonagensSchema = z.object({
+  consulta: z.string().trim().min(1, "Descreva o que procurar").max(500),
+});
+
+export const respostaBuscaPersonagensSchema = z.object({
+  resultados: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1).max(50),
+        relevancia: z.number().int().min(0).max(100),
+        motivo: z.string().trim().min(1).max(1_000),
+      }),
+    )
+    .max(20)
+    .default([]),
+});
+
+/** Mapeamento completo de personagens da obra: existentes + novos a criar (RF-74). */
+export const respostaMapeamentoPersonagensSchema = z.object({
+  existentes: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1).max(50),
+        motivo: z.string().trim().max(1_000).default(""),
+      }),
+    )
+    .max(50)
+    .default([]),
+  novos: z
+    .array(
+      z.object({
+        nome: z.string().trim().min(1).max(200),
+        papel: z.enum(PAPEIS).default("SECUNDARIO"),
+        descricao: textoOpcional(2_000),
+      }),
+    )
+    .max(20)
+    .default([]),
+});
+
 /** Resposta da geração de prompt de imagem (capítulo/personagem/ambiente). */
 export const respostaPromptImagemSchema = z.object({
   prompt: z.string().trim().min(1).max(4_000),

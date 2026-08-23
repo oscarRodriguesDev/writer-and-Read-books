@@ -115,6 +115,91 @@ export function GerenciadorPersonagens({
   const [criando, setCriando] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
 
+  // ---- Mapeamento completo: IA lê a obra e cadastra quem falta (RF-74) ----
+  const [mapeando, setMapeando] = useState(false);
+  const [resumoMapeamento, setResumoMapeamento] = useState<string | null>(null);
+
+  async function mapear() {
+    if (
+      !window.confirm(
+        "A IA vai ler toda a obra, listar os personagens encontrados e CADASTRAR automaticamente os que ainda não existem (como SECUNDÁRIO). Continuar?",
+      )
+    )
+      return;
+    setMapeando(true);
+    setResumoMapeamento(null);
+    try {
+      const res = await fetch(`/api/obras/${obraId}/personagens/mapear`, {
+        method: "POST",
+      });
+      const corpo = (await res.json().catch(() => null)) as
+        | {
+            existentes?: Array<{ nome: string }>;
+            criados?: Array<{ nome: string }>;
+            erro?: string;
+          }
+        | null;
+      if (!res.ok || !corpo)
+        throw new Error(corpo?.erro ?? "Falha no mapeamento.");
+      const partes: string[] = [];
+      if (corpo.criados?.length)
+        partes.push(`🆕 Cadastrados: ${corpo.criados.map((p) => p.nome).join(", ")}`);
+      if (corpo.existentes?.length)
+        partes.push(`✅ Confirmados no texto: ${corpo.existentes.map((p) => p.nome).join(", ")}`);
+      setResumoMapeamento(
+        partes.length > 0
+          ? partes.join(" · ")
+          : "Nenhum personagem identificado no texto ainda.",
+      );
+      router.refresh();
+    } catch (e) {
+      setResumoMapeamento(e instanceof Error ? e.message : "Falha no mapeamento.");
+    } finally {
+      setMapeando(false);
+    }
+  }
+
+  // ---- Busca semântica de personagens via IA (RF-55/56) ----
+  const [consulta, setConsulta] = useState("");
+  const [buscando, setBuscando] = useState(false);
+  const [resultados, setResultados] = useState<
+    Array<{ id: string; nome: string; relevancia: number; motivo: string }>
+  >([]);
+  const [erroBusca, setErroBusca] = useState<string | null>(null);
+
+  async function buscar() {
+    if (!consulta.trim()) return;
+    setBuscando(true);
+    setErroBusca(null);
+    try {
+      const res = await fetch(`/api/obras/${obraId}/personagens/buscar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consulta }),
+      });
+      const corpo = (await res.json().catch(() => null)) as
+        | { resultados?: typeof resultados; erro?: string }
+        | null;
+      if (!res.ok || !corpo) throw new Error(corpo?.erro ?? "Falha na busca.");
+      setResultados(corpo.resultados ?? []);
+    } catch (e) {
+      setErroBusca(e instanceof Error ? e.message : "Falha na busca.");
+    } finally {
+      setBuscando(false);
+    }
+  }
+
+  // Com busca ativa, a lista mostra apenas os encontrados (na ordem de relevância)
+  const visiveis =
+    resultados.length > 0
+      ? resultados
+          .map((r) => {
+            const p = iniciais.find((x) => x.id === r.id);
+            return p ? { personagem: p, relevancia: r.relevancia } : null;
+          })
+          .filter((v): v is { personagem: PersonagemDados; relevancia: number } => v !== null)
+      : iniciais.map((personagem) => ({ personagem, relevancia: null as number | null }));
+
   async function criar(corpo: Record<string, unknown>) {
     await requisicao(`/api/obras/${obraId}/personagens`, "POST", corpo);
     setCriando(false);
@@ -135,6 +220,74 @@ export function GerenciadorPersonagens({
 
   return (
     <div className="space-y-4">
+      {/* Busca semântica com IA */}
+      <div className={`${cardCls} space-y-2`}>
+        <label className={labelCls}>
+          🔎 Buscar personagens pelo que já foi escrito (IA)
+        </label>
+        <div className="flex flex-wrap gap-2">
+          <input
+            value={consulta}
+            onChange={(e) => setConsulta(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && buscar()}
+            maxLength={500}
+            placeholder="Ex.: quem sabe sobre o tesouro? / a mulher loira que traiu o grupo"
+            aria-label="Descrição do que procurar nos personagens"
+            className={`${inputCls} flex-1`}
+          />
+          <button
+            type="button"
+            onClick={buscar}
+            disabled={buscando || !consulta.trim()}
+            className={btnPrimario}
+          >
+            {buscando ? "⏳ Lendo a obra…" : "Buscar"}
+          </button>
+          {resultados.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setResultados([]);
+                setConsulta("");
+              }}
+              className={btnSecundario}
+            >
+              ✖ Limpar busca
+            </button>
+          )}
+        </div>
+        {erroBusca && <p className="text-sm text-red-600">{erroBusca}</p>}
+        {buscando && (
+          <p className="text-xs text-muted">
+            A IA está relendo as cenas da obra — pode levar até 5 min.
+          </p>
+        )}
+      </div>
+
+      {/* Mapeamento completo da obra */}
+      <div className={`${cardCls} space-y-2`}>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={mapear}
+            disabled={mapeando}
+            className={btnPrimario}
+            title="Lê toda a obra, lista os personagens e cadastra os que ainda não existem"
+          >
+            {mapeando ? "⏳ Analisando a obra inteira…" : "🧠 Mapear personagens do texto"}
+          </button>
+          <span className="text-xs text-muted">
+            A IA lê tudo que foi escrito e cria os personagens que ainda não
+            estão cadastrados (você pode editar depois)
+          </span>
+        </div>
+        {resumoMapeamento && (
+          <p className="rounded-md border border-line bg-surface p-2 text-xs text-muted">
+            {resumoMapeamento}
+          </p>
+        )}
+      </div>
+
       {!criando && (
         <button onClick={() => setCriando(true)} className={btnPrimario}>
           + Novo personagem
@@ -147,11 +300,15 @@ export function GerenciadorPersonagens({
         </div>
       )}
 
-      {iniciais.length === 0 && !criando && (
-        <p className="text-sm text-muted">Nenhum personagem cadastrado.</p>
+      {visiveis.length === 0 && !criando && (
+        <p className="text-sm text-muted">
+          {resultados.length === 0 && consulta.trim()
+            ? "Nenhum personagem corresponde a essa busca."
+            : "Nenhum personagem cadastrado."}
+        </p>
       )}
 
-      {iniciais.map((p) =>
+      {visiveis.map(({ personagem: p, relevancia }) =>
         editandoId === p.id ? (
           <div key={p.id} className={cardCls}>
             <h3 className="mb-3 font-semibold">Editar: {p.nome}</h3>
@@ -165,7 +322,20 @@ export function GerenciadorPersonagens({
           <div key={p.id} className={`${cardCls} flex items-start justify-between gap-4`}>
             <ImagemEntidade tipo="personagem" id={p.id} url={p.imagemUrl} rotulo="Personagem" />
             <div className="min-w-0">
-              <h3 className="font-semibold">{p.nome}</h3>
+              <h3 className="font-semibold">
+                {p.nome}
+                {relevancia !== null && (
+                  <span className="ml-2 rounded-full bg-chipbg px-2 py-0.5 text-xs font-normal text-soft">
+                    ✨ {relevancia}% relevante
+                  </span>
+                )}
+              </h3>
+              {relevancia !== null &&
+                resultados.find((r) => r.id === p.id)?.motivo && (
+                  <p className="mt-1 rounded-md border border-line bg-surface p-2 text-xs text-muted">
+                    💡 {resultados.find((r) => r.id === p.id)!.motivo}
+                  </p>
+                )}
               <span className="mt-1 inline-block rounded-full bg-chipbg px-2 py-0.5 text-xs text-soft">
                 {ROTULO_PAPEL[p.papel] ?? p.papel}
               </span>
