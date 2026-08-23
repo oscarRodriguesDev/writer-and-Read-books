@@ -9,4 +9,4 @@ Registro de pedidos do usuário com ID do commit.
 | 2026-08-22 | Iniciar criação do sistema: Prisma 7 + SQLite, migração inicial e MVP Fase 1 (obras, esqueleto, personagens, ambientes, capítulos 3×3, editor com autosave, modo leitor) | 0bdc7dd |
 | 2026-08-22 | Tema claro/escuro com alternância e persistência | 0bdc7dd |
 | 2026-08-23 | Fase 2: linha do tempo (APIs + UI), associações cena↔personagem/ambiente (API + painel no editor) | 4aa3b3f |
-| 2026-08-23 | Fase 3: núcleo IA com NVIDIA NIM — análises (obra/capítulo/cena), sistema de alertas e UI | (ver commit) |
+| 2026-08-23 | Fase 3: núcleo IA com NVIDIA NIM — análises (obra/capítulo/cena), sistema de alertas e UI | 7cb5fb1 |
