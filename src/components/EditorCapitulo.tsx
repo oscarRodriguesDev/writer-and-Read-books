@@ -203,15 +203,17 @@ export function EditorCapitulo({
   // ---- Extração de entidades da cena (RF-18/19/20/74) ----
   const [extraindo, setExtraindo] = useState<Record<string, boolean>>({});
   const [resumoExtracao, setResumoExtracao] = useState<Record<string, string>>({});
+  const [extraindoCap, setExtraindoCap] = useState(false);
+  const [resumoCap, setResumoCap] = useState<string | null>(null);
 
-  async function extrairEntidades(cenaId: string) {
+  async function extrairEntidades(cenaId: string): Promise<boolean> {
     const dados = cenas[cenaId];
     if (!dados.conteudo.trim()) {
       setResumoExtracao((m) => ({
         ...m,
         [cenaId]: "⚠️ Escreva o conteúdo da cena antes de extrair entidades.",
       }));
-      return;
+      return false;
     }
     setResumoExtracao((m) => ({ ...m, [cenaId]: "" }));
     setExtraindo((g) => ({ ...g, [cenaId]: true }));
@@ -260,13 +262,103 @@ export function EditorCapitulo({
         ...m,
         [cenaId]: partes.length > 0 ? `✅ Reconhecido: ${partes.join(" · ")}` : "Nada novo reconhecido nesta cena.",
       }));
+      return true;
     } catch (e) {
       setResumoExtracao((m) => ({
         ...m,
         [cenaId]: e instanceof Error ? e.message : "Falha na extração.",
       }));
+      return false;
     } finally {
       setExtraindo((g) => ({ ...g, [cenaId]: false }));
+    }
+  }
+
+  /** Roda a extração em todas as cenas com conteúdo, uma a uma (sequencial
+   *  para não sobrecarregar a API). */
+  async function extrairTodas() {
+    if (
+      !window.confirm(
+        "A IA vai analisar todas as cenas preenchidas e substituir as associações de personagens/ambientes e o evento temporal do capítulo. Continuar?",
+      )
+    )
+      return;
+
+    setExtraindoCap(true);
+    setResumoCap(null);
+    let ok = 0;
+    let vazias = 0;
+    const ids = capitulo.partes.flatMap((p) => p.cenas.map((c) => c.id));
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      if (!cenas[id].conteudo.trim()) {
+        vazias++;
+        continue;
+      }
+      setResumoCap(`Analisando cena ${i + 1} de ${ids.length}…`);
+      if (await extrairEntidades(id)) ok++;
+    }
+    setResumoCap(
+      `Concluído: ${ok} cena(s) processada(s), ${vazias} vazia(s) ignorada(s).`,
+    );
+    setExtraindoCap(false);
+  }
+
+  // ---- Revisão dirigida da cena (RF-49) ----
+  const [instrucaoRevisao, setInstrucaoRevisao] = useState<Record<string, string>>({});
+  const [revisando, setRevisando] = useState<Record<string, boolean>>({});
+
+  async function revisarCena(cenaId: string) {
+    const dados = cenas[cenaId];
+    const instrucao = instrucaoRevisao[cenaId]?.trim();
+    if (!dados.conteudo.trim()) {
+      setErroGeracao((m) => ({
+        ...m,
+        [cenaId]: "A cena está vazia — escreva ou gere o conteúdo antes de revisar.",
+      }));
+      return;
+    }
+    if (!instrucao) {
+      setErroGeracao((m) => ({
+        ...m,
+        [cenaId]: "Descreva o que deve ser corrigido na instrução de revisão.",
+      }));
+      return;
+    }
+    if (
+      !window.confirm(
+        "A IA vai gerar uma versão revisada da cena — você compara e decide se usa. Continuar?",
+      )
+    )
+      return;
+
+    setErroGeracao((m) => ({ ...m, [cenaId]: "" }));
+    setPreview((m) => ({ ...m, [cenaId]: "" }));
+    setRevisando((g) => ({ ...g, [cenaId]: true }));
+    try {
+      // Garante que a IA leia a versão mais recente do texto
+      await patchJson(`/api/cenas/${cenaId}`, {
+        conteudo: dados.conteudo,
+        objetivo: dados.objetivo,
+      });
+      const res = await fetch(`/api/cenas/${cenaId}/revisar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instrucao }),
+      });
+      const corpo = (await res.json().catch(() => null)) as
+        | { texto?: string; erro?: string }
+        | null;
+      if (!res.ok || !corpo?.texto)
+        throw new Error(corpo?.erro ?? "Falha na revisão.");
+      setPreview((m) => ({ ...m, [cenaId]: corpo.texto! }));
+    } catch (e) {
+      setErroGeracao((m) => ({
+        ...m,
+        [cenaId]: e instanceof Error ? e.message : "Falha na revisão.",
+      }));
+    } finally {
+      setRevisando((g) => ({ ...g, [cenaId]: false }));
     }
   }
 
@@ -306,9 +398,23 @@ export function EditorCapitulo({
             className={`w-full border-none bg-transparent text-sm text-muted outline-none ${labelCls}`}
           />
         </div>
-        <span className={`shrink-0 text-sm ${CORES_ESTADO[estado]}`}>
-          {ROTULO_ESTADO[estado]}
-        </span>
+        <div className="shrink-0 text-right">
+          <span className={`block text-sm ${CORES_ESTADO[estado]}`}>
+            {ROTULO_ESTADO[estado]}
+          </span>
+          <button
+            type="button"
+            onClick={extrairTodas}
+            disabled={extraindoCap}
+            className={`mt-1 ${btnSecundario}`}
+            title="Roda o reconhecimento de entidades em todas as cenas preenchidas"
+          >
+            {extraindoCap ? "⏳ Analisando cenas…" : "🧠 Reconhecer todas as cenas"}
+          </button>
+          {resumoCap && (
+            <p className="mt-1 max-w-xs text-xs text-muted">{resumoCap}</p>
+          )}
+        </div>
       </header>
 
       {/* Grade 3×3: uma coluna por parte, três cenas por coluna */}
@@ -380,6 +486,30 @@ export function EditorCapitulo({
                       {resumoExtracao[cena.id]}
                     </p>
                   )}
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <input
+                      value={instrucaoRevisao[cena.id] ?? ""}
+                      onChange={(e) =>
+                        setInstrucaoRevisao((m) => ({
+                          ...m,
+                          [cena.id]: e.target.value,
+                        }))
+                      }
+                      maxLength={2000}
+                      placeholder="Instrução de revisão (ex.: diálogos mais naturais)"
+                      aria-label={`Instrução de revisão da cena ${i + 1}`}
+                      className={inputCls}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => revisarCena(cena.id)}
+                      disabled={revisando[cena.id]}
+                      className={`${btnSecundario} shrink-0`}
+                      title="A IA corrige o detalhe indicado; você compara antes de usar"
+                    >
+                      {revisando[cena.id] ? "⏳ Revisando…" : "🔧"}
+                    </button>
+                  </div>
                   {erroGeracao[cena.id] && (
                     <p className="mt-1 text-xs text-red-600">
                       {erroGeracao[cena.id]}
