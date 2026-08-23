@@ -182,6 +182,17 @@ export const respostaSugestaoEsqueletoSchema = z
   })
   .strip();
 
+/** Resposta da geração de prompt de imagem (capítulo/personagem/ambiente). */
+export const respostaPromptImagemSchema = z.object({
+  prompt: z.string().trim().min(1).max(4_000),
+});
+
+/** POST /api/prompts-imagem — corpo aceito. */
+export const pedidoPromptImagemSchema = z.object({
+  tipo: z.enum(["capitulo", "personagem", "ambiente"]),
+  id: z.string().trim().min(1).max(50),
+});
+
 /** PATCH /api/achados/[id] — RF-40/41. */
 export const atualizarAchadoSchema = z.object({
   status: z.enum(["RESOLVIDO", "IGNORADO", "INTENCIONAL", "EM_ANALISE"]),

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PAPEIS, ROTULO_PAPEL } from "@/lib/constants";
 import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
+import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
 
 export type PersonagemDados = {
   id: string;
@@ -171,6 +172,7 @@ export function GerenciadorPersonagens({
               {p.comportamento && <p className="text-sm"><strong>Comportamento:</strong> {p.comportamento}</p>}
             </div>
             <div className="flex shrink-0 flex-col gap-2">
+              <BotaoPromptImagem tipo="personagem" id={p.id} />
               <button onClick={() => setEditandoId(p.id)} className={btnSecundario}>
                 Editar
               </button>

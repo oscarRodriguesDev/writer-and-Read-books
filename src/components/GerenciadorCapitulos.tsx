@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { inputCls, labelCls, btnPrimario, btnSecundario, cardCls } from "@/components/ui";
+import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
 
 export type CapituloDados = {
   id: string;
@@ -122,23 +123,26 @@ export function GerenciadorCapitulos({
                 <p className="truncate text-sm text-muted">{c.objetivo}</p>
               )}
             </div>
-            <div className="flex shrink-0 flex-col gap-1">
-              <button
-                onClick={() => mover(c.id, "CIMA")}
-                disabled={movendo !== null || i === 0}
-                aria-label={`Mover ${c.titulo} para cima`}
-                className={btnSecundario}
-              >
-                ↑
-              </button>
-              <button
-                onClick={() => mover(c.id, "BAIXO")}
-                disabled={movendo !== null || i === iniciais.length - 1}
-                aria-label={`Mover ${c.titulo} para baixo`}
-                className={btnSecundario}
-              >
-                ↓
-              </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <BotaoPromptImagem tipo="capitulo" id={c.id} rotulo="🎨" />
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={() => mover(c.id, "CIMA")}
+                  disabled={movendo !== null || i === 0}
+                  aria-label={`Mover ${c.titulo} para cima`}
+                  className={btnSecundario}
+                >
+                  ↑
+                </button>
+                <button
+                  onClick={() => mover(c.id, "BAIXO")}
+                  disabled={movendo !== null || i === iniciais.length - 1}
+                  aria-label={`Mover ${c.titulo} para baixo`}
+                  className={btnSecundario}
+                >
+                  ↓
+                </button>
+              </div>
             </div>
           </li>
         ))}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
+import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
 
 export type AmbienteDados = {
   id: string;
@@ -156,6 +157,7 @@ export function GerenciadorAmbientes({
               {a.importanciaNarrativa && <p className="text-sm"><strong>Importância:</strong> {a.importanciaNarrativa}</p>}
             </div>
             <div className="flex shrink-0 flex-col gap-2">
+              <BotaoPromptImagem tipo="ambiente" id={a.id} />
               <button onClick={() => setEditandoId(a.id)} className={btnSecundario}>
                 Editar
               </button>
