@@ -131,6 +131,11 @@ export const respostaAnaliseIaSchema = z.object({
   achados: z.array(achadoIaBruto).max(100).default([]),
 });
 
+/** Resposta da geração de cena por IA (RF-46). */
+export const respostaGeracaoCenaSchema = z.object({
+  texto: z.string().trim().min(1, "IA não retornou texto").max(100_000),
+});
+
 /** PATCH /api/achados/[id] — RF-40/41. */
 export const atualizarAchadoSchema = z.object({
   status: z.enum(["RESOLVIDO", "IGNORADO", "INTENCIONAL", "EM_ANALISE"]),

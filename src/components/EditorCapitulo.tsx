@@ -143,6 +143,63 @@ export function EditorCapitulo({
     );
   }
 
+  // ---- Geração assistida por IA (RF-46) ----
+  const [gerando, setGerando] = useState<Record<string, boolean>>({});
+  const [preview, setPreview] = useState<Record<string, string>>({});
+  const [erroGeracao, setErroGeracao] = useState<Record<string, string>>({});
+
+  async function gerarCena(cenaId: string) {
+    const dados = cenas[cenaId];
+    if (!dados.objetivo.trim()) {
+      setErroGeracao((m) => ({
+        ...m,
+        [cenaId]:
+          "Escreva um breve resumo da cena no campo “Objetivo da cena” antes de gerar.",
+      }));
+      return;
+    }
+    if (
+      dados.conteudo.trim() &&
+      !window.confirm(
+        "Esta cena já tem conteúdo. A IA vai gerar uma nova versão — você poderá comparar e decidir se usa ou descarta. Continuar?",
+      )
+    )
+      return;
+
+    setErroGeracao((m) => ({ ...m, [cenaId]: "" }));
+    setPreview((m) => ({ ...m, [cenaId]: "" }));
+    setGerando((g) => ({ ...g, [cenaId]: true }));
+    try {
+      // Salva o resumo antes, para a IA ler o valor mais recente do banco
+      await patchJson(`/api/cenas/${cenaId}`, {
+        conteudo: dados.conteudo,
+        objetivo: dados.objetivo,
+      });
+      const res = await fetch(`/api/cenas/${cenaId}/gerar`, { method: "POST" });
+      const corpo = (await res.json().catch(() => null)) as
+        | { texto?: string; erro?: string }
+        | null;
+      if (!res.ok || !corpo?.texto)
+        throw new Error(corpo?.erro ?? "Falha na geração.");
+      setPreview((m) => ({ ...m, [cenaId]: corpo.texto! }));
+    } catch (e) {
+      setErroGeracao((m) => ({
+        ...m,
+        [cenaId]: e instanceof Error ? e.message : "Falha na geração.",
+      }));
+    } finally {
+      setGerando((g) => ({ ...g, [cenaId]: false }));
+    }
+  }
+
+  function usarGeracao(cenaId: string) {
+    const texto = preview[cenaId];
+    if (!texto) return;
+    setCenas((m) => ({ ...m, [cenaId]: { ...m[cenaId], conteudo: texto } }));
+    salvarCena(cenaId);
+    setPreview((m) => ({ ...m, [cenaId]: "" }));
+  }
+
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
       <div className="mb-4">
@@ -221,10 +278,62 @@ export function EditorCapitulo({
                       salvarCena(cena.id);
                     }}
                     maxLength={500}
-                    placeholder="Objetivo da cena"
+                    placeholder="Resumo / objetivo da cena"
                     aria-label={`Objetivo da cena ${i + 1}`}
                     className={inputCls}
                   />
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => gerarCena(cena.id)}
+                      disabled={gerando[cena.id]}
+                      className={btnSecundario}
+                    >
+                      {gerando[cena.id]
+                        ? "⏳ Gerando… pode levar até 2 min"
+                        : "✨ Gerar com IA"}
+                    </button>
+                    <span className="text-xs text-faint">
+                      Escreva o resumo acima e a IA redige a cena
+                    </span>
+                  </div>
+                  {erroGeracao[cena.id] && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {erroGeracao[cena.id]}
+                    </p>
+                  )}
+                  {preview[cena.id] && (
+                    <div className="mt-2 rounded-md border border-line p-2">
+                      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">
+                        Sugestão da IA — revise antes de usar (RF-48/51)
+                      </p>
+                      <textarea
+                        value={preview[cena.id]}
+                        readOnly
+                        rows={8}
+                        aria-label={`Sugestão da IA para a cena ${i + 1}`}
+                        className="w-full resize-y rounded-md border border-line bg-surface p-2 text-sm leading-relaxed outline-none"
+                      />
+                      <div className="mt-1.5 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => usarGeracao(cena.id)}
+                          className={btnSecundario}
+                        >
+                          ✅ Usar este texto
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPreview((m) => ({ ...m, [cena.id]: "" }))
+                          }
+                          className={btnSecundario}
+                        >
+                          ✖ Descartar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <PainelAssociacoesCena
                     cenaId={cena.id}
                     selecao={cenas[cena.id].associacoes}
