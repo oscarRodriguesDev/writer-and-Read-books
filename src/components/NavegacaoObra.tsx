@@ -10,6 +10,7 @@ const ABAS = [
   { href: "/ambientes", rotulo: "Ambientes" },
   { href: "/linha-do-tempo", rotulo: "Linha do Tempo" },
   { href: "/capitulos", rotulo: "Capítulos" },
+  { href: "/analise", rotulo: "Análise IA" },
 ];
 
 export function NavegacaoObra({ obraId }: { obraId: string }) {

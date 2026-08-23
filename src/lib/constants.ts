@@ -32,6 +32,62 @@ export const ROTULO_PARTE: Record<ParteTipo, string> = {
   FIM: "Fim",
 };
 
+// ---- Análise IA ----
+
+export const ESCOPOS_ANALISE = ["OBRA", "CAPITULO", "CENA", "TRECHO"] as const;
+
+export const CATEGORIAS_ACHADO = [
+  "CONTINUIDADE",
+  "CRONOLOGIA",
+  "PERSONAGEM",
+  "AMBIENTE",
+  "CAUSALIDADE",
+  "ESTRUTURA",
+  "CONHECIMENTO",
+  "CANON",
+  "CONTRADICAO",
+] as const;
+export type CategoriaAchado = (typeof CATEGORIAS_ACHADO)[number];
+
+export const GRAVIDADES_ACHADO = ["BAIXA", "MEDIA", "ALTA", "CRITICA"] as const;
+export type GravidadeAchado = (typeof GRAVIDADES_ACHADO)[number];
+
+export const STATUS_ACHADO = [
+  "NOVO",
+  "EM_ANALISE",
+  "RESOLVIDO",
+  "IGNORADO",
+  "INTENCIONAL",
+] as const;
+export type StatusAchado = (typeof STATUS_ACHADO)[number];
+
+export const ROTULO_CATEGORIA_ACHADO: Record<string, string> = {
+  CONTINUIDADE: "Continuidade",
+  CRONOLOGIA: "Cronologia",
+  PERSONAGEM: "Personagem",
+  AMBIENTE: "Ambiente",
+  CAUSALIDADE: "Causalidade",
+  ESTRUTURA: "Estrutura",
+  CONHECIMENTO: "Conhecimento",
+  CANON: "Canon",
+  CONTRADICAO: "Contradição",
+};
+
+export const ROTULO_GRAVIDADE: Record<string, string> = {
+  BAIXA: "Baixa",
+  MEDIA: "Média",
+  ALTA: "Alta",
+  CRITICA: "Crítica",
+};
+
+export const ROTULO_STATUS_ACHADO: Record<string, string> = {
+  NOVO: "Novo",
+  EM_ANALISE: "Em análise",
+  RESOLVIDO: "Resolvido",
+  IGNORADO: "Ignorado",
+  INTENCIONAL: "Intencional",
+};
+
 export const ROTULO_PAPEL: Record<string, string> = {
   PROTAGONISTA: "Protagonista",
   ANTAGONISTA: "Antagonista",

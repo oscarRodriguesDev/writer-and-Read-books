@@ -83,3 +83,14 @@ Consulte no início de cada interação para saber onde parou.
 - **Build**: `npm run build` passando
 - **Commit/push**: pendente
 - **Próximos passos sugeridos**: Fase 3 (análise IA de furos de roteiro), testes automatizados para as novas APIs
+
+## 2026-08-23 — Fase 3 (Núcleo de IA com NVIDIA NIM)
+
+- **Provider**: camada abstrata `IaProvider` (`src/lib/ia/provider.ts`) + implementação NVIDIA NIM (`nvidia.ts`, modelo `meta/llama-3.3-70b-instruct`, JSON mode, timeout 120s, erros amigáveis RNF-07). Chave `KEY_NVIDIA` no `.env`
+- **Contexto**: `contexto.ts` monta prompt por escopo (obra/capítulo/cena+vizinhas) incluindo esqueleto, personagens/relações, ambientes, timeline, canon e regras da obra
+- **Prompt**: `prompt.ts` — analista de consistência narrativa; diferencia erro × risco × escolha intencional (RIA-15/16); retorna JSON validado com Zod
+- **Serviço**: `services/analise.ts` — cria `AnaliseIA` (EM_ANDAMENTO → CONCLUIDA/ERRO), persiste `AchadoIA` vinculados a cena/parte/capítulo quando IDs válidos no mapa de cenas
+- **Rotas novas**: POST `/api/obras/[obraId]/analisar`, `/api/capitulos/[capituloId]/analisar`, `/api/cenas/[id]/analisar`; GET `/api/obras/[obraId]/achados?status=`; PATCH `/api/achados/[id]` (RF-40/41)
+- **UI**: página `/obras/[obraId]/analise` + aba "Análise IA" no `NavegacaoObra`; painel "Analisar cena" no editor (`PainelAchadosCena`) com ações Resolver/Ignorar/Intencional
+- **Build**: `npm run build` passando
+- **Próximos passos sugeridos**: marcar trechos problemáticos no texto (RF-39, offsets), testes automatizados das APIs de análise, ajuste fino do prompt conforme qualidade dos achados

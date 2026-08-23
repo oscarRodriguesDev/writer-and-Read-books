@@ -9,6 +9,7 @@ import {
   PainelAssociacoesCena,
   type SelecaoCena,
 } from "@/components/PainelAssociacoesCena";
+import { PainelAchadosCena } from "@/components/PainelAchadosCena";
 
 export type CenaDados = {
   id: string;
@@ -234,6 +235,15 @@ export function EditorCapitulo({
                         ...m,
                         [cena.id]: { ...m[cena.id], associacoes },
                       }))
+                    }
+                  />
+                  <PainelAchadosCena
+                    cenaId={cena.id}
+                    salvarAntes={() =>
+                      patchJson(`/api/cenas/${cena.id}`, {
+                        conteudo: cenas[cena.id].conteudo,
+                        objetivo: cenas[cena.id].objetivo,
+                      })
                     }
                   />
                 </div>

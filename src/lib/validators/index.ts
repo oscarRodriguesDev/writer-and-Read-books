@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { PAPEIS, ESCALAS_TEMPORAIS } from "@/lib/constants";
+import {
+  CATEGORIAS_ACHADO,
+  GRAVIDADES_ACHADO,
+  PAPEIS,
+  ESCALAS_TEMPORAIS,
+  STATUS_ACHADO,
+} from "@/lib/constants";
 
 /** String que vira null quando vazia (campos opcionais de formulário). */
 const textoOpcional = (max: number) =>
@@ -100,6 +106,43 @@ export const associacoesCenaSchema = z.object({
   personagensIds: z.array(z.string()).max(500).default([]),
   ambientesIds: z.array(z.string()).max(500).default([]),
 });
+
+// ---- Análise IA ----
+
+/** Achado individual retornado pela IA (antes de virar registro no banco). */
+const achadoIaBruto = z.object({
+  categoria: z.enum(CATEGORIAS_ACHADO),
+  gravidade: z.enum(GRAVIDADES_ACHADO),
+  titulo: z.string().trim().min(1).max(300),
+  descricao: z.string().trim().min(1).max(4_000),
+  evidencia: textoOpcional(4_000),
+  sugestao: textoOpcional(2_000),
+  cenaId: z
+    .string()
+    .trim()
+    .max(50)
+    .transform((v) => (v === "" ? null : v))
+    .nullish(),
+  trecho: textoOpcional(1_000),
+});
+
+/** Resposta esperada do provedor de IA. */
+export const respostaAnaliseIaSchema = z.object({
+  achados: z.array(achadoIaBruto).max(100).default([]),
+});
+
+/** PATCH /api/achados/[id] — RF-40/41. */
+export const atualizarAchadoSchema = z.object({
+  status: z.enum(["RESOLVIDO", "IGNORADO", "INTENCIONAL", "EM_ANALISE"]),
+  justificativa: textoOpcional(2_000),
+});
+
+/** Filtro opcional ?status= na listagem de achados. */
+export const filtroAchadosSchema = z.object({
+  status: z.enum(STATUS_ACHADO).optional(),
+});
+
+export type RespostaAnaliseIa = z.infer<typeof respostaAnaliseIaSchema>;
 
 // Exportados para tipagem dos services
 export type CriarObraInput = z.infer<typeof criarObraSchema>;
