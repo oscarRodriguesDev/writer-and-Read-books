@@ -12,6 +12,11 @@ const PROMPT_SISTEMA_EXTRACAO = `Você analisa uma cena de ficção e extrai ent
 TAREFAS:
 1. PERSONAGENS: identifique quais personagens participam ou são claramente citados na cena. Use EXCLUSIVAMENTE os IDs fornecidos na lista. Apelidos, títulos ("o capitão") e pronomes contam quando o texto deixa claro quem é. Na dúvida, NÃO inclua.
 2. AMBIENTES: mesmo critério — onde a cena acontece ou cita explicitamente. Só IDs da lista.
+3. NOVAS ENTIDADES (RF-74/75): se a cena apresentar personagens ou ambientes CLARAMENTE identificados que NÃO estão na lista, cadastre-os em "novosPersonagens"/"novosAmbientes" com nome e breve descrição extraída do próprio texto. Regras:
+   - Máximo 5 de cada por análise; priorize os mais relevantes.
+   - NÃO repita nomes que já constam na lista (compare ignorando maiúsculas).
+   - Só inclua quem aparece de forma inequívoca — personagem genérico ("um guarda") só entra se tiver relevância narrativa clara.
+   - Se nada novo aparecer, devolva listas vazias.
 3. TEMPORAL: detecte o tempo DENTRO DA NARRATIVA (tempo diegético — quando a história acontece), NUNCA a data real de escrita. Procure no texto marcações como datas citadas na ficção ("12 de junho de 1994"), horários ("às três da tarde"), períodos do dia ("madrugada"), dias da semana, estações, datas especiais (Natal, véspera de ano novo) ou durações relativas ("três dias depois da chegada"):
    - Preencha "dataInicio" apenas com campos CLARAMENTE inferíveis do TEXTO: {"ano"?, "mes"?, "dia"?, "hora"?} (mes 1-12, dia 1-31, hora 0-23). Omita o que não for dito.
    - "escalaTemporal": ANO (só ano), MES (ano+mês), DIA (data completa), HORA (com horário), INDEFINIDO (período vago tipo "noite", "anos depois").
@@ -23,6 +28,8 @@ Responda EXCLUSIVAMENTE com JSON válido:
 {
   "personagens": ["<id>", "..."],
   "ambientes": ["<id>", "..."],
+  "novosPersonagens": [{"nome": "...", "descricao": "..."}],
+  "novosAmbientes": [{"nome": "...", "descricao": "..."}],
   "temporal": {
     "detectado": true|false,
     "titulo": "<evento curto, ex.: 'Natal de 1994'>",
@@ -38,6 +45,7 @@ type ResumoExtracao = {
   ambientesIds: string[];
   personagens: string[];
   ambientes: string[];
+  criados: { personagens: string[]; ambientes: string[] };
   evento: { titulo: string; escalaTemporal: string; criado: boolean } | null;
 };
 
@@ -98,6 +106,63 @@ Extraia as entidades conforme instruído.`,
   const idsAmbiente = extraido.ambientes.filter((id) =>
     ambientesObra.some((a) => a.id === id),
   );
+
+  // RF-74/75: cadastra entidades novas identificadas na cena (máx. 5 por tipo,
+  // sem duplicar nomes já existentes — comparação sem maiúsculas)
+  const nomesPersonagemObra = personagensObra.map((p) => p.nome.toLowerCase());
+  const nomesAmbienteObra = ambientesObra.map((a) => a.nome.toLowerCase());
+
+  const novosPersonagensDados = extraido.novosPersonagens.filter(
+    (n) => !nomesPersonagemObra.includes(n.nome.trim().toLowerCase()),
+  );
+  const novosAmbientesDados = extraido.novosAmbientes.filter(
+    (n) => !nomesAmbienteObra.includes(n.nome.trim().toLowerCase()),
+  );
+
+  const criados: ResumoExtracao["criados"] = { personagens: [], ambientes: [] };
+
+  if (novosPersonagensDados.length > 0) {
+    await prisma.personagem.createMany({
+      data: novosPersonagensDados.map((n) => ({
+        obraId: cena.parte.capitulo.obraId,
+        nome: n.nome.trim(),
+        papel: "SECUNDARIO",
+        historia: n.descricao ?? null,
+      })),
+    });
+    const criadosAgora = await prisma.personagem.findMany({
+      where: {
+        obraId: cena.parte.capitulo.obraId,
+        nome: {
+          in: novosPersonagensDados.map((n) => n.nome.trim()),
+        },
+      },
+      select: { id: true, nome: true },
+    });
+    idsPersonagem.push(...criadosAgora.map((p) => p.id));
+    criados.personagens = criadosAgora.map((p) => p.nome);
+  }
+
+  if (novosAmbientesDados.length > 0) {
+    await prisma.ambiente.createMany({
+      data: novosAmbientesDados.map((n) => ({
+        obraId: cena.parte.capitulo.obraId,
+        nome: n.nome.trim(),
+        descricao: n.descricao ?? null,
+      })),
+    });
+    const criadosAgora = await prisma.ambiente.findMany({
+      where: {
+        obraId: cena.parte.capitulo.obraId,
+        nome: {
+          in: novosAmbientesDados.map((n) => n.nome.trim()),
+        },
+      },
+      select: { id: true, nome: true },
+    });
+    idsAmbiente.push(...criadosAgora.map((a) => a.id));
+    criados.ambientes = criadosAgora.map((a) => a.nome);
+  }
 
   // RF-18/19: substitui as associações da cena
   await prisma.$transaction([
@@ -161,6 +226,7 @@ Extraia as entidades conforme instruído.`,
     ambientes: ambientesObra
       .filter((a) => idsAmbiente.includes(a.id))
       .map((a) => a.nome),
+    criados,
     evento,
   };
 }

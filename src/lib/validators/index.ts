@@ -136,10 +136,18 @@ export const respostaGeracaoCenaSchema = z.object({
   texto: z.string().trim().min(1, "IA não retornou texto").max(100_000),
 });
 
+/** Entidade nova identificada na cena e ainda não cadastrada na obra (RF-74/75). */
+const entidadeNovaSchema = z.object({
+  nome: z.string().trim().min(1).max(200),
+  descricao: textoOpcional(2000),
+});
+
 /** Extração de entidades de uma cena: personagens, ambientes e marcação temporal (RF-74/18/19). */
 export const respostaExtracaoCenaSchema = z.object({
   personagens: z.array(z.string()).max(500).default([]),
   ambientes: z.array(z.string()).max(500).default([]),
+  novosPersonagens: z.array(entidadeNovaSchema).max(5).default([]),
+  novosAmbientes: z.array(entidadeNovaSchema).max(5).default([]),
   temporal: z
     .object({
       detectado: z.boolean().default(false),
@@ -158,6 +166,21 @@ export const respostaExtracaoCenaSchema = z.object({
       descricao: null,
     }),
 });
+
+/** Sugestão de campos do esqueleto gerada pela IA (RF-09/45 assistido). */
+export const respostaSugestaoEsqueletoSchema = z
+  .object({
+    premissa: textoOpcional(5000),
+    conflitoPrincipal: textoOpcional(5000),
+    conflitosSecundarios: textoOpcional(5000),
+    objetivoProtagonista: textoOpcional(5000),
+    transformacaoProtagonista: textoOpcional(5000),
+    eventosPrincipais: textoOpcional(5000),
+    pontosVirada: textoOpcional(5000),
+    climax: textoOpcional(5000),
+    desfecho: textoOpcional(5000),
+  })
+  .strip();
 
 /** PATCH /api/achados/[id] — RF-40/41. */
 export const atualizarAchadoSchema = z.object({

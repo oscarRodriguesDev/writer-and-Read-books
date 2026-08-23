@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ROTULO_PARTE } from "@/lib/constants";
 import type { ParteTipo } from "@/lib/constants";
 import { inputCls, labelCls, btnSecundario } from "@/components/ui";
@@ -103,6 +104,7 @@ export function EditorCapitulo({
   ambientesObra: Array<{ id: string; nome: string }>;
 }) {
   const { agendar, estado } = useAutosave();
+  const router = useRouter();
 
   // Estado local do capítulo (título/objetivo)
   const [tituloCap, setTituloCap] = useState(capitulo.titulo);
@@ -230,26 +232,39 @@ export function EditorCapitulo({
             ambientesIds?: string[];
             personagens?: string[];
             ambientes?: string[];
+            criados?: { personagens?: string[]; ambientes?: string[] };
             evento?: { titulo: string; escalaTemporal: string; criado: boolean } | null;
             erro?: string;
           }
         | null;
       if (!res.ok || !corpo) throw new Error(corpo?.erro ?? "Falha na extração.");
 
-      // Atualiza os checkboxes com o que foi reconhecido
+      // Atualiza os checkboxes com o que foi reconhecido (inclui entidades novas)
       if (corpo.personagensIds || corpo.ambientesIds)
         setCenas((m) => ({
           ...m,
           [cenaId]: {
             ...m[cenaId],
             associacoes: {
-              personagens: corpo.personagensIds ?? m[cenaId].associacoes.personagens,
-              ambientes: corpo.ambientesIds ?? m[cenaId].associacoes.ambientes,
+              personagens: [
+                ...new Set([
+                  ...(corpo.personagensIds ?? m[cenaId].associacoes.personagens),
+                ]),
+              ],
+              ambientes: [
+                ...new Set([
+                  ...(corpo.ambientesIds ?? m[cenaId].associacoes.ambientes),
+                ]),
+              ],
             },
           },
         }));
 
       const partes: string[] = [];
+      if (corpo.criados?.personagens?.length)
+        partes.push(`🆕 Personagens cadastrados: ${corpo.criados.personagens.join(", ")}`);
+      if (corpo.criados?.ambientes?.length)
+        partes.push(`🆕 Ambientes cadastrados: ${corpo.criados.ambientes.join(", ")}`);
       if (corpo.personagens?.length)
         partes.push(`👥 ${corpo.personagens.join(", ")}`);
       if (corpo.ambientes?.length)
@@ -262,6 +277,9 @@ export function EditorCapitulo({
         ...m,
         [cenaId]: partes.length > 0 ? `✅ Reconhecido: ${partes.join(" · ")}` : "Nada novo reconhecido nesta cena.",
       }));
+      // Entidades novas criadas precisam recarregar o elenco da página
+      if (corpo.criados?.personagens?.length || corpo.criados?.ambientes?.length)
+        router.refresh();
       return true;
     } catch (e) {
       setResumoExtracao((m) => ({
