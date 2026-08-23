@@ -25,3 +25,4 @@ Registro de decisões e alterações do projeto.
 | 2026-08-22 | MVP Fase 1 implementado: dashboard, obras, esqueleto, personagens, ambientes, capítulos 3×3 com editor/autosave e modo leitor (`/ler/[obraId]`) | VIBECODE |
 | 2026-08-22 | Tema claro/escuro: tokens semânticos em `globals.css` + classe `.dark` + `AlternadorTema` com persistência localStorage | VIBECODE |
 | 2026-08-22 | Commit `0bdc7dd` na branch `vibecode`. Push pendente: repositório sem remote configurado | VIBECODE |
+| 2026-08-22 | Importação de histórias (.txt/.pdf, múltiplos arquivos): detecção de capítulos por marcador + distribuição nas 9 cenas; extração de PDF via `unpdf`; TXT com fallback Latin-1. Commit `fc55f18` | VIBECODE |
