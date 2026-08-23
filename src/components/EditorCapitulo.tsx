@@ -200,6 +200,76 @@ export function EditorCapitulo({
     setPreview((m) => ({ ...m, [cenaId]: "" }));
   }
 
+  // ---- Extração de entidades da cena (RF-18/19/20/74) ----
+  const [extraindo, setExtraindo] = useState<Record<string, boolean>>({});
+  const [resumoExtracao, setResumoExtracao] = useState<Record<string, string>>({});
+
+  async function extrairEntidades(cenaId: string) {
+    const dados = cenas[cenaId];
+    if (!dados.conteudo.trim()) {
+      setResumoExtracao((m) => ({
+        ...m,
+        [cenaId]: "⚠️ Escreva o conteúdo da cena antes de extrair entidades.",
+      }));
+      return;
+    }
+    setResumoExtracao((m) => ({ ...m, [cenaId]: "" }));
+    setExtraindo((g) => ({ ...g, [cenaId]: true }));
+    try {
+      // Salva o texto atual antes de a IA ler do banco
+      await patchJson(`/api/cenas/${cenaId}`, {
+        conteudo: dados.conteudo,
+        objetivo: dados.objetivo,
+      });
+      const res = await fetch(`/api/cenas/${cenaId}/extrair`, { method: "POST" });
+      const corpo = (await res.json().catch(() => null)) as
+        | {
+            personagensIds?: string[];
+            ambientesIds?: string[];
+            personagens?: string[];
+            ambientes?: string[];
+            evento?: { titulo: string; escalaTemporal: string; criado: boolean } | null;
+            erro?: string;
+          }
+        | null;
+      if (!res.ok || !corpo) throw new Error(corpo?.erro ?? "Falha na extração.");
+
+      // Atualiza os checkboxes com o que foi reconhecido
+      if (corpo.personagensIds || corpo.ambientesIds)
+        setCenas((m) => ({
+          ...m,
+          [cenaId]: {
+            ...m[cenaId],
+            associacoes: {
+              personagens: corpo.personagensIds ?? m[cenaId].associacoes.personagens,
+              ambientes: corpo.ambientesIds ?? m[cenaId].associacoes.ambientes,
+            },
+          },
+        }));
+
+      const partes: string[] = [];
+      if (corpo.personagens?.length)
+        partes.push(`👥 ${corpo.personagens.join(", ")}`);
+      if (corpo.ambientes?.length)
+        partes.push(`📍 ${corpo.ambientes.join(", ")}`);
+      if (corpo.evento)
+        partes.push(
+          `🕒 ${corpo.evento.criado ? "Evento criado" : "Evento atualizado"}: “${corpo.evento.titulo}” (${corpo.evento.escalaTemporal.toLowerCase()})`,
+        );
+      setResumoExtracao((m) => ({
+        ...m,
+        [cenaId]: partes.length > 0 ? `✅ Reconhecido: ${partes.join(" · ")}` : "Nada novo reconhecido nesta cena.",
+      }));
+    } catch (e) {
+      setResumoExtracao((m) => ({
+        ...m,
+        [cenaId]: e instanceof Error ? e.message : "Falha na extração.",
+      }));
+    } finally {
+      setExtraindo((g) => ({ ...g, [cenaId]: false }));
+    }
+  }
+
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
       <div className="mb-4">
@@ -293,10 +363,23 @@ export function EditorCapitulo({
                         ? "⏳ Gerando… pode levar até 2 min"
                         : "✨ Gerar com IA"}
                     </button>
-                    <span className="text-xs text-faint">
-                      Escreva o resumo acima e a IA redige a cena
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => extrairEntidades(cena.id)}
+                      disabled={extraindo[cena.id]}
+                      className={btnSecundario}
+                      title="Reconhece personagens, ambientes e tempo narrativo do texto e aplica nas associações e na linha do tempo"
+                    >
+                      {extraindo[cena.id]
+                        ? "⏳ Analisando texto…"
+                        : "🧠 Reconhecer entidades"}
+                    </button>
                   </div>
+                  {resumoExtracao[cena.id] && (
+                    <p className="mt-1 text-xs text-muted">
+                      {resumoExtracao[cena.id]}
+                    </p>
+                  )}
                   {erroGeracao[cena.id] && (
                     <p className="mt-1 text-xs text-red-600">
                       {erroGeracao[cena.id]}

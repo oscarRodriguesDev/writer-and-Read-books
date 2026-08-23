@@ -136,6 +136,29 @@ export const respostaGeracaoCenaSchema = z.object({
   texto: z.string().trim().min(1, "IA não retornou texto").max(100_000),
 });
 
+/** Extração de entidades de uma cena: personagens, ambientes e marcação temporal (RF-74/18/19). */
+export const respostaExtracaoCenaSchema = z.object({
+  personagens: z.array(z.string()).max(500).default([]),
+  ambientes: z.array(z.string()).max(500).default([]),
+  temporal: z
+    .object({
+      detectado: z.boolean().default(false),
+      titulo: z.string().trim().max(200).default(""),
+      escalaTemporal: z.enum(ESCALAS_TEMPORAIS).default("INDEFINIDO"),
+      dataInicio: dataTemporalSchema,
+      dataFim: dataTemporalSchema,
+      descricao: textoOpcional(2000),
+    })
+    .default({
+      detectado: false,
+      titulo: "",
+      escalaTemporal: "INDEFINIDO",
+      dataInicio: null,
+      dataFim: null,
+      descricao: null,
+    }),
+});
+
 /** PATCH /api/achados/[id] — RF-40/41. */
 export const atualizarAchadoSchema = z.object({
   status: z.enum(["RESOLVIDO", "IGNORADO", "INTENCIONAL", "EM_ANALISE"]),
