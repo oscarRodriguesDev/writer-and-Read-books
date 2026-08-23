@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { inputCls, labelCls, btnPrimario, btnSecundario, cardCls } from "@/components/ui";
 import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
+import { ImagemEntidade } from "@/components/ImagemEntidade";
 
 export type CapituloDados = {
   id: string;
@@ -13,6 +14,7 @@ export type CapituloDados = {
   ordemEscrita: number;
   ordemNarrativa: number | null;
   status: string;
+  imagemUrl?: string | null;
 };
 
 export function GerenciadorCapitulos({
@@ -109,6 +111,7 @@ export function GerenciadorCapitulos({
       <ol className="space-y-2">
         {iniciais.map((c, i) => (
           <li key={c.id} className={`${cardCls} flex items-center gap-4 py-3`}>
+            <ImagemEntidade tipo="capitulo" id={c.id} url={c.imagemUrl} rotulo="Capa" />
             <span className="w-8 shrink-0 text-center font-bold text-faint">
               {c.ordemNarrativa ?? "—"}
             </span>

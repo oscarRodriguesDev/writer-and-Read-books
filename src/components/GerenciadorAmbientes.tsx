@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
 import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
+import { ImagemEntidade } from "@/components/ImagemEntidade";
 
 export type AmbienteDados = {
   id: string;
   nome: string;
+  imagemUrl?: string | null;
   localizacao: string | null;
   descricao: string | null;
   epoca: string | null;
@@ -149,6 +151,7 @@ export function GerenciadorAmbientes({
           </div>
         ) : (
           <div key={a.id} className={`${cardCls} flex items-start justify-between gap-4`}>
+            <ImagemEntidade tipo="ambiente" id={a.id} url={a.imagemUrl} rotulo="Ambiente" />
             <div className="min-w-0">
               <h3 className="font-semibold">{a.nome}</h3>
               {a.localizacao && <p className="mt-1 text-sm"><strong>Localização:</strong> {a.localizacao}</p>}

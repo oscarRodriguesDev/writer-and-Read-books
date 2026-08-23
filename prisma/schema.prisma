@@ -61,6 +61,8 @@ model Capitulo {
   ordemNarrativa Int?
   // PLANEJADO | RASCUNHO | REVISAO | FINAL
   status         String   @default("PLANEJADO")
+  // Imagem ilustrativa do capítulo (caminho público, ex.: /uploads/capitulo/x.jpg)
+  imagemUrl      String?
   criadoEm       DateTime @default(now())
   atualizadoEm   DateTime @updatedAt
 
@@ -111,6 +113,8 @@ model Personagem {
   nome          String
   // PROTAGONISTA | ANTAGONISTA | SECUNDARIO | COADJUVANTE
   papel         String   @default("SECUNDARIO")
+  // Imagem representativa (caminho público)
+  imagemUrl     String?
   fisico        String?
   psicologico   String?
   historia      String?
@@ -144,6 +148,8 @@ model Ambiente {
   id                    String  @id @default(cuid())
   obraId                String
   nome                  String
+  // Imagem representativa (caminho público)
+  imagemUrl             String?
   localizacao           String?
   descricao             String?
   epoca                 String?

@@ -48,3 +48,5 @@ prisma/dev.db-journal
 
 # prisma generated client
 src/generated/prisma
+# uploads de imagens do usuario (dados locais, nao versionar)  
+/public/uploads 

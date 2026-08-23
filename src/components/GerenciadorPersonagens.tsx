@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { PAPEIS, ROTULO_PAPEL } from "@/lib/constants";
 import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
 import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
+import { ImagemEntidade } from "@/components/ImagemEntidade";
 
 export type PersonagemDados = {
   id: string;
   nome: string;
   papel: string;
+  imagemUrl?: string | null;
   fisico: string | null;
   psicologico: string | null;
   historia: string | null;
@@ -161,6 +163,7 @@ export function GerenciadorPersonagens({
           </div>
         ) : (
           <div key={p.id} className={`${cardCls} flex items-start justify-between gap-4`}>
+            <ImagemEntidade tipo="personagem" id={p.id} url={p.imagemUrl} rotulo="Personagem" />
             <div className="min-w-0">
               <h3 className="font-semibold">{p.nome}</h3>
               <span className="mt-1 inline-block rounded-full bg-chipbg px-2 py-0.5 text-xs text-soft">
