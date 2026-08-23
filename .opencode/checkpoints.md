@@ -60,3 +60,14 @@ Consulte no início de cada interação para saber onde parou.
   - Comandos `/exit`, `/reset`, `/help`, `/stats` no loop de conversa
 - **`package.json`**: v3.1.0 → v4.0.0, novos arquivos incluídos no `files`
 - **Key no `.env`**: `KEY_NVIDIA=nvapi-...`
+
+## 2026-08-22 — MVP Fase 1 + Tema claro/escuro
+
+- **Banco**: Prisma 7 + SQLite (`prisma-adapter-sqlite`, node:sqlite — sem compilação nativa). `prisma.config.ts` + `DATABASE_URL=file:./dev.db` no `.env`. Migração `init` aplicada
+- **Schema completo**: Obra, Esqueleto, Capitulo (ordemEscrita/ordemNarrativa), Parte, Cena (estrutura 3×3 garantida por UNIQUE), Personagem (+Relacao), Ambiente, EventoLinhaDoTempo (datas em Json), CanonInfo, RegraObra, AnaliseIA/AchadoIA (status NOVO/EM_ANALISE/RESOLVIDO/IGNORADO/INTENCIONAL), VersaoCena, ImportacaoArquivo. Enums como String (SQLite não suporta enum)
+- **Rotas**: `/` dashboard, `/obras/nova`, `/obras/[obraId]` (+esqueleto/personagens/ambientes/capitulos), editor 3×3 com autosave em `/obras/[obraId]/capitulos/[capituloId]`, leitor em `/ler/[obraId]`
+- **APIs**: obras, esqueleto, personagens, ambientes, capitulos (+mover), cenas — validadas com Zod
+- **Tema claro/escuro**: tokens semânticos (`--surface`, `--line`, `--accent`, etc.) em `globals.css`, variante `dark` por classe, script anti-flash no layout, `AlternadorTema` fixo com localStorage
+- **Build**: `npm run build` passando
+- **Commit**: `0bdc7dd` na branch `vibecode` — push pendente (sem remote)
+- **Próximos passos sugeridos**: Fase 2 (linha do tempo UI, associações cena↔personagem/ambiente, importação txt/pdf) e Fase 3 (IA: análise de furos de roteiro)
