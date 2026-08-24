@@ -37,14 +37,20 @@ export async function POST(req: Request, { params }: Ctx) {
       ? { gte: alvo, lt: evento.ordemCronologica } // desloca +1
       : { gt: evento.ordemCronologica, lte: alvo }; // desloca -1
     const offset = (maximo?.ordemCronologica ?? 0) + 1_000_000;
+    const temp = offset * 2;
 
     await prisma.$transaction([
-      // 1) Manda o bloco para uma faixa livre (evita colisão de UNIQUE)
+      // 1) Tira o evento arrastado do caminho (slot antigo precisa ficar livre)
+      prisma.eventoLinhaDoTempo.update({
+        where: { id },
+        data: { ordemCronologica: temp },
+      }),
+      // 2) Manda o bloco para uma faixa livre (evita colisão entre os próprios itens)
       prisma.eventoLinhaDoTempo.updateMany({
         where: { obraId: evento.obraId, ordemCronologica: bloco },
         data: { ordemCronologica: { increment: offset } },
       }),
-      // 2) Assenta na posição final (net +1 ou -1)
+      // 3) Assenta o bloco na posição final (net +1 ou -1)
       prisma.eventoLinhaDoTempo.updateMany({
         where: { obraId: evento.obraId, ordemCronologica: { gte: offset } },
         data: {
@@ -52,6 +58,7 @@ export async function POST(req: Request, { params }: Ctx) {
             indoParaCima ? { decrement: offset - 1 } : { decrement: offset + 1 },
         },
       }),
+      // 4) Agora sim, posiciona o evento arrastado no alvo
       prisma.eventoLinhaDoTempo.update({
         where: { id },
         data: { ordemCronologica: alvo },
