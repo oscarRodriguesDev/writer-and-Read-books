@@ -31,6 +31,21 @@ export const criarObraSchema = z.object({
   descricao: textoOpcional(2000),
 });
 
+const STATUS_OBRA = ["PLANEJAMENTO", "ESCRITA", "REVISAO", "CONCLUIDA"] as const;
+
+/** PATCH /api/obras/[obraId] — edição completa dos dados da obra (RP-07/08). */
+export const atualizarObraSchema = z
+  .object({
+    titulo: z.string().trim().min(1, "Título é obrigatório").max(200),
+    genero: textoOpcional(100),
+    subgenero: textoOpcional(100),
+    tema: textoOpcional(200),
+    publicoAlvo: textoOpcional(200),
+    descricao: textoOpcional(2000),
+    status: z.enum(STATUS_OBRA),
+  })
+  .partial();
+
 export const esqueletoSchema = z.object({
   premissa: textoOpcional(5000),
   conflitoPrincipal: textoOpcional(5000),

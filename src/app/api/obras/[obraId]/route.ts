@@ -1,7 +1,32 @@
 import { prisma } from "@/lib/db";
-import { respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { atualizarObraSchema } from "@/lib/validators";
+import {
+  validarCorpo,
+  respostaErro,
+  tratarErroDesconhecido,
+} from "@/lib/api-helpers";
 
 type Ctx = { params: Promise<{ obraId: string }> };
+
+/** PATCH /api/obras/[obraId] — edita qualquer dado da obra (RP-07/08). */
+export async function PATCH(req: Request, { params }: Ctx) {
+  try {
+    const { obraId } = await params;
+    const atual = await prisma.obra.findUnique({ where: { id: obraId } });
+    if (!atual) return respostaErro("Obra não encontrada", 404);
+
+    const validacao = await validarCorpo(atualizarObraSchema, req);
+    if (!validacao.ok) return validacao.resposta;
+    const dados = Object.fromEntries(
+      Object.entries(validacao.dados).filter(([, v]) => v !== undefined),
+    );
+
+    const obra = await prisma.obra.update({ where: { id: obraId }, data: dados });
+    return Response.json(obra);
+  } catch (e) {
+    return tratarErroDesconhecido(e);
+  }
+}
 
 /** DELETE /api/obras/[obraId] — exclui a obra e tudo que pertence a ela
  *  (RP-06; cascata configurada no schema). */

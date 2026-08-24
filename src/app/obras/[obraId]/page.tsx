@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { NavegacaoObra } from "@/components/NavegacaoObra";
+import { FormEditarObra } from "@/components/FormEditarObra";
 import { cardCls, btnSecundario } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -71,9 +72,23 @@ export default async function ObraPage({
         <h2 className="mb-2 font-semibold">Dados da obra</h2>
         <dl className="space-y-1 text-sm">
           <div><dt className="inline font-medium">Status: </dt><dd className="inline">{obra.status}</dd></div>
+          {obra.subgenero && <div><dt className="inline font-medium">Subgênero: </dt><dd className="inline">{obra.subgenero}</dd></div>}
+          {obra.publicoAlvo && <div><dt className="inline font-medium">Público-alvo: </dt><dd className="inline">{obra.publicoAlvo}</dd></div>}
           <div><dt className="inline font-medium">Tema: </dt><dd className="inline">{obra.tema ?? "—"}</dd></div>
           <div><dt className="inline font-medium">Descrição: </dt><dd className="inline">{obra.descricao ?? "—"}</dd></div>
         </dl>
+        <FormEditarObra
+          obraId={obra.id}
+          inicial={{
+            titulo: obra.titulo,
+            genero: obra.genero,
+            subgenero: obra.subgenero,
+            tema: obra.tema,
+            publicoAlvo: obra.publicoAlvo,
+            descricao: obra.descricao,
+            status: obra.status,
+          }}
+        />
       </section>
 
       {obra.capitulos.length > 0 && (
