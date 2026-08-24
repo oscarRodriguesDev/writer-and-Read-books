@@ -83,6 +83,34 @@ export function ImagemEntidade({
     }
   }
 
+  /** Importa imagem codificada em Base64 (respostas de APIs de geração
+   *  de imagem, ex.: Gemini) decodificando e salvando no servidor. */
+  async function importarBase64() {
+    const entrada = window.prompt(
+      "Cole o Base64 ou Data URL da imagem (data:image/png;base64,…):",
+    );
+    if (!entrada?.trim()) return;
+    setErro(null);
+    setEnviando(true);
+    try {
+      const res = await fetch("/api/upload/base64", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo, id, dados: entrada.trim() }),
+      });
+      if (!res.ok) {
+        const corpo = (await res.json().catch(() => null)) as { erro?: string } | null;
+        throw new Error(corpo?.erro ?? "Falha ao importar o Base64.");
+      }
+      setFalhouCarregar(false);
+      router.refresh();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao importar o Base64.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
   async function definirPorUrl() {
     const entrada = window.prompt(
       "URL da imagem (http:// ou https://):",
@@ -162,15 +190,26 @@ export function ImagemEntidade({
               📋 Colar
             </button>
             {permitirUrl && (
-              <button
-                type="button"
-                onClick={definirPorUrl}
-                disabled={enviando}
-                title="Definir imagem por URL externa"
-                className="rounded-md border border-inputline bg-surface px-2 py-0.5 text-xs text-soft hover:bg-hoverbg disabled:opacity-50"
-              >
-                🔗
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={definirPorUrl}
+                  disabled={enviando}
+                  title="Definir imagem por URL externa"
+                  className="rounded-md border border-inputline bg-surface px-2 py-0.5 text-xs text-soft hover:bg-hoverbg disabled:opacity-50"
+                >
+                  🔗
+                </button>
+                <button
+                  type="button"
+                  onClick={importarBase64}
+                  disabled={enviando}
+                  title="Importar imagem em Base64 (APIs de geração)"
+                  className="rounded-md border border-inputline bg-surface px-2 py-0.5 text-xs text-soft hover:bg-hoverbg disabled:opacity-50"
+                >
+                  🧩
+                </button>
+              </>
             )}
             <button
               type="button"
@@ -194,14 +233,25 @@ export function ImagemEntidade({
             {enviando ? "⏳ Enviando…" : `🖼️ ${rotulo}`}
           </button>
           {permitirUrl && (
-            <button
-              type="button"
-              onClick={definirPorUrl}
-              disabled={enviando}
-              className="w-full rounded-md border border-inputline bg-surface px-2 py-0.5 text-xs text-soft hover:bg-hoverbg disabled:opacity-50"
-            >
-              🔗 Usar URL
-            </button>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={definirPorUrl}
+                disabled={enviando}
+                className="flex-1 rounded-md border border-inputline bg-surface px-2 py-0.5 text-xs text-soft hover:bg-hoverbg disabled:opacity-50"
+              >
+                🔗 URL
+              </button>
+              <button
+                type="button"
+                onClick={importarBase64}
+                disabled={enviando}
+                title="Importar Base64 de APIs de geração (Gemini etc.)"
+                className="flex-1 rounded-md border border-inputline bg-surface px-2 py-0.5 text-xs text-soft hover:bg-hoverbg disabled:opacity-50"
+              >
+                🧩 Base64
+              </button>
+            </div>
           )}
           <button
             type="button"
