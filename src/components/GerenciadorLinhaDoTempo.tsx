@@ -283,15 +283,42 @@ function FormEvento({
   );
 }
 
-/** Botão "+" posicionado sobre a linha para inserir evento naquele ponto. */
-function BotaoInserir({ aoClicar }: { aoClicar: () => void }) {
+/** Botão "+" posicionado sobre a linha para inserir evento naquele ponto;
+ *  também funciona como zona de soltura do arrastar e soltar. */
+function BotaoInserir({
+  aoClicar,
+  aoSoltar,
+}: {
+  aoClicar: () => void;
+  aoSoltar?: (arrastandoId: string) => void;
+}) {
+  const [destacado, setDestacado] = useState(false);
   return (
     <button
       type="button"
       onClick={aoClicar}
-      title="Adicionar acontecimento neste ponto da linha do tempo"
-      aria-label="Adicionar acontecimento neste ponto"
-      className="absolute -left-[2.35rem] flex h-6 w-6 items-center justify-center rounded-full border-2 border-line bg-surface text-sm font-bold text-muted transition hover:border-accent hover:text-accent"
+      onDragOver={(e) => {
+        if (!aoSoltar) return;
+        e.preventDefault();
+        setDestacado(true);
+      }}
+      onDragLeave={() => setDestacado(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDestacado(false);
+        if (aoSoltar) aoSoltar(e.dataTransfer.getData("text/plain"));
+      }}
+      title={
+        aoSoltar
+          ? "Clique para adicionar ou arraste um evento até aqui para reposicionar"
+          : "Adicionar acontecimento neste ponto da linha do tempo"
+      }
+      aria-label="Ponto da linha do tempo"
+      className={`absolute -left-[2.35rem] flex h-6 w-6 items-center justify-center rounded-full border-2 text-sm font-bold transition ${
+        destacado
+          ? "scale-125 border-accent bg-accent text-onaccent"
+          : "border-line bg-surface text-muted hover:border-accent hover:text-accent"
+      }`}
     >
       +
     </button>
@@ -352,6 +379,23 @@ export function GerenciadorLinhaDoTempo({
     } finally {
       setMapeando(false);
     }
+  }
+
+  // ---- Arrastar e soltar para reposicionar eventos ----
+  const [arrastandoId, setArrastandoId] = useState<string | null>(null);
+
+  async function soltarEm(posicao: number) {
+    if (!arrastandoId) return;
+    const id = arrastandoId;
+    setArrastandoId(null);
+    const erro = await requisicao(`/api/eventos/${id}/mover`, "POST", {
+      ordemCronologica: posicao,
+    });
+    if (erro) {
+      setErroGeral(erro);
+      return;
+    }
+    router.refresh();
   }
 
   // ---- Inserção num ponto específico da linha (clique no "+") ----
@@ -559,11 +603,16 @@ export function GerenciadorLinhaDoTempo({
 
       {/* Linha do tempo vertical gráfica */}
       <ol className="relative ml-4 space-y-2 border-l-2 border-line pl-6">
-        {/* Ponto de inserção no início da linha */}
+        {/* Ponto de inserção/soltura no início da linha */}
         <li className="relative -my-1">
           <BotaoInserir
             aoClicar={() =>
               setInserindoEm(eventosIniciais[0]?.ordemCronologica ?? 0)
+            }
+            aoSoltar={
+              arrastandoId
+                ? (id) => soltarEm(eventosIniciais[0]?.ordemCronologica ?? 0)
+                : undefined
             }
           />
         </li>
@@ -589,7 +638,18 @@ export function GerenciadorLinhaDoTempo({
               </div>
             ) : (
               <>
-                <div className={`${cardCls} group py-3 transition hover:border-faint`}>
+                <div
+                  draggable={editandoId !== ev.id && sugestaoDe !== ev.id}
+                  onDragStart={(e) => {
+                    setArrastandoId(ev.id);
+                    e.dataTransfer.setData("text/plain", ev.id);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragEnd={() => setArrastandoId(null)}
+                  className={`${cardCls} group cursor-grab py-3 transition hover:border-faint active:cursor-grabbing ${
+                    arrastandoId === ev.id ? "opacity-50" : ""
+                  }`}
+                >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -703,11 +763,17 @@ export function GerenciadorLinhaDoTempo({
                   )}
                 </div>
 
-                {/* Ponto de inserção entre este evento e o próximo */}
+                {/* Ponto de inserção/soltura entre este evento e o próximo */}
                 {i < eventosIniciais.length - 1 && (
                   <BotaoInserir
                     aoClicar={() =>
                       setInserindoEm(eventosIniciais[i + 1].ordemCronologica)
+                    }
+                    aoSoltar={
+                      arrastandoId
+                        ? (id) =>
+                            soltarEm(eventosIniciais[i + 1].ordemCronologica)
+                        : undefined
                     }
                   />
                 )}
@@ -715,7 +781,7 @@ export function GerenciadorLinhaDoTempo({
             )}
           </li>
         ))}
-        {/* Inserção no fim da linha */}
+        {/* Inserção/soltura no fim da linha */}
         {eventosIniciais.length > 0 && (
           <li className="relative -my-1">
             <BotaoInserir
@@ -723,6 +789,15 @@ export function GerenciadorLinhaDoTempo({
                 setInserindoEm(
                   eventosIniciais[eventosIniciais.length - 1].ordemCronologica + 1,
                 )
+              }
+              aoSoltar={
+                arrastandoId
+                  ? (id) =>
+                      soltarEm(
+                        eventosIniciais[eventosIniciais.length - 1]
+                          .ordemCronologica + 1,
+                      )
+                  : undefined
               }
             />
           </li>

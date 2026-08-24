@@ -301,6 +301,11 @@ export const pedidoEventoIdSchema = z.object({
   eventoId: z.string().trim().min(1).max(50),
 });
 
+/** POST /api/eventos/[id]/mover — arrastar e soltar na linha do tempo. */
+export const moverEventoSchema = z.object({
+  ordemCronologica: z.number().int().min(0).max(1_000_000),
+});
+
 /** Resposta da geração de prompt de imagem (capítulo/personagem/ambiente). */
 export const respostaPromptImagemSchema = z.object({
   prompt: z.string().trim().min(1).max(4_000),
