@@ -54,6 +54,35 @@ export function ImagemEntidade({
     }
   }
 
+  /** Lê uma imagem diretamente da área de transferência (Ctrl+C na imagem
+   *  do Gemini/ChatGPT/etc. e cola aqui) — contorna URLs blob temporárias. */
+  async function colarDaAreaTransferencia() {
+    setErro(null);
+    try {
+      const itens = await navigator.clipboard.read();
+      let arquivo: File | null = null;
+      for (const item of itens) {
+        const tipo = item.types.find((t) => t.startsWith("image/"));
+        if (tipo) {
+          const blob = await item.getType(tipo);
+          arquivo = new File([blob], `colado.${tipo.split("/")[1] ?? "png"}`, {
+            type: tipo,
+          });
+          break;
+        }
+      }
+      if (!arquivo)
+        throw new Error(
+          "Nenhuma imagem encontrada na área de transferência. Copie a imagem primeiro (botão direito → Copiar imagem).",
+        );
+      await subir(arquivo);
+    } catch (e) {
+      setErro(
+        e instanceof Error ? e.message : "Não foi possível ler a área de transferência.",
+      );
+    }
+  }
+
   async function definirPorUrl() {
     const entrada = window.prompt(
       "URL da imagem (http:// ou https://):",
@@ -123,6 +152,15 @@ export function ImagemEntidade({
             >
               Trocar
             </button>
+            <button
+              type="button"
+              onClick={colarDaAreaTransferencia}
+              disabled={enviando}
+              title="Cola uma imagem copiada (ex.: do Gemini, ChatGPT)"
+              className="rounded-md border border-inputline bg-surface px-2 py-0.5 text-xs text-soft hover:bg-hoverbg disabled:opacity-50"
+            >
+              📋 Colar
+            </button>
             {permitirUrl && (
               <button
                 type="button"
@@ -165,6 +203,15 @@ export function ImagemEntidade({
               🔗 Usar URL
             </button>
           )}
+          <button
+            type="button"
+            onClick={colarDaAreaTransferencia}
+            disabled={enviando}
+            title="Copie a imagem no Gemini/ChatGPT e cole aqui"
+            className="w-full rounded-md border border-inputline bg-surface px-2 py-0.5 text-xs text-soft hover:bg-hoverbg disabled:opacity-50"
+          >
+            📋 Colar imagem copiada
+          </button>
         </div>
       )}
       {erro && <p className="mt-1 max-w-28 text-xs text-red-600">{erro}</p>}
