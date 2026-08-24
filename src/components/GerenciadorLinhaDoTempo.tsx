@@ -290,35 +290,43 @@ function BotaoInserir({
   aoSoltar,
 }: {
   aoClicar: () => void;
-  aoSoltar?: (arrastandoId: string) => void;
+  aoSoltar?: () => void;
 }) {
   const [destacado, setDestacado] = useState(false);
   return (
     <button
       type="button"
       onClick={aoClicar}
+      // Área de soltura generosa além do botão visual
+      className={`absolute -left-[2.35rem] flex h-6 w-6 items-center justify-center rounded-full border-2 text-sm font-bold transition before:absolute before:-inset-3 before:rounded-full ${
+        destacado
+          ? "scale-125 border-accent bg-accent text-onaccent"
+          : "border-line bg-surface text-muted hover:border-accent hover:text-accent"
+      }`}
+      onDragEnter={(e) => {
+        if (!aoSoltar) return;
+        e.preventDefault();
+        setDestacado(true);
+      }}
       onDragOver={(e) => {
         if (!aoSoltar) return;
         e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
         setDestacado(true);
       }}
       onDragLeave={() => setDestacado(false)}
       onDrop={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         setDestacado(false);
-        if (aoSoltar) aoSoltar(e.dataTransfer.getData("text/plain"));
+        aoSoltar?.();
       }}
       title={
         aoSoltar
-          ? "Clique para adicionar ou arraste um evento até aqui para reposicionar"
-          : "Adicionar acontecimento neste ponto da linha do tempo"
+          ? "Solte aqui para reposicionar o evento neste ponto"
+          : "Clique para adicionar acontecimento neste ponto da linha do tempo"
       }
       aria-label="Ponto da linha do tempo"
-      className={`absolute -left-[2.35rem] flex h-6 w-6 items-center justify-center rounded-full border-2 text-sm font-bold transition ${
-        destacado
-          ? "scale-125 border-accent bg-accent text-onaccent"
-          : "border-line bg-surface text-muted hover:border-accent hover:text-accent"
-      }`}
     >
       +
     </button>
@@ -383,11 +391,13 @@ export function GerenciadorLinhaDoTempo({
 
   // ---- Arrastar e soltar para reposicionar eventos ----
   const [arrastandoId, setArrastandoId] = useState<string | null>(null);
+  const [dropAlvo, setDropAlvo] = useState<string | null>(null);
 
   async function soltarEm(posicao: number) {
     if (!arrastandoId) return;
     const id = arrastandoId;
     setArrastandoId(null);
+    setDropAlvo(null);
     const erro = await requisicao(`/api/eventos/${id}/mover`, "POST", {
       ordemCronologica: posicao,
     });
@@ -611,7 +621,7 @@ export function GerenciadorLinhaDoTempo({
             }
             aoSoltar={
               arrastandoId
-                ? (id) => soltarEm(eventosIniciais[0]?.ordemCronologica ?? 0)
+                ? () => soltarEm(eventosIniciais[0]?.ordemCronologica ?? 0)
                 : undefined
             }
           />
@@ -645,11 +655,40 @@ export function GerenciadorLinhaDoTempo({
                     e.dataTransfer.setData("text/plain", ev.id);
                     e.dataTransfer.effectAllowed = "move";
                   }}
-                  onDragEnd={() => setArrastandoId(null)}
+                  onDragEnd={() => {
+                    setArrastandoId(null);
+                    setDropAlvo(null);
+                  }}
+                  onDragOver={(e) => {
+                    // Card inteiro é zona de soltura: soltar = mover para a posição deste evento
+                    if (!arrastandoId || arrastandoId === ev.id) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    setDropAlvo(ev.id);
+                  }}
+                  onDragLeave={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      setDropAlvo((atual) => (atual === ev.id ? null : atual));
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDropAlvo(null);
+                    void soltarEm(ev.ordemCronologica);
+                  }}
                   className={`${cardCls} group cursor-grab py-3 transition hover:border-faint active:cursor-grabbing ${
-                    arrastandoId === ev.id ? "opacity-50" : ""
+                    arrastandoId === ev.id
+                      ? "opacity-50"
+                      : dropAlvo === ev.id
+                        ? "-mt-1 border-accent border-t-4 pt-5"
+                        : ""
                   }`}
                 >
+                  {dropAlvo === ev.id && (
+                    <p aria-hidden className="mb-1 text-center text-xs font-medium text-accent">
+                      ↓ soltar para posicionar aqui
+                    </p>
+                  )}
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -771,8 +810,7 @@ export function GerenciadorLinhaDoTempo({
                     }
                     aoSoltar={
                       arrastandoId
-                        ? (id) =>
-                            soltarEm(eventosIniciais[i + 1].ordemCronologica)
+                        ? () => soltarEm(eventosIniciais[i + 1].ordemCronologica)
                         : undefined
                     }
                   />
@@ -792,7 +830,7 @@ export function GerenciadorLinhaDoTempo({
               }
               aoSoltar={
                 arrastandoId
-                  ? (id) =>
+                  ? () =>
                       soltarEm(
                         eventosIniciais[eventosIniciais.length - 1]
                           .ordemCronologica + 1,
