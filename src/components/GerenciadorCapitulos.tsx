@@ -111,7 +111,7 @@ export function GerenciadorCapitulos({
       <ol className="space-y-2">
         {iniciais.map((c, i) => (
           <li key={c.id} className={`${cardCls} flex items-center gap-4 py-3`}>
-            <ImagemEntidade tipo="capitulo" id={c.id} url={c.imagemUrl} rotulo="Capa" />
+            <ImagemEntidade tipo="capitulo" id={c.id} url={c.imagemUrl} rotulo="Capa" permitirUrl />
             <span className="w-8 shrink-0 text-center font-bold text-faint">
               {c.ordemNarrativa ?? "—"}
             </span>

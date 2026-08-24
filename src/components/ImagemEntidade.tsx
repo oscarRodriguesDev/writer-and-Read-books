@@ -16,11 +16,14 @@ export function ImagemEntidade({
   id,
   url,
   rotulo = "Imagem",
+  permitirUrl = false,
 }: {
   tipo: Tipo;
   id: string;
   url?: string | null;
   rotulo?: string;
+  /** Habilita definir a imagem por URL externa (além do upload). */
+  permitirUrl?: boolean;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,6 +49,32 @@ export function ImagemEntidade({
     } finally {
       setEnviando(false);
       if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  async function definirPorUrl() {
+    const entrada = window.prompt(
+      "URL da imagem (http:// ou https://):",
+      "https://",
+    );
+    if (!entrada || entrada.trim() === "" || entrada.trim() === "https://") return;
+    setErro(null);
+    setEnviando(true);
+    try {
+      const res = await fetch("/api/upload/url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo, id, url: entrada.trim() }),
+      });
+      if (!res.ok) {
+        const corpo = (await res.json().catch(() => null)) as { erro?: string } | null;
+        throw new Error(corpo?.erro ?? "Falha ao definir a URL.");
+      }
+      router.refresh();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao definir a URL.");
+    } finally {
+      setEnviando(false);
     }
   }
 
@@ -84,6 +113,17 @@ export function ImagemEntidade({
             >
               Trocar
             </button>
+            {permitirUrl && (
+              <button
+                type="button"
+                onClick={definirPorUrl}
+                disabled={enviando}
+                title="Definir imagem por URL externa"
+                className="rounded-md border border-inputline bg-surface px-2 py-0.5 text-xs text-soft hover:bg-hoverbg disabled:opacity-50"
+              >
+                🔗
+              </button>
+            )}
             <button
               type="button"
               onClick={remover}
@@ -95,15 +135,27 @@ export function ImagemEntidade({
           </div>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={enviando}
-          title="Subir imagem (JPG, PNG ou WebP até 5 MB)"
-          className="flex h-28 w-28 flex-col items-center justify-center rounded-md border border-dashed border-line text-xs text-faint hover:bg-hoverbg disabled:opacity-50"
-        >
-          {enviando ? "⏳ Enviando…" : `🖼️ ${rotulo}`}
-        </button>
+        <div className="space-y-1">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={enviando}
+            title="Subir imagem (JPG, PNG ou WebP até 5 MB)"
+            className="flex h-28 w-28 flex-col items-center justify-center rounded-md border border-dashed border-line text-xs text-faint hover:bg-hoverbg disabled:opacity-50"
+          >
+            {enviando ? "⏳ Enviando…" : `🖼️ ${rotulo}`}
+          </button>
+          {permitirUrl && (
+            <button
+              type="button"
+              onClick={definirPorUrl}
+              disabled={enviando}
+              className="w-full rounded-md border border-inputline bg-surface px-2 py-0.5 text-xs text-soft hover:bg-hoverbg disabled:opacity-50"
+            >
+              🔗 Usar URL
+            </button>
+          )}
+        </div>
       )}
       {erro && <p className="mt-1 max-w-28 text-xs text-red-600">{erro}</p>}
       <input

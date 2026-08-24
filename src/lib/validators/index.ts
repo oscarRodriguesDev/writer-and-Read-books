@@ -306,6 +306,20 @@ export const moverEventoSchema = z.object({
   ordemCronologica: z.number().int().min(0).max(1_000_000),
 });
 
+/** POST /api/upload/url — define a imagem de um registro por URL externa. */
+export const urlImagemSchema = z.object({
+  tipo: z.enum(["personagem", "ambiente", "capitulo"]),
+  id: z.string().trim().min(1).max(50),
+  url: z
+    .string()
+    .trim()
+    .url("Informe uma URL válida (https://…)")
+    .max(1_000)
+    .refine((u) => /^https?:\/\//i.test(u), {
+      message: "A URL deve começar com http:// ou https://",
+    }),
+});
+
 /** Resposta da geração de prompt de imagem (capítulo/personagem/ambiente). */
 export const respostaPromptImagemSchema = z.object({
   prompt: z.string().trim().min(1).max(4_000),
