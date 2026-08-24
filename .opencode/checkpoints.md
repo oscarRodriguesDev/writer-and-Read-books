@@ -94,3 +94,44 @@ Consulte no início de cada interação para saber onde parou.
 - **UI**: página `/obras/[obraId]/analise` + aba "Análise IA" no `NavegacaoObra`; painel "Analisar cena" no editor (`PainelAchadosCena`) com ações Resolver/Ignorar/Intencional
 - **Build**: `npm run build` passando
 - **Próximos passos sugeridos**: marcar trechos problemáticos no texto (RF-39, offsets), testes automatizados das APIs de análise, ajuste fino do prompt conforme qualidade dos achados
+
+## 2026-08-23 — Sessão intensiva: IA assistente completa + imagens + timeline 2.0
+
+Estado final: build passando, working tree limpo na `vibecode`, ~15 commits desde a Fase 3 (`7cb5fb1`…`8cbfbce`). Push pendente (sem remote).
+
+### IA como assistente de escrita
+- **Gerar cena** (RF-46): resumo no campo objetivo → ✨ Gera com IA → prévia Usar/Descartar; resumo vai no corpo da requisição (evita corrida com autosave); timeout 300s + max_tokens 4096
+- **Revisar cena** (RF-49): instrução livre → IA aplica só o pedido; prévia
+- **Corrigir achado**: 🔧 Corrigir com IA em cada alerta — usa sugestão da análise e/ou instrução livre; aplicar = PATCH na cena + status RESOLVIDO
+- **Modelo**: `nvidia/nemotron-3-ultra-550b-a55b` com `chat_template_kwargs.enable_thinking:false`; testado ao vivo (200 OK)
+- **Fix estrutural**: `tratarErroDesconhecido` agora repassa `ErroAplicacao` (status+mensagem); schemas IA usam `listaTolerante` (truncate em vez de rejeitar)
+
+### Entidades autoformantes
+- 🧠 Reconhecer entidades por cena e em lote (capítulo): personagens/ambientes/tempo diegético → associações + evento na timeline
+- Extração e mapeamentos **criam** entidades novas (dedupe case-insensitive, limites 5/20)
+- Mapeamento completo de personagens e ambientes (`/personagens/mapear`, `/ambientes/mapear`)
+- Busca semântica de personagens (`/personagens/buscar`) com % relevância + motivo
+
+### Esqueleto autoformante
+- `/esqueleto/sugerir` propõe só campos vazios; FormEsqueleto controlado com badge "sugestão" e descarte individual; salva só no botão
+
+### Imagens
+- Prompts de imagem para geradores externos (Gemini/DALL-E/Midjourney): `/api/prompts-imagem` + BotaoPromptImagem nos 3 gerenciadores
+- Upload: `imagemUrl String?` em Personagem/Ambiente/Capitulo (migração aplicada); arquivos locais em `public/uploads/{tipo}/` ≤5MB JPG/PNG/WebP; `/api/upload` POST/DELETE
+
+### Linha do tempo 2.0
+- Mapeamento IA (`/eventos/mapear`): extrai acontecimentos em ordem cronológica do texto escrito
+- Linha gráfica vertical: marcadores, badges de escala/data, "+" clicáveis em qualquer ponto
+- Inserção posicional com deslocamento (`/eventos/inserir`, transação)
+- Sugestão de capítulos (`/eventos/sugerir-capitulos`): cria/altera capítulos para apoiar o acontecimento; abre automático após inserir; aceitar criação já vincula capítulo↔evento
+
+### Obra
+- Edição completa dos dados (PATCH + FormEditarObra na Visão Geral) com status PLANEJAMENTO/ESCRITA/REVISAO/CONCLUIDA
+- Exclusão com confirmação digitando o título (cascata via schema)
+
+### Próximos passos sugeridos
+1. Marcar trechos problemáticos no editor (RF-39, offsets já no schema)
+2. Dashboard da obra com indicadores (RF-67/68)
+3. Testes automatizados das rotas de IA
+4. Busca semântica de ambientes (replicar a de personagens)
+5. Configurar remote Git para push
