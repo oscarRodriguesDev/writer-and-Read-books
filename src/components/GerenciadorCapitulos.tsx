@@ -127,7 +127,7 @@ export function GerenciadorCapitulos({
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <BotaoPromptImagem tipo="capitulo" id={c.id} rotulo="🎨" />
+              <BotaoPromptImagem tipo="capitulo" id={c.id} rotulo="🎨" permitirGerar />
               <div className="flex flex-col gap-1">
                 <button
                   onClick={() => mover(c.id, "CIMA")}

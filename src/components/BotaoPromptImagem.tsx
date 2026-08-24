@@ -1,26 +1,54 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 /**
  * Botão "🎨 Prompt de imagem": pede à IA um prompt representativo
  * (capítulo/personagem/ambiente) e exibe para copiar e colar no gerador
- * de imagem que o autor preferir (Gemini, ChatGPT, Midjourney…).
+ * que o autor preferir (Gemini, ChatGPT, Midjourney…).
+ * Com permitirGerar: também gera a imagem direto pela NVIDIA NIM e
+ * salva automaticamente na entidade.
  */
 export function BotaoPromptImagem({
   tipo,
   id,
   rotulo = "🎨 Prompt de imagem",
+  permitirGerar = false,
 }: {
   tipo: "capitulo" | "personagem" | "ambiente";
   id: string;
   rotulo?: string;
+  permitirGerar?: boolean;
 }) {
+  const router = useRouter();
   const [aberto, setAberto] = useState(false);
   const [gerando, setGerando] = useState(false);
+  const [gerandoImagem, setGerandoImagem] = useState(false);
   const [prompt, setPrompt] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
+
+  async function gerarImagem() {
+    setErro(null);
+    setGerandoImagem(true);
+    try {
+      const res = await fetch("/api/gerar-imagem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo, id }),
+      });
+      if (!res.ok) {
+        const corpo = (await res.json().catch(() => null)) as { erro?: string } | null;
+        throw new Error(corpo?.erro ?? "Falha na geração da imagem.");
+      }
+      router.refresh();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha na geração da imagem.");
+    } finally {
+      setGerandoImagem(false);
+    }
+  }
 
   async function gerar() {
     if (prompt) {
@@ -71,6 +99,20 @@ export function BotaoPromptImagem({
       >
         {gerando ? "⏳ Criando prompt…" : rotulo}
       </button>
+
+      {permitirGerar && (
+        <button
+          type="button"
+          onClick={gerarImagem}
+          disabled={gerandoImagem || gerando}
+          title="Gera a imagem automaticamente (NVIDIA NIM) e salva na entidade"
+          className="mt-2 w-fit rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-onaccent hover:bg-accenthover disabled:opacity-50"
+        >
+          {gerandoImagem
+            ? "⏳ Gerando imagem… pode levar minutos"
+            : "🖼️ Gerar imagem com IA"}
+        </button>
+      )}
 
       {erro && <p className="mt-1 text-xs text-red-600">{erro}</p>}
 

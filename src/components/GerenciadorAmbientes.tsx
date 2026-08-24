@@ -228,7 +228,7 @@ export function GerenciadorAmbientes({
               {a.importanciaNarrativa && <p className="text-sm"><strong>Importância:</strong> {a.importanciaNarrativa}</p>}
             </div>
             <div className="flex shrink-0 flex-col gap-2">
-              <BotaoPromptImagem tipo="ambiente" id={a.id} />
+              <BotaoPromptImagem tipo="ambiente" id={a.id} permitirGerar />
               <button onClick={() => setEditandoId(a.id)} className={btnSecundario}>
                 Editar
               </button>
