@@ -14,6 +14,16 @@ const textoOpcional = (max: number) =>
     z.string().trim().max(max).nullish(),
   );
 
+/**
+ * Array tolerante: corta o excesso em vez de rejeitar a resposta inteira da IA
+ * quando ela devolve mais itens que o limite.
+ */
+const listaTolerante = <S extends z.ZodTypeAny>(elemento: S, max: number) =>
+  z.preprocess(
+    (v) => (Array.isArray(v) ? v.slice(0, max) : undefined),
+    z.array(elemento).max(max).default([]),
+  );
+
 export const criarObraSchema = z.object({
   titulo: z.string().trim().min(1, "Título é obrigatório").max(200),
   genero: textoOpcional(100),
@@ -128,7 +138,7 @@ const achadoIaBruto = z.object({
 
 /** Resposta esperada do provedor de IA. */
 export const respostaAnaliseIaSchema = z.object({
-  achados: z.array(achadoIaBruto).max(100).default([]),
+  achados: listaTolerante(achadoIaBruto, 100),
 });
 
 /** Resposta da geração de cena por IA (RF-46). */
@@ -144,10 +154,10 @@ const entidadeNovaSchema = z.object({
 
 /** Extração de entidades de uma cena: personagens, ambientes e marcação temporal (RF-74/18/19). */
 export const respostaExtracaoCenaSchema = z.object({
-  personagens: z.array(z.string()).max(500).default([]),
-  ambientes: z.array(z.string()).max(500).default([]),
-  novosPersonagens: z.array(entidadeNovaSchema).max(5).default([]),
-  novosAmbientes: z.array(entidadeNovaSchema).max(5).default([]),
+  personagens: listaTolerante(z.string(), 500),
+  ambientes: listaTolerante(z.string(), 500),
+  novosPersonagens: listaTolerante(entidadeNovaSchema, 5),
+  novosAmbientes: listaTolerante(entidadeNovaSchema, 5),
   temporal: z
     .object({
       detectado: z.boolean().default(false),
@@ -188,61 +198,43 @@ export const pedidoBuscaPersonagensSchema = z.object({
 });
 
 export const respostaBuscaPersonagensSchema = z.object({
-  resultados: z
-    .array(
-      z.object({
-        id: z.string().trim().min(1).max(50),
-        relevancia: z.number().int().min(0).max(100),
-        motivo: z.string().trim().min(1).max(1_000),
-      }),
-    )
-    .max(20)
-    .default([]),
+  resultados: listaTolerante(
+    z.object({
+      id: z.string().trim().min(1).max(50),
+      relevancia: z.number().int().min(0).max(100),
+      motivo: z.string().trim().min(1).max(1_000),
+    }),
+    20,
+  ),
 });
 
 /** Mapeamento completo de personagens da obra: existentes + novos a criar (RF-74). */
+const mapeamentoPersonagemExistente = z.object({
+  id: z.string().trim().min(1).max(50),
+  motivo: z.string().trim().max(1_000).default(""),
+});
+const personagemNovoSchema = z.object({
+  nome: z.string().trim().min(1).max(200),
+  papel: z.enum(PAPEIS).default("SECUNDARIO"),
+  descricao: textoOpcional(2_000),
+});
 export const respostaMapeamentoPersonagensSchema = z.object({
-  existentes: z
-    .array(
-      z.object({
-        id: z.string().trim().min(1).max(50),
-        motivo: z.string().trim().max(1_000).default(""),
-      }),
-    )
-    .max(50)
-    .default([]),
-  novos: z
-    .array(
-      z.object({
-        nome: z.string().trim().min(1).max(200),
-        papel: z.enum(PAPEIS).default("SECUNDARIO"),
-        descricao: textoOpcional(2_000),
-      }),
-    )
-    .max(20)
-    .default([]),
+  existentes: listaTolerante(mapeamentoPersonagemExistente, 50),
+  novos: listaTolerante(personagemNovoSchema, 20),
 });
 
 /** Mapeamento completo de ambientes da obra (RF-74). */
+const mapeamentoAmbienteExistente = z.object({
+  id: z.string().trim().min(1).max(50),
+  motivo: z.string().trim().max(1_000).default(""),
+});
+const ambienteNovoSchema = z.object({
+  nome: z.string().trim().min(1).max(200),
+  descricao: textoOpcional(2_000),
+});
 export const respostaMapeamentoAmbientesSchema = z.object({
-  existentes: z
-    .array(
-      z.object({
-        id: z.string().trim().min(1).max(50),
-        motivo: z.string().trim().max(1_000).default(""),
-      }),
-    )
-    .max(50)
-    .default([]),
-  novos: z
-    .array(
-      z.object({
-        nome: z.string().trim().min(1).max(200),
-        descricao: textoOpcional(2_000),
-      }),
-    )
-    .max(20)
-    .default([]),
+  existentes: listaTolerante(mapeamentoAmbienteExistente, 50),
+  novos: listaTolerante(ambienteNovoSchema, 20),
 });
 
 /** Resposta da geração de prompt de imagem (capítulo/personagem/ambiente). */
