@@ -283,6 +283,21 @@ function FormEvento({
   );
 }
 
+/** Botão "+" posicionado sobre a linha para inserir evento naquele ponto. */
+function BotaoInserir({ aoClicar }: { aoClicar: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={aoClicar}
+      title="Adicionar acontecimento neste ponto da linha do tempo"
+      aria-label="Adicionar acontecimento neste ponto"
+      className="absolute -left-[2.35rem] flex h-6 w-6 items-center justify-center rounded-full border-2 border-line bg-surface text-sm font-bold text-muted transition hover:border-accent hover:text-accent"
+    >
+      +
+    </button>
+  );
+}
+
 export function GerenciadorLinhaDoTempo({
   obraId,
   eventosIniciais,
@@ -296,6 +311,154 @@ export function GerenciadorLinhaDoTempo({
   const [criando, setCriando] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [erroGeral, setErroGeral] = useState<string | null>(null);
+
+  // ---- Mapeamento da linha do tempo via IA (RF-20/21/74) ----
+  const [mapeando, setMapeando] = useState(false);
+  const [resumoMapeamento, setResumoMapeamento] = useState<string | null>(null);
+
+  async function mapear() {
+    if (
+      !window.confirm(
+        "A IA vai ler toda a obra escrita e CADASTRAR os acontecimentos que ainda não estão na linha do tempo (em ordem cronológica). Continuar?",
+      )
+    )
+      return;
+    setMapeando(true);
+    setResumoMapeamento(null);
+    try {
+      const res = await fetch(`/api/obras/${obraId}/eventos/mapear`, {
+        method: "POST",
+      });
+      const corpo = (await res.json().catch(() => null)) as
+        | {
+            existentes?: Array<{ titulo: string }>;
+            criados?: Array<{ titulo: string }>;
+            erro?: string;
+          }
+        | null;
+      if (!res.ok || !corpo)
+        throw new Error(corpo?.erro ?? "Falha no mapeamento.");
+      const partes: string[] = [];
+      if (corpo.criados?.length)
+        partes.push(`🆕 Criados: ${corpo.criados.map((e) => e.titulo).join(", ")}`);
+      if (corpo.existentes?.length)
+        partes.push(`✅ Confirmados: ${corpo.existentes.map((e) => e.titulo).join(", ")}`);
+      setResumoMapeamento(
+        partes.length > 0 ? partes.join(" · ") : "Nada novo extraído do texto.",
+      );
+      router.refresh();
+    } catch (e) {
+      setResumoMapeamento(e instanceof Error ? e.message : "Falha no mapeamento.");
+    } finally {
+      setMapeando(false);
+    }
+  }
+
+  // ---- Inserção num ponto específico da linha (clique no "+") ----
+  const [inserindoEm, setInserindoEm] = useState<number | null>(null);
+
+  async function inserir(corpo: Record<string, unknown>) {
+    const erro = await requisicao(
+      `/api/obras/${obraId}/eventos/inserir`,
+      "POST",
+      corpo,
+    );
+    if (erro) return erro;
+    setInserindoEm(null);
+    router.refresh();
+    // Após inserir, abre a sugestão de capítulos para o novo acontecimento
+    const recemCriado = await fetch(`/api/obras/${obraId}/eventos`)
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null);
+    if (Array.isArray(recemCriado)) {
+      const alvo = recemCriado.find(
+        (e: { ordemCronologica: number }) =>
+          e.ordemCronologica === Number(corpo.ordemCronologica),
+      );
+      if (alvo?.id) void sugerirPara(alvo.id);
+    }
+    return null;
+  }
+
+  // ---- Sugestão de capítulos para apoiar um acontecimento ----
+  type Sugestoes = {
+    criar: Array<{ titulo: string; objetivo: string | null; motivo: string }>;
+    alterar: Array<{ id: string; titulo: string | null; objetivo: string | null; motivo: string }>;
+  };
+  const [sugestaoDe, setSugestaoDe] = useState<string | null>(null);
+  const [carregandoSugestao, setCarregandoSugestao] = useState(false);
+  const [sugestoes, setSugestoes] = useState<Sugestoes | null>(null);
+
+  async function sugerirPara(eventoId: string) {
+    setSugestaoDe(eventoId);
+    setCarregandoSugestao(true);
+    setSugestoes(null);
+    try {
+      const res = await fetch(`/api/obras/${obraId}/eventos/sugerir-capitulos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventoId }),
+      });
+      const corpo = (await res.json().catch(() => null)) as
+        | (Sugestoes & { erro?: string })
+        | null;
+      if (!res.ok || !corpo)
+        throw new Error(corpo?.erro ?? "Falha na sugestão.");
+      setSugestoes({
+        criar: corpo.criar ?? [],
+        alterar: corpo.alterar ?? [],
+      });
+      router.refresh();
+    } catch (e) {
+      setErroGeral(e instanceof Error ? e.message : "Falha na sugestão.");
+      setSugestaoDe(null);
+    } finally {
+      setCarregandoSugestao(false);
+    }
+  }
+
+  async function aceitarCriacao(sug: { titulo: string; objetivo: string | null }) {
+    if (!sugestaoDe) return;
+    const erro = await requisicao(`/api/obras/${obraId}/capitulos`, "POST", {
+      titulo: sug.titulo,
+      ...(sug.objetivo ? { objetivo: sug.objetivo } : {}),
+    });
+    if (erro) {
+      setErroGeral(erro);
+      return;
+    }
+    // Vincula o capítulo recém-criado ao acontecimento
+    await fetch(`/api/obras/${obraId}/capitulos`)
+      .then((r) => r.json())
+      .then(async (lista: Array<{ id: string; titulo: string }>) => {
+        const criado = lista.find((c) => c.titulo === sug.titulo);
+        if (criado)
+          await requisicao(`/api/eventos/${sugestaoDe}`, "PATCH", {
+            capituloId: criado.id,
+          });
+      });
+    setSugestaoDe(null);
+    setSugestoes(null);
+    router.refresh();
+  }
+
+  async function aceitarAlteracao(sug: {
+    id: string;
+    titulo: string | null;
+    objetivo: string | null;
+  }) {
+    const corpo: Record<string, unknown> = {};
+    if (sug.titulo) corpo.titulo = sug.titulo;
+    if (sug.objetivo) corpo.objetivo = sug.objetivo;
+    const erro = await requisicao(`/api/capitulos/${sug.id}`, "PATCH", corpo);
+    if (erro) {
+      setErroGeral(erro);
+      return;
+    }
+    setSugestaoDe(null);
+    setSugestoes(null);
+    router.refresh();
+  }
 
   async function criar(corpo: Record<string, unknown>) {
     const erro = await requisicao(`/api/obras/${obraId}/eventos`, "POST", corpo);
@@ -326,11 +489,30 @@ export function GerenciadorLinhaDoTempo({
 
   return (
     <div className="space-y-4">
-      {!criando && (
-        <button onClick={() => setCriando(true)} className={btnPrimario}>
-          + Novo evento
-        </button>
-      )}
+      {/* Mapeamento da linha do tempo via IA */}
+      <div className={`${cardCls} space-y-2`}>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={mapear}
+            disabled={mapeando}
+            className={btnPrimario}
+          >
+            {mapeando ? "⏳ Analisando a obra inteira…" : "🧠 Gerar linha do tempo a partir do texto"}
+          </button>
+          {!criando && inserindoEm === null && (
+            <button onClick={() => setCriando(true)} className={btnSecundario}>
+              + Novo evento
+            </button>
+          )}
+        </div>
+        {resumoMapeamento && (
+          <p className="rounded-md border border-line bg-surface p-2 text-xs text-muted">
+            {resumoMapeamento}
+          </p>
+        )}
+      </div>
+
       {criando && (
         <div className={cardCls}>
           <h3 className="mb-3 font-semibold">Novo evento</h3>
@@ -338,6 +520,31 @@ export function GerenciadorLinhaDoTempo({
             capitulos={capitulos}
             aoSalvar={criar}
             aoCancelar={() => setCriando(false)}
+          />
+        </div>
+      )}
+
+      {/* Inserção em ponto específico da linha */}
+      {inserindoEm !== null && (
+        <div className={`${cardCls} border-accent`}>
+          <h3 className="mb-3 font-semibold">
+            Novo acontecimento na posição #{inserindoEm + 1}
+          </h3>
+          <FormEvento
+            inicial={{
+              id: "",
+              titulo: "",
+              descricao: null,
+              escalaTemporal: "INDEFINIDO",
+              dataInicio: null,
+              dataFim: null,
+              ordemCronologica: inserindoEm,
+              capituloId: null,
+              capituloTitulo: null,
+            }}
+            capitulos={capitulos}
+            aoSalvar={inserir}
+            aoCancelar={() => setInserindoEm(null)}
           />
         </div>
       )}
@@ -350,14 +557,25 @@ export function GerenciadorLinhaDoTempo({
         </p>
       )}
 
-      {/* Linha do tempo vertical */}
-      <ol className="relative ml-2 space-y-4 border-l border-line pl-6">
-        {eventosIniciais.map((ev) => (
+      {/* Linha do tempo vertical gráfica */}
+      <ol className="relative ml-4 space-y-2 border-l-2 border-line pl-6">
+        {/* Ponto de inserção no início da linha */}
+        <li className="relative -my-1">
+          <BotaoInserir
+            aoClicar={() =>
+              setInserindoEm(eventosIniciais[0]?.ordemCronologica ?? 0)
+            }
+          />
+        </li>
+        {eventosIniciais.map((ev, i) => (
           <li key={ev.id} className="relative">
-            {/* Marcador sobre a linha */}
+            {/* Marcador colorido sobre a linha, conforme a escala */}
             <span
               aria-hidden
-              className="absolute top-5 -left-[1.9rem] h-3 w-3 rounded-full border-2 border-line bg-accent"
+              title={ROTULO_ESCALA_TEMPORAL[ev.escalaTemporal] ?? ev.escalaTemporal}
+              className={`absolute top-6 -left-[1.95rem] h-3.5 w-3.5 rounded-full border-2 border-line ${
+                ev.capituloId ? "bg-accent" : "bg-faint"
+              }`}
             />
             {editandoId === ev.id ? (
               <div className={cardCls}>
@@ -370,41 +588,145 @@ export function GerenciadorLinhaDoTempo({
                 />
               </div>
             ) : (
-              <div className={`${cardCls} flex items-start justify-between gap-4 py-3`}>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-block rounded-full bg-chipbg px-2 py-0.5 text-xs text-soft">
-                      #{ev.ordemCronologica + 1}
-                    </span>
-                    <h3 className="font-semibold">{ev.titulo}</h3>
-                    <span className="text-xs text-faint">
-                      {ROTULO_ESCALA_TEMPORAL[ev.escalaTemporal] ?? ev.escalaTemporal}
-                    </span>
+              <>
+                <div className={`${cardCls} group py-3 transition hover:border-faint`}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-onaccent">
+                          {ev.ordemCronologica + 1}
+                        </span>
+                        <h3 className="font-semibold">{ev.titulo}</h3>
+                        <span className="rounded-full bg-chipbg px-2 py-0.5 text-xs text-soft">
+                          {ROTULO_ESCALA_TEMPORAL[ev.escalaTemporal] ?? ev.escalaTemporal}
+                        </span>
+                        {Boolean(ev.dataInicio || ev.dataFim) && (
+                          <span className="rounded-full bg-chipbg px-2 py-0.5 text-xs font-medium text-soft">
+                            📅 {formatarData(ev.dataInicio) || "?"}
+                            {(ev.dataInicio && ev.dataFim) || (!ev.dataInicio && ev.dataFim)
+                              ? ` → ${formatarData(ev.dataFim) || "?"}`
+                              : ""}
+                          </span>
+                        )}
+                      </div>
+                      {ev.descricao && (
+                        <p className="mt-2 text-sm">{ev.descricao}</p>
+                      )}
+                      {ev.capituloTitulo && (
+                        <p className="mt-1 text-xs text-muted">📚 {ev.capituloTitulo}</p>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 flex-col gap-2">
+                      <button onClick={() => setEditandoId(ev.id)} className={btnSecundario}>
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => sugerirPara(ev.id)}
+                        disabled={carregandoSugestao}
+                        className={btnSecundario}
+                        title="A IA sugere capítulos para apoiar este acontecimento"
+                      >
+                        🧠 Sugerir capítulos
+                      </button>
+                      <button onClick={() => excluir(ev.id, ev.titulo)} className={btnPerigo}>
+                        Excluir
+                      </button>
+                    </div>
                   </div>
-                  {Boolean(ev.dataInicio || ev.dataFim) && (
-                    <p className="mt-1 text-sm text-soft">
-                      {formatarData(ev.dataInicio) || "?"}
-                      {" → "}
-                      {formatarData(ev.dataFim) || "?"}
-                    </p>
-                  )}
-                  {ev.descricao && <p className="mt-2 text-sm">{ev.descricao}</p>}
-                  {ev.capituloTitulo && (
-                    <p className="mt-1 text-xs text-muted">📚 {ev.capituloTitulo}</p>
+
+                  {/* Painel de sugestão de capítulos */}
+                  {sugestaoDe === ev.id && (
+                    <div className="mt-3 rounded-md border border-line bg-surface p-3">
+                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">
+                        Sugestões para apoiar “{ev.titulo}” — aceite o que fizer sentido
+                      </p>
+                      {carregandoSugestao && (
+                        <p className="text-xs text-muted">
+                          ⏳ A IA está analisando a estrutura da obra…
+                        </p>
+                      )}
+                      {sugestoes && (
+                        <div className="space-y-2">
+                          {sugestoes.criar.length === 0 &&
+                            sugestoes.alterar.length === 0 && (
+                              <p className="text-xs text-muted">
+                                Nenhum ajuste necessário: a estrutura atual já apoia este acontecimento.
+                              </p>
+                            )}
+                          {sugestoes.criar.map((s) => (
+                            <div key={s.titulo} className="rounded-md border border-line p-2">
+                              <p className="text-sm font-medium">➕ Criar capítulo: {s.titulo}</p>
+                              {s.objetivo && <p className="text-xs text-muted">Objetivo: {s.objetivo}</p>}
+                              {s.motivo && <p className="text-xs text-muted">💡 {s.motivo}</p>}
+                              <button
+                                type="button"
+                                onClick={() => aceitarCriacao(s)}
+                                className={`mt-1 ${btnSecundario}`}
+                              >
+                                Aceitar e criar
+                              </button>
+                            </div>
+                          ))}
+                          {sugestoes.alterar.map((s) => {
+                            const alvo = capitulos.find((c) => c.id === s.id);
+                            return (
+                              <div key={s.id} className="rounded-md border border-line p-2">
+                                <p className="text-sm font-medium">
+                                  ✏️ Alterar: {alvo?.titulo ?? s.id}
+                                </p>
+                                {s.titulo && <p className="text-xs text-muted">Novo título: {s.titulo}</p>}
+                                {s.objetivo && <p className="text-xs text-muted">Novo objetivo: {s.objetivo}</p>}
+                                {s.motivo && <p className="text-xs text-muted">💡 {s.motivo}</p>}
+                                <button
+                                  type="button"
+                                  onClick={() => aceitarAlteracao(s)}
+                                  className={`mt-1 ${btnSecundario}`}
+                                >
+                                  Aceitar alteração
+                                </button>
+                              </div>
+                            );
+                          })}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSugestaoDe(null);
+                              setSugestoes(null);
+                            }}
+                            className="text-xs text-muted underline hover:text-foreground"
+                          >
+                            fechar sugestões
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  <button onClick={() => setEditandoId(ev.id)} className={btnSecundario}>
-                    Editar
-                  </button>
-                  <button onClick={() => excluir(ev.id, ev.titulo)} className={btnPerigo}>
-                    Excluir
-                  </button>
-                </div>
-              </div>
+
+                {/* Ponto de inserção entre este evento e o próximo */}
+                {i < eventosIniciais.length - 1 && (
+                  <BotaoInserir
+                    aoClicar={() =>
+                      setInserindoEm(eventosIniciais[i + 1].ordemCronologica)
+                    }
+                  />
+                )}
+              </>
             )}
           </li>
         ))}
+        {/* Inserção no fim da linha */}
+        {eventosIniciais.length > 0 && (
+          <li className="relative -my-1">
+            <BotaoInserir
+              aoClicar={() =>
+                setInserindoEm(
+                  eventosIniciais[eventosIniciais.length - 1].ordemCronologica + 1,
+                )
+              }
+            />
+          </li>
+        )}
       </ol>
     </div>
   );

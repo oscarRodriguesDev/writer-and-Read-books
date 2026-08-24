@@ -237,6 +237,55 @@ export const respostaMapeamentoAmbientesSchema = z.object({
   novos: listaTolerante(ambienteNovoSchema, 20),
 });
 
+/** Mapeamento completo da linha do tempo a partir do texto (RF-20/21/74). */
+const eventoNovoIaSchema = z.object({
+  titulo: z.string().trim().min(1).max(200),
+  descricao: textoOpcional(2_000),
+  escalaTemporal: z.enum(ESCALAS_TEMPORAIS).default("INDEFINIDO"),
+  dataInicio: dataTemporalSchema,
+  dataFim: dataTemporalSchema,
+});
+export const respostaMapeamentoEventosSchema = z.object({
+  existentes: listaTolerante(
+    z.object({
+      id: z.string().trim().min(1).max(50),
+      motivo: z.string().trim().max(1_000).default(""),
+    }),
+    80,
+  ),
+  novos: listaTolerante(eventoNovoIaSchema, 30),
+});
+
+/** Sugestão de capítulos para apoiar um evento da linha do tempo. */
+export const respostaSugestaoCapitulosSchema = z.object({
+  criar: listaTolerante(
+    z.object({
+      titulo: z.string().trim().min(1).max(200),
+      objetivo: textoOpcional(500),
+      motivo: z.string().trim().max(500).default(""),
+    }),
+    5,
+  ),
+  alterar: listaTolerante(
+    z.object({
+      id: z.string().trim().min(1).max(50),
+      titulo: textoOpcional(200),
+      objetivo: textoOpcional(500),
+      motivo: z.string().trim().max(500).default(""),
+    }),
+    10,
+  ),
+});
+
+export type RespostaSugestaoCapitulos = z.infer<
+  typeof respostaSugestaoCapitulosSchema
+>;
+
+/** Corpo do POST /api/obras/[obraId]/eventos/sugerir-capitulos. */
+export const pedidoEventoIdSchema = z.object({
+  eventoId: z.string().trim().min(1).max(50),
+});
+
 /** Resposta da geração de prompt de imagem (capítulo/personagem/ambiente). */
 export const respostaPromptImagemSchema = z.object({
   prompt: z.string().trim().min(1).max(4_000),
