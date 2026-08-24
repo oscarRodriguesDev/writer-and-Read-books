@@ -103,6 +103,50 @@ export function GerenciadorAmbientes({
   const [criando, setCriando] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
 
+  // ---- Mapeamento completo: IA lê a obra e cadastra locais que faltam (RF-74) ----
+  const [mapeando, setMapeando] = useState(false);
+  const [resumoMapeamento, setResumoMapeamento] = useState<string | null>(null);
+
+  async function mapear() {
+    if (
+      !window.confirm(
+        "A IA vai ler toda a obra e CADASTRAR automaticamente os ambientes/locais que aparecem no texto e ainda não existem. Continuar?",
+      )
+    )
+      return;
+    setMapeando(true);
+    setResumoMapeamento(null);
+    try {
+      const res = await fetch(`/api/obras/${obraId}/ambientes/mapear`, {
+        method: "POST",
+      });
+      const corpo = (await res.json().catch(() => null)) as
+        | {
+            existentes?: Array<{ nome: string }>;
+            criados?: Array<{ nome: string }>;
+            erro?: string;
+          }
+        | null;
+      if (!res.ok || !corpo)
+        throw new Error(corpo?.erro ?? "Falha no mapeamento.");
+      const partes: string[] = [];
+      if (corpo.criados?.length)
+        partes.push(`🆕 Cadastrados: ${corpo.criados.map((a) => a.nome).join(", ")}`);
+      if (corpo.existentes?.length)
+        partes.push(`✅ Confirmados no texto: ${corpo.existentes.map((a) => a.nome).join(", ")}`);
+      setResumoMapeamento(
+        partes.length > 0
+          ? partes.join(" · ")
+          : "Nenhum ambiente identificado no texto ainda.",
+      );
+      router.refresh();
+    } catch (e) {
+      setResumoMapeamento(e instanceof Error ? e.message : "Falha no mapeamento.");
+    } finally {
+      setMapeando(false);
+    }
+  }
+
   async function criar(corpo: Record<string, unknown>) {
     await requisicao(`/api/obras/${obraId}/ambientes`, "POST", corpo);
     setCriando(false);
@@ -123,6 +167,30 @@ export function GerenciadorAmbientes({
 
   return (
     <div className="space-y-4">
+      {/* Mapeamento completo da obra */}
+      <div className={`${cardCls} space-y-2`}>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={mapear}
+            disabled={mapeando}
+            className={btnPrimario}
+            title="Lê toda a obra e cadastra os ambientes/locais que ainda não existem"
+          >
+            {mapeando ? "⏳ Analisando a obra inteira…" : "🧠 Mapear ambientes do texto"}
+          </button>
+          <span className="text-xs text-muted">
+            A IA lê tudo que foi escrito e cria os locais que ainda não estão
+            cadastrados (você pode editar depois)
+          </span>
+        </div>
+        {resumoMapeamento && (
+          <p className="rounded-md border border-line bg-surface p-2 text-xs text-muted">
+            {resumoMapeamento}
+          </p>
+        )}
+      </div>
+
       {!criando && (
         <button onClick={() => setCriando(true)} className={btnPrimario}>
           + Novo ambiente
