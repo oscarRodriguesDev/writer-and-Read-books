@@ -29,6 +29,7 @@ export function ImagemEntidade({
   const inputRef = useRef<HTMLInputElement>(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [falhouCarregar, setFalhouCarregar] = useState(false);
 
   async function subir(arquivo: File) {
     setErro(null);
@@ -43,6 +44,7 @@ export function ImagemEntidade({
         const corpo = (await res.json().catch(() => null)) as { erro?: string } | null;
         throw new Error(corpo?.erro ?? "Falha no upload.");
       }
+      setFalhouCarregar(false);
       router.refresh();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha no upload.");
@@ -70,6 +72,7 @@ export function ImagemEntidade({
         const corpo = (await res.json().catch(() => null)) as { erro?: string } | null;
         throw new Error(corpo?.erro ?? "Falha ao definir a URL.");
       }
+      setFalhouCarregar(false);
       router.refresh();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao definir a URL.");
@@ -98,12 +101,19 @@ export function ImagemEntidade({
     <div className="shrink-0">
       {url ? (
         <div className="space-y-1">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={url}
-            alt={`Imagem do ${rotulo.toLowerCase()}`}
-            className="h-28 w-28 rounded-md border border-line object-cover"
-          />
+          {falhouCarregar ? (
+            <div className="flex h-28 w-28 flex-col items-center justify-center rounded-md border border-red-300 bg-red-50 p-2 text-center text-xs text-red-700">
+              ⚠️ URL não é uma imagem direta. Use “Copiar endereço da imagem”.
+            </div>
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={url}
+              alt={`Imagem do ${rotulo.toLowerCase()}`}
+              onError={() => setFalhouCarregar(true)}
+              className="h-28 w-28 rounded-md border border-line object-cover"
+            />
+          )}
           <div className="flex gap-1">
             <button
               type="button"
