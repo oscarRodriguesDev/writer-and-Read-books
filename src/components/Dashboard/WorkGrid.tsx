@@ -109,7 +109,7 @@ export function WorkGrid({
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3 shadow-sm">
         <div className="flex items-center gap-2">
           <label htmlFor="filter-obras" className="text-sm text-muted">
             Filtrar:

@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode } from "react";
 import { SidebarProvider, useSidebar } from "./SidebarContext";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
@@ -8,19 +8,7 @@ import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 
 function LayoutContent({ children, obraId, obraTitulo }: { children: ReactNode; obraId?: string; obraTitulo?: string }) {
   const { isCollapsed, isMobileOpen, setMobileOpen } = useSidebar();
-  const [mounted, setMounted] = useState(false);
-
   useKeyboardShortcuts();
-
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="fixed top-0 left-0 right-0 h-16 border-b border-line bg-surface/80 backdrop-blur-sm" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -34,7 +22,7 @@ function LayoutContent({ children, obraId, obraTitulo }: { children: ReactNode; 
         role="main"
         tabIndex={-1}
       >
-        <div className="w-full">{children}</div>
+        <div className="w-full pt-16">{children}</div>
       </main>
       {isMobileOpen && (
         <button

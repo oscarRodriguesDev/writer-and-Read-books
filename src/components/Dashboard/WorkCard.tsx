@@ -58,7 +58,7 @@ export function WorkCard({ obra, onDelete }: WorkCardProps) {
   const statusColor = statusColors[obra.status] || "bg-gray-100 text-gray-800";
 
   return (
-    <div className={`${cardCls} relative group transition-all duration-200 hover:shadow-lg hover:border-faint`}>
+    <div className={`${cardCls} relative group overflow-hidden rounded-xl bg-surface p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-accent/40`}>
       {onDelete && (
         <div className="absolute right-2 top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
           <button

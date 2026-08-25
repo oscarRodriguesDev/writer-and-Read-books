@@ -52,7 +52,7 @@ export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTi
 
   return (
     <header
-      className={`sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-line bg-surface/80 backdrop-blur-sm transition-all duration-300 ${
+      className={`fixed left-0 right-0 top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-surface transition-all duration-300 ${
         isCollapsed ? "lg:pl-16" : "lg:pl-64"
       }`}
       role="banner"
@@ -70,10 +70,15 @@ export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTi
         </svg>
       </button>
 
-      <nav className="flex-1 flex items-center gap-2 overflow-x-auto px-4" aria-label="Breadcrumb">
+      <div className="hidden w-64 items-center gap-2 rounded-full bg-chipbg px-3 py-2 text-sm text-muted md:flex">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+        <span>Pesquisar no Book Writer</span>
+      </div>
+
+      <nav className="flex flex-1 items-center justify-center gap-1 overflow-x-auto px-2" aria-label="Navegação contextual">
         <ol className="flex items-center gap-1 whitespace-nowrap" role="list">
           {breadcrumbs.map((crumb, i) => (
-            <li key={crumb.href || crumb.label} className="flex items-center gap-1">
+            <li key={`${crumb.label}-${i}`} className="flex items-center gap-1">
               {i > 0 && (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-faint flex-shrink-0" aria-hidden="true">
                   <path d="M9 18l6-6-6-6" />
@@ -97,7 +102,7 @@ export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTi
         </ol>
       </nav>
 
-      <div className="flex items-center gap-2 pr-4">
+      <div className="flex items-center gap-2 pr-3">
         <div className="hidden sm:flex items-center gap-2">
           <AlternadorTema />
         </div>
