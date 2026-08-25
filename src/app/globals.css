@@ -4,17 +4,17 @@
 
 :root {
   /* Light mode - clean whites with colored accents */
-  --background: #ffffff;
-  --foreground: #1a1a1a;
+  --background: #f7f7f5;
+  --foreground: #20201e;
   --surface: #ffffff;
-  --surface-elevated: #fafafa;
-  --line: #e5e5e5;
-  --inputline: #d4d4d4;
-  --soft: #737373;
-  --muted: #a3a3a3;
-  --faint: #d4d4d4;
-  --hoverbg: #f5f5f5;
-  --chipbg: #f5f5f5;
+  --surface-elevated: #fcfcfa;
+  --line: #e8e7e2;
+  --inputline: #d8d7d1;
+  --soft: #6f706b;
+  --muted: #9a9b95;
+  --faint: #c6c7c0;
+  --hoverbg: #f0f0eb;
+  --chipbg: #eeeee9;
 
   /* Brand colors - Red, Blue, Violet */
   --red: #dc2626;
@@ -60,17 +60,17 @@
 
 .dark {
   /* Dark mode - deep blacks with vibrant accents */
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-  --surface: #171717;
-  --surface-elevated: #1f1f1f;
-  --line: #262626;
-  --inputline: #404040;
-  --soft: #a3a3a3;
-  --muted: #737373;
-  --faint: #525252;
-  --hoverbg: #262626;
-  --chipbg: #262626;
+  --background: #111210;
+  --foreground: #f4f3ee;
+  --surface: #1a1b18;
+  --surface-elevated: #22231f;
+  --line: #30312c;
+  --inputline: #454740;
+  --soft: #a9aaa2;
+  --muted: #777970;
+  --faint: #5c5e56;
+  --hoverbg: #292a25;
+  --chipbg: #292a25;
 
   --red: #ef4444;
   --red-hover: #f87171;

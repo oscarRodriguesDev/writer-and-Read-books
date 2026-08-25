@@ -73,7 +73,7 @@ export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTi
       <nav className="flex-1 flex items-center gap-2 overflow-x-auto px-4" aria-label="Breadcrumb">
         <ol className="flex items-center gap-1 whitespace-nowrap" role="list">
           {breadcrumbs.map((crumb, i) => (
-            <li key={crumb.href || crumb.label} className="flex items-center gap-1">
+            <li key={`${crumb.label}-${i}`} className="flex items-center gap-1">
               {i > 0 && (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-faint flex-shrink-0" aria-hidden="true">
                   <path d="M9 18l6-6-6-6" />

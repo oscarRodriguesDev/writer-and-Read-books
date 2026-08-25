@@ -26,10 +26,11 @@ export function DashboardHeader({
   obrasAtivas,
 }: DashboardHeaderProps) {
   return (
-    <header className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-bold">Minhas Obras</h1>
-        <p className="mt-1 text-sm text-muted">
+    <header className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <div className="max-w-xl">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Seu espaço de criação</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Minhas Obras</h1>
+        <p className="mt-2 text-sm leading-6 text-soft">
           {totalObras === 0
             ? "Nenhuma obra cadastrada ainda."
             : `${obrasAtivas} em andamento • ${totalPalavras === 0 ? "0" : formatNumber(totalPalavras)} palavras no total`}

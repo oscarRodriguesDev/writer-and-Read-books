@@ -39,8 +39,6 @@ export default function Sidebar({ obraId }: { obraId?: string }) {
         active: item.href === "/" ? pathname === "/" : pathname.startsWith(item.href),
       }));
 
-  if (typeof window === "undefined") return null;
-
   return (
     <>
       <button
