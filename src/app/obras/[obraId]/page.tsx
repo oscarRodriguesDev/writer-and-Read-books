@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { NavegacaoObra } from "@/components/NavegacaoObra";
 import { FormEditarObra } from "@/components/FormEditarObra";
 import { cardCls, btnSecundario } from "@/components/ui";
+import { BotaoExportar } from "@/components/BotaoExportar";
 
 export const dynamic = "force-dynamic";
 
@@ -41,11 +42,14 @@ export default async function ObraPage({
       <div className="mb-4">
         <Link href="/" className={`inline-block ${btnSecundario}`}>← Obras</Link>
       </div>
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold">{obra.titulo}</h1>
-        <p className="text-sm text-muted">
-          {obra.genero ?? "Sem gênero"} · Criada em {formatarData(obra.criadoEm)}
-        </p>
+      <header className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">{obra.titulo}</h1>
+          <p className="text-sm text-muted">
+            {obra.genero ?? "Sem gênero"} · Criada em {formatarData(obra.criadoEm)}
+          </p>
+        </div>
+        <BotaoExportar obraId={obra.id} />
       </header>
       <NavegacaoObra obraId={obra.id} />
 

@@ -420,4 +420,19 @@
   .dark .accent-red { --accent: var(--red); --accent-hover: var(--red-hover); --accent-light: var(--red-light); --accent-dark: var(--red-dark); --onaccent: #000; }
   .dark .accent-blue { --accent: var(--blue); --accent-hover: var(--blue-hover); --accent-light: var(--blue-light); --accent-dark: var(--blue-dark); --onaccent: #000; }
   .dark .accent-violet { --accent: var(--violet); --accent-hover: var(--violet-hover); --accent-light: var(--violet-light); --accent-dark: var(--violet-dark); --onaccent: #000; }
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
 }
