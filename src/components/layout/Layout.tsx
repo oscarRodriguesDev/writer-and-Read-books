@@ -22,7 +22,7 @@ function LayoutContent({ children, obraId, obraTitulo }: { children: ReactNode; 
         role="main"
         tabIndex={-1}
       >
-        <div className="w-full">{children}</div>
+        <div className="w-full pt-16">{children}</div>
       </main>
       {isMobileOpen && (
         <button

@@ -62,7 +62,7 @@ export default function Sidebar({ obraId }: { obraId?: string }) {
         data-state={isCollapsed ? "collapsed" : "expanded"}
       >
         <div className="flex h-full flex-col">
-          <div className="flex h-16 items-center justify-between px-4 border-b border-line">
+          <div className="flex h-16 items-center justify-between border-b border-line px-4">
             <Link
               href="/"
               className="flex items-center gap-3 font-bold text-lg text-foreground transition-opacity"
@@ -86,7 +86,8 @@ export default function Sidebar({ obraId }: { obraId?: string }) {
             </button>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1" aria-label="Navegação primária">
+          {!isCollapsed && <p className="px-6 pb-2 pt-5 text-xs font-semibold uppercase tracking-wider text-faint">Menu</p>}
+          <nav className="flex-1 overflow-y-auto px-3 py-2" aria-label="Navegação primária">
             {navItems.map((item) => (
               <Link
                 key={item.href}
