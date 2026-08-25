@@ -6,7 +6,7 @@ import * as path from "path";
 import * as os from "os";
 
 // EPUB
-import { epubGen } from "epub-gen";
+import EPub from "epub-gen";
 // PDF
 import PDFDocument from "pdfkit";
 // DOCX
@@ -126,7 +126,7 @@ export async function exportarEPUB(obra: ObraExportacao): Promise<Buffer> {
   try {
     const conteudoCapitulos = obra.capitulos
       .filter((cap) => cap.partes.some((p) => p.texto))
-      .map((cap, i) => ({
+      .map((cap) => ({
         title: cap.titulo,
         data: cap.partes
           .filter((p) => p.texto)
@@ -136,9 +136,8 @@ export async function exportarEPUB(obra: ObraExportacao): Promise<Buffer> {
 
     const opcoes = {
       title: obra.titulo,
-      author: "Autor",
+      author: ["Autor"],
       publisher: "Book Writer App",
-      cover: undefined,
       content: conteudoCapitulos,
       output: path.join(tempDir, "livro.epub"),
       tocTitle: "Sumário",
@@ -154,7 +153,7 @@ export async function exportarEPUB(obra: ObraExportacao): Promise<Buffer> {
       `,
     };
 
-    await epubGen(opcoes, path.join(tempDir, "livro.epub"));
+    await new EPub(opcoes, path.join(tempDir, "livro.epub")).promise;
     const buffer = fs.readFileSync(path.join(tempDir, "livro.epub"));
     return buffer;
   } finally {
@@ -389,7 +388,7 @@ export async function exportarKindle(obra: ObraExportacao): Promise<Buffer> {
 
     const opcoes = {
       title: obra.titulo,
-      author: "Autor",
+      author: ["Autor"],
       publisher: "Book Writer App",
       content: conteudoCapitulos,
       output: path.join(tempDir, "livro.epub"),
@@ -407,7 +406,7 @@ export async function exportarKindle(obra: ObraExportacao): Promise<Buffer> {
       `,
     };
 
-    await epubGen(opcoes, path.join(tempDir, "livro.epub"));
+    await new EPub(opcoes, path.join(tempDir, "livro.epub")).promise;
     const buffer = fs.readFileSync(path.join(tempDir, "livro.epub"));
     return buffer;
   } finally {

@@ -1,7 +1,7 @@
 declare module "epub-gen" {
   export interface EpubGenOptions {
     title: string;
-    author?: string;
+    author?: string[];
     publisher?: string;
     cover?: string;
     content: Array<{ title: string; data: string }>;
@@ -9,7 +9,13 @@ declare module "epub-gen" {
     tocTitle?: string;
     lang?: string;
     css?: string;
+    version?: number;
   }
 
-  export function epubGen(options: EpubGenOptions, outputPath: string): Promise<void>;
+  class EPub {
+    constructor(options: EpubGenOptions, output: string);
+    promise: Promise<void>;
+  }
+
+  export default EPub;
 }
