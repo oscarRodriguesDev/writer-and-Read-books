@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import AlternadorTema from "@/components/AlternadorTema";
 import "./globals.css";
+import AppLayoutWrapper from "@/components/layout/AppLayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,10 +18,9 @@ export const metadata: Metadata = {
   description: "Escreva, estruture e leia suas obras narrativas",
 };
 
-// Aplica o tema salvo (ou o do sistema) antes da primeira pintura, evitando flash
 const scriptTema = `(function(){try{var t=localStorage.getItem("tema");if(!t){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"escuro":"claro";}document.documentElement.classList.toggle("dark",t==="escuro");}catch(e){}})();`;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="pt-BR"
@@ -31,11 +30,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: scriptTema }} />
       </head>
-      <body className="min-h-full flex flex-col">
-        {children}
-        <div className="fixed bottom-4 right-4 z-50">
-          <AlternadorTema />
-        </div>
+      <body className="min-h-full">
+        <AppLayoutWrapper>{children}</AppLayoutWrapper>
       </body>
     </html>
   );

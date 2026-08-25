@@ -1,56 +1,91 @@
-import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { cardCls } from "@/components/ui";
-import { BotaoExcluirObra } from "@/components/BotaoExcluirObra";
+import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
+import { WorkGrid } from "@/components/Dashboard/WorkGrid";
+import { EmptyState } from "@/components/Dashboard/EmptyState";
+import { Obra } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function Dashboard() {
+async function fetchObrasComEstatisticas(): Promise<{
+  obras: Obra[];
+  totalObras: number;
+  totalPalavras: number;
+  obrasAtivas: number;
+  obrasArquivadas: number;
+}> {
   const obras = await prisma.obra.findMany({
-    where: { arquivada: false },
-    orderBy: { criadoEm: "desc" },
+    orderBy: { atualizadoEm: "desc" },
+    include: {
+      capitulos: {
+        include: {
+          partes: {
+            include: {
+              cenas: {
+                select: { conteudo: true },
+              },
+            },
+          },
+        },
+      },
+    },
   });
 
-  return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-      <header className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Minhas Obras</h1>
-          <p className="text-sm text-muted">
-            {obras.length === 0
-              ? "Nenhuma obra cadastrada ainda."
-              : `${obras.length} obra(s) em andamento.`}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            href="/importar"
-            className="rounded-md border border-inputline bg-surface px-4 py-2 text-sm font-medium text-soft hover:bg-hoverbg"
-          >
-            Importar História
-          </Link>
-          <Link href="/obras/nova" className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-onaccent hover:bg-accenthover">
-            Nova Obra
-          </Link>
-        </div>
-      </header>
+  const obrasComPalavras: Obra[] = obras.map((obra) => {
+    let totalPalavras = 0;
+    for (const capitulo of obra.capitulos) {
+      for (const parte of capitulo.partes) {
+        for (const cena of parte.cenas) {
+          const palavras = cena.conteudo.trim().split(/\s+/).filter(Boolean).length;
+          totalPalavras += palavras;
+        }
+      }
+    }
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {obras.map((obra) => (
-          <div key={obra.id} className={`${cardCls} relative`}>
-            <div className="absolute right-2 top-2 z-10">
-              <BotaoExcluirObra obraId={obra.id} titulo={obra.titulo} />
-            </div>
-            <Link href={`/obras/${obra.id}`} className="block transition hover:border-faint">
-              <h2 className="mb-1 font-semibold">{obra.titulo}</h2>
-              <p className="text-sm text-muted">{obra.genero ?? "Sem gênero"}</p>
-              <span className="mt-3 inline-block rounded-full bg-chipbg px-2 py-0.5 text-xs text-soft">
-                {obra.status}
-              </span>
-            </Link>
-          </div>
-        ))}
-      </div>
+    return {
+      id: obra.id,
+      titulo: obra.titulo,
+      genero: obra.genero,
+      subgenero: obra.subgenero,
+      status: obra.status,
+      arquivada: obra.arquivada,
+      criadoEm: obra.criadoEm,
+      atualizadoEm: obra.atualizadoEm,
+      capaUrl: null,
+      totalPalavras,
+    };
+  });
+
+  const totalPalavras = obrasComPalavras.reduce((acc, o) => acc + (o.totalPalavras || 0), 0);
+  const obrasAtivas = obrasComPalavras.filter((o) => !o.arquivada).length;
+  const obrasArquivadas = obrasComPalavras.filter((o) => o.arquivada).length;
+
+  return {
+    obras: obrasComPalavras,
+    totalObras: obrasComPalavras.length,
+    totalPalavras,
+    obrasAtivas,
+    obrasArquivadas,
+  };
+}
+
+export default async function Dashboard() {
+  const { obras, totalObras, totalPalavras, obrasAtivas, obrasArquivadas } =
+    await fetchObrasComEstatisticas();
+
+  return (
+    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
+      <DashboardHeader
+        totalObras={totalObras}
+        totalPalavras={totalPalavras}
+        obrasAtivas={obrasAtivas}
+        obrasArquivadas={obrasArquivadas}
+      />
+
+      {totalObras === 0 ? (
+        <EmptyState />
+      ) : (
+        <WorkGrid obras={obras} />
+      )}
     </main>
   );
 }
