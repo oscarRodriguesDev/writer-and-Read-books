@@ -322,6 +322,70 @@ export function EditorCapitulo({
     setExtraindoCap(false);
   }
 
+  // ---- Geração de capítulo completo ----
+  const [gerandoCapitulo, setGerandoCapitulo] = useState(false);
+  const [promptCapitulo, setPromptCapitulo] = useState("");
+  const [previewCapitulo, setPreviewCapitulo] = useState<Record<string, string>>({});
+  const [erroGeracaoCapitulo, setErroGeracaoCapitulo] = useState("");
+
+  async function gerarCapituloCompleto() {
+    const prompt = promptCapitulo.trim();
+    setErroGeracaoCapitulo("");
+    setPreviewCapitulo({});
+    setGerandoCapitulo(true);
+    try {
+      const res = await fetch(`/api/capitulos/${capitulo.id}/gerar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ promptUsuario: prompt, incluirCenasPreenchidas: false }),
+      });
+      const corpo = (await res.json().catch(() => null)) as
+        | { cenas?: Array<{ parteTipo: string; cenaTipo: string; texto: string }>; erro?: string }
+        | null;
+      if (!res.ok || !corpo?.cenas)
+        throw new Error(corpo?.erro ?? "Falha na geração do capítulo.");
+      // Monta preview por cenaId
+      const previewMap: Record<string, string> = {};
+      const idsPorTipo: Record<string, string> = {};
+      capitulo.partes.forEach((parte) => {
+        parte.cenas.forEach((cena) => {
+          const key = `${parte.tipo}-${cena.tipo}`;
+          idsPorTipo[key] = cena.id;
+        });
+      });
+      for (const c of corpo.cenas) {
+        const key = `${c.parteTipo}-${c.cenaTipo}`;
+        const cenaId = idsPorTipo[key];
+        if (cenaId) previewMap[cenaId] = c.texto;
+      }
+      setPreviewCapitulo(previewMap);
+    } catch (e) {
+      setErroGeracaoCapitulo(e instanceof Error ? e.message : "Falha na geração do capítulo.");
+    } finally {
+      setGerandoCapitulo(false);
+    }
+  }
+
+  async function usarGeracaoCapitulo() {
+    const novosConteudos: Record<string, { conteudo: string; objetivo: string; associacoes: SelecaoCena }> = {};
+    for (const [cenaId, texto] of Object.entries(previewCapitulo)) {
+      if (texto) {
+        novosConteudos[cenaId] = { ...cenas[cenaId], conteudo: texto };
+      }
+    }
+    if (Object.keys(novosConteudos).length === 0) return;
+    setCenas((m) => ({ ...m, ...novosConteudos }));
+    // Salva todas as cenas
+    for (const [cenaId, dados] of Object.entries(novosConteudos)) {
+      await patchJson(`/api/cenas/${cenaId}`, {
+        conteudo: dados.conteudo,
+        objetivo: dados.objetivo,
+      });
+    }
+    setPreviewCapitulo({});
+    setPromptCapitulo("");
+  }
+
   // ---- Revisão dirigida da cena (RF-49) ----
   const [instrucaoRevisao, setInstrucaoRevisao] = useState<Record<string, string>>({});
   const [revisando, setRevisando] = useState<Record<string, boolean>>({});
@@ -434,6 +498,50 @@ export function EditorCapitulo({
           )}
         </div>
       </header>
+
+      {/* Geração de capítulo completo */}
+      <section className="mb-6 rounded-lg border border-line bg-surface p-4">
+        <h3 className="mb-3 text-center font-semibold">✨ Gerar capítulo completo com IA</h3>
+        <p className="mb-3 text-sm text-muted text-center">
+          Descreva o que deve acontecer no capítulo. A IA preenche as 9 cenas (Início/Meio/Fim de cada parte)
+          respeitando o contexto da obra, personagens, ambientes e linha do tempo.
+        </p>
+        <textarea
+          value={promptCapitulo}
+          onChange={(e) => setPromptCapitulo(e.target.value)}
+          rows={3}
+          placeholder="Ex.: O protagonista descobre a traição do mentor, foge da cidade e encontra um aliado improvável na floresta..."
+          aria-label="Prompt para gerar o capítulo completo"
+          className="w-full resize-y rounded-md border border-line bg-surface p-2 text-sm leading-relaxed outline-none focus:border-faint"
+        />
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={gerarCapituloCompleto}
+            disabled={gerandoCapitulo}
+            className={btnSecundario}
+          >
+            {gerandoCapitulo ? "⏳ Gerando capítulo… pode levar até 2 min" : "✨ Gerar capítulo completo"}
+          </button>
+          {Object.keys(previewCapitulo).length > 0 && (
+            <button
+              type="button"
+              onClick={usarGeracaoCapitulo}
+              className="px-3 py-1.5 rounded-md border border-green-500 bg-green-50 text-green-700 text-sm font-medium hover:bg-green-100"
+            >
+              ✅ Usar todas as cenas geradas
+            </button>
+          )}
+        </div>
+        {erroGeracaoCapitulo && (
+          <p className="mt-2 text-center text-sm text-red-600">{erroGeracaoCapitulo}</p>
+        )}
+        {Object.keys(previewCapitulo).length > 0 && (
+          <p className="mt-2 text-center text-sm text-muted">
+            Prévia gerada para {Object.keys(previewCapitulo).length} cena(s). Revise cada uma abaixo antes de confirmar.
+          </p>
+        )}
+      </section>
 
       {/* Grade 3×3: uma coluna por parte, três cenas por coluna */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -563,6 +671,20 @@ export function EditorCapitulo({
                           ✖ Descartar
                         </button>
                       </div>
+                    </div>
+                  )}
+                  {previewCapitulo[cena.id] && (
+                    <div className="mt-2 rounded-md border border-green-200 bg-green-50 p-2">
+                      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-green-700">
+                        Prévia do capítulo gerado — revise antes de usar
+                      </p>
+                      <textarea
+                        value={previewCapitulo[cena.id]}
+                        readOnly
+                        rows={8}
+                        aria-label={`Prévia do capítulo gerado para a cena ${i + 1}`}
+                        className="w-full resize-y rounded-md border border-green-200 bg-white p-2 text-sm leading-relaxed outline-none"
+                      />
                     </div>
                   )}
                   <PainelAssociacoesCena

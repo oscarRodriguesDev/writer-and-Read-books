@@ -161,6 +161,17 @@ export const respostaGeracaoCenaSchema = z.object({
   texto: z.string().trim().min(1, "IA não retornou texto").max(100_000),
 });
 
+/** Resposta da geração de capítulo completo por IA. */
+export const respostaGeracaoCapituloSchema = z.object({
+  cenas: z.array(
+    z.object({
+      parteTipo: z.enum(["INICIO", "MEIO", "FIM"]),
+      cenaTipo: z.enum(["INICIO", "MEIO", "FIM"]),
+      texto: z.string().trim().min(1).max(100_000),
+    })
+  ).length(9),
+});
+
 /** Entidade nova identificada na cena e ainda não cadastrada na obra (RF-74/75). */
 const entidadeNovaSchema = z.object({
   nome: z.string().trim().min(1).max(200),
