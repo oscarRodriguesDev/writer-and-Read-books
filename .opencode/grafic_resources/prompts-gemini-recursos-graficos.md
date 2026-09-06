@@ -371,11 +371,11 @@ de banner.
 | `mascote-chorando.png` | Estado vazio dramático (`Dashboard/EmptyState.tsx`) | ✅ aplicado |
 | `mascote-dormindo.png` | Sem atividade / inativo | ⏳ pendente de uso |
 | `mascote-tech.png` | Estados de IA gerando/mapeando (`EditorCapitulo`, Gerenciadores) | ✅ aplicado |
-| `empty-dashboard.png` | `Dashboard/EmptyState.tsx` | ⏳ aguardando arquivo |
-| `empty-personagens.png` | `GerenciadorPersonagens.tsx` (lista vazia) | ⏳ aguardando arquivo |
-| `empty-capitulos.png` | `GerenciadorCapitulos.tsx` (lista vazia) | ⏳ aguardando arquivo |
-| `empty-ambientes.png` | `GerenciadorAmbientes.tsx` (lista vazia) | ⏳ aguardando arquivo |
-| `empty-linha-do-tempo.png` | `GerenciadorLinhaDoTempo.tsx` (lista vazia) | ⏳ aguardando arquivo |
+| `empty-dashboard.png` | `Dashboard/EmptyState.tsx` / `WorkGrid.tsx` (filtros sem resultado) | ✅ aplicado (`comic-estado-vazio.png`) |
+| `empty-personagens.png` | `GerenciadorPersonagens.tsx` (lista vazia) | ✅ aplicado (`comic-no-persons.png`) |
+| `empty-capitulos.png` | `GerenciadorCapitulos.tsx` (lista vazia) | ✅ aplicado (`comic-sem-capitulos.png`) |
+| `empty-ambientes.png` | `GerenciadorAmbientes.tsx` (lista vazia) | ✅ aplicado (`comic-no-envs.png`) |
+| `empty-linha-do-tempo.png` | `GerenciadorLinhaDoTempo.tsx` (lista vazia) | ✅ aplicado (`comic-no-timeline.png`) |
 | `icone-livros.png` (`meus-livros.png`) | Sidebar — item "Obras" (`Sidebar.tsx`) | ✅ aplicado |
 | `icone-personagens.png` (`personagens.png`) | Sidebar — item "Personagens" | ✅ aplicado |
 | `icone-capitulos.png` (`capitulos.png`) | Sidebar — item "Capítulos" | ✅ aplicado |

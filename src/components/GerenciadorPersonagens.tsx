@@ -6,6 +6,7 @@ import { PAPEIS, ROTULO_PAPEL } from "@/lib/constants";
 import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
 import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
 import { ImagemEntidade } from "@/components/ImagemEntidade";
+import { EstadoVazio } from "@/components/EstadoVazio";
 import { GRAFIC } from "@/lib/grafic";
 
 export type PersonagemDados = {
@@ -306,11 +307,15 @@ export function GerenciadorPersonagens({
       )}
 
       {visiveis.length === 0 && !criando && (
-        <p className="text-sm text-muted">
-          {resultados.length === 0 && consulta.trim()
-            ? "Nenhum personagem corresponde a essa busca."
-            : "Nenhum personagem cadastrado."}
-        </p>
+        <EstadoVazio
+          src={GRAFIC.vazioPersonagens}
+          alt="Nenhum personagem cadastrado"
+          mensagem={
+            resultados.length === 0 && consulta.trim()
+              ? "Nenhum personagem corresponde a essa busca."
+              : "Nenhum personagem cadastrado."
+          }
+        />
       )}
 
       {visiveis.map(({ personagem: p, relevancia }) =>

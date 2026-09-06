@@ -3,6 +3,8 @@
 import { useState, useMemo } from "react";
 import { WorkCard } from "./WorkCard";
 import { SkeletonCard } from "./SkeletonCard";
+import { EstadoVazio } from "@/components/EstadoVazio";
+import { GRAFIC } from "@/lib/grafic";
 import { Obra } from "@/lib/types";
 import { excluirObra } from "@/app/actions/obras";
 import { toast } from "sonner";
@@ -98,12 +100,11 @@ export function WorkGrid({
 
   if (filteredObras.length === 0) {
     return (
-      <div className="text-center py-12 text-muted">
-        <svg className="mx-auto mb-3 w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <p>Nenhuma obra encontrada com os filtros atuais.</p>
-      </div>
+      <EstadoVazio
+        src={GRAFIC.vazioDashboard}
+        alt="Nenhuma obra encontrada"
+        mensagem="Nenhuma obra encontrada com os filtros atuais."
+      />
     );
   }
 

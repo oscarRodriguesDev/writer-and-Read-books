@@ -5,6 +5,7 @@
  */
 
 const ICONES = "/grafic/icones";
+const COMPOSITIONS = "/grafic/compositions";
 
 /** Ícones de navegação/módulos. */
 export const GRAFIC = {
@@ -30,6 +31,12 @@ export const GRAFIC = {
   seloConcluida: `${ICONES}/status-done.png`,
   sucessoCelebrando: `${ICONES}/sucesso-celebrando.png`,
   sucessoJoinha: `${ICONES}/sucesso-joinha.png`,
+  /* Composições de estado vazio (geradas na 2ª leva) */
+  vazioDashboard: `${COMPOSITIONS}/comic-estado-vazio.png`,
+  vazioPersonagens: `${COMPOSITIONS}/comic-no-persons.png`,
+  vazioAmbientes: `${COMPOSITIONS}/comic-no-envs.png`,
+  vazioLinhaTempo: `${COMPOSITIONS}/comic-no-timeline.png`,
+  vazioCapitulos: `${COMPOSITIONS}/comic-sem-capitulos.png`,
 } as const;
 
 export type ChaveGrafic = keyof typeof GRAFIC;

@@ -1,5 +1,22 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: 2ª leva de recursos gráficos — estados vazios
+
+### Estado final
+- 5 composições cômicas de estado vazio em `public/grafic/compositions/`:
+  `comic-estado-vazio`, `comic-no-persons`, `comic-no-envs`, `comic-no-timeline`, `comic-sem-capitulos`
+- Novo componente reutilizável `src/components/EstadoVazio.tsx` (imagem + mensagem + ação opcional)
+- Registrados em `src/lib/grafic.ts` (`GRAFIC.vazio*`)
+- Aplicado em: WorkGrid (filtros), GerenciadorPersonagens, GerenciadorAmbientes,
+  GerenciadorLinhaDoTempo, GerenciadorCapitulos
+- Build passando (Turbopack + TS)
+
+### Próximos passos sugeridos
+- Gerar demais recursos: `ia-*`, `decor-*`, `avatar-*`, `banner-modo-leitor`, `sucesso-joinha`
+- Teste visual do mascote/estados vazios em temas claro/escuro
+
+---
+
 ## 2026-09-06 - Sessão: Prompts de recursos gráficos cômicos (Gemini)
 
 ### Estado final

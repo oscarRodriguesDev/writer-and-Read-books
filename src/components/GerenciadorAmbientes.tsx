@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
 import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
 import { ImagemEntidade } from "@/components/ImagemEntidade";
+import { EstadoVazio } from "@/components/EstadoVazio";
 import { GRAFIC } from "@/lib/grafic";
 
 export type AmbienteDados = {
@@ -209,7 +210,11 @@ export function GerenciadorAmbientes({
       )}
 
       {iniciais.length === 0 && !criando && (
-        <p className="text-sm text-muted">Nenhum ambiente cadastrado.</p>
+        <EstadoVazio
+          src={GRAFIC.vazioAmbientes}
+          alt="Nenhum ambiente cadastrado"
+          mensagem="Nenhum ambiente cadastrado."
+        />
       )}
 
       {iniciais.map((a) =>

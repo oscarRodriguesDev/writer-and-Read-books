@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { inputCls, labelCls, btnPrimario, btnSecundario, cardCls } from "@/components/ui";
 import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
 import { ImagemEntidade } from "@/components/ImagemEntidade";
+import { EstadoVazio } from "@/components/EstadoVazio";
 import { GRAFIC } from "@/lib/grafic";
 
 export type CapituloDados = {
@@ -146,7 +147,11 @@ export function GerenciadorCapitulos({
       )}
 
       {iniciais.length === 0 && !criando && (
-        <p className="text-sm text-muted">Nenhum capítulo criado ainda.</p>
+        <EstadoVazio
+          src={GRAFIC.vazioCapitulos}
+          alt="Nenhum capítulo criado ainda"
+          mensagem="Nenhum capítulo criado ainda."
+        />
       )}
 
       <ol className="space-y-2">

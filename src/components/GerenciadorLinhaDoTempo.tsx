@@ -7,6 +7,7 @@ import {
   ROTULO_ESCALA_TEMPORAL,
 } from "@/lib/constants";
 import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
+import { EstadoVazio } from "@/components/EstadoVazio";
 import { GRAFIC } from "@/lib/grafic";
 
 export type EventoDados = {
@@ -611,9 +612,11 @@ export function GerenciadorLinhaDoTempo({
       {erroGeral && <p className="text-sm text-red-600">{erroGeral}</p>}
 
       {eventosIniciais.length === 0 && !criando && (
-        <p className="text-sm text-muted">
-          Nenhum evento cadastrado. Crie o primeiro marco da sua história.
-        </p>
+        <EstadoVazio
+          src={GRAFIC.vazioLinhaTempo}
+          alt="Nenhum evento cadastrado"
+          mensagem="Nenhum evento cadastrado. Crie o primeiro marco da sua história."
+        />
       )}
 
       {/* Linha do tempo vertical gráfica */}
