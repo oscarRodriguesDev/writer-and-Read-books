@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-06 - Backlog item 1: Relações entre personagens
+- **Commit**: (pendente)
+- **Descrição**: Model `RelacaoPersonagem` existia sem tela/API. Criado CRUD completo.
+- **Solução**: Constantes de tipos, validator, rotas GET/POST/DELETE, componente `RelacoesPersonagem` no card do personagem.
+- **Arquivos**: `src/lib/constants.ts`, `src/lib/validators/index.ts`, `src/app/api/obras/[obraId]/relacoes/route.ts`, `src/app/api/personagens/[id]/relacoes/route.ts`, `src/app/api/relacoes/[id]/route.ts`, `src/components/RelacoesPersonagem.tsx`, `src/components/GerenciadorPersonagens.tsx`
+- **Testes**: build passa; API validada (201/409/400/200/404); sem migração.
+
 ## 2026-09-06 - Criar backlog do projeto
 - **Commit**: (pendente)
 - **Descrição**: Usuário pediu para salvar tudo que falta fazer em ordem de prioridade e apresentar item a item.

@@ -1,5 +1,30 @@
 # Memórias do Projeto
 
+## 2026-09-06 - Relações entre personagens — Item 1 do backlog (Autoria: VIBECODE)
+
+### Contexto
+O model `RelacaoPersonagem` existia no banco desde o início, era usado apenas pela IA como contexto de geração/reescrita — mas não havia nenhuma tela nem rota para o autor criar relações.
+
+### Decisões
+- Relação é **direcionada** (origem → destino) com tipo e descrição; a UI mostra sempre "personagem ↔ outro" independente da direção (o card de cada personagem apresenta as relações onde ele participa).
+- Proteções na API: ambos os personagens precisam pertencer à mesma obra; relação duplicada bidirecional é bloqueada (409); auto-relação é vetada (400).
+- Tipos de relação: FAMILIA, AMIZADE, ROMANCE, RIVALIDADE, INIMIZADE, MENTORIA, ALIANCA, SUBORDINACAO, DEPENDENCIA, OUTRO.
+- Sem migração Prisma — o model já existia com os campos necessários.
+
+### Arquivos alterados
+- `src/lib/constants.ts` — `TIPOS_RELACAO` + `ROTULO_TIPO_RELACAO`
+- `src/lib/validators/index.ts` — `relacaoPersonagemSchema` + tipo `RelacaoPersonagemInput`
+- `src/app/api/obras/[obraId]/relacoes/route.ts` — POST (criar, com validações)
+- `src/app/api/personagens/[id]/relacoes/route.ts` — GET (listar com nomes)
+- `src/app/api/relacoes/[id]/route.ts` — DELETE
+- `src/components/RelacoesPersonagem.tsx` — novo componente (listagem + criação + remoção)
+- `src/components/GerenciadorPersonagens.tsx` — integração do componente no card
+
+### Testes
+- Build passa. Smoke test da API: criar 201, duplicata 409, auto-relação 400, listar ok, remover 200, remover inexistente 404.
+
+---
+
 ## 2026-09-06 - Edição de título e descrição na lista de capítulos (Autoria: VIBECODE)
 
 ### Problema

@@ -36,6 +36,21 @@ export const PAPEIS_AUTOR = [
 ] as const;
 export type PapelAutor = (typeof PAPEIS_AUTOR)[number];
 
+/** Tipos de relação entre personagens (RelacaoPersonagem.tipo). */
+export const TIPOS_RELACAO = [
+  "FAMILIA",
+  "AMIZADE",
+  "ROMANCE",
+  "RIVALIDADE",
+  "INIMIZADE",
+  "MENTORIA",
+  "ALIANCA",
+  "SUBORDINACAO",
+  "DEPENDENCIA",
+  "OUTRO",
+] as const;
+export type TipoRelacao = (typeof TIPOS_RELACAO)[number];
+
 // Rótulos em PT-BR para exibição
 export const ROTULO_PARTE: Record<ParteTipo, string> = {
   INICIO: "Início",
@@ -51,6 +66,19 @@ export const ROTULO_PAPEL_AUTOR: Record<PapelAutor, string> = {
   ILUSTRADOR: "Ilustrador",
   PREFACIADOR: "Prefaciador",
   POSFACIADOR: "Posfaciador",
+};
+
+export const ROTULO_TIPO_RELACAO: Record<TipoRelacao, string> = {
+  FAMILIA: "Família",
+  AMIZADE: "Amizade",
+  ROMANCE: "Romance",
+  RIVALIDADE: "Rivalidade",
+  INIMIZADE: "Inimizade",
+  MENTORIA: "Mentoria",
+  ALIANCA: "Aliança",
+  SUBORDINACAO: "Subordinação",
+  DEPENDENCIA: "Dependência",
+  OUTRO: "Outro",
 };
 
 // ---- Análise IA ----

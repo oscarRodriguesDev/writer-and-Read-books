@@ -5,6 +5,7 @@ import {
   PAPEIS,
   ESCALAS_TEMPORAIS,
   STATUS_ACHADO,
+  TIPOS_RELACAO,
 } from "@/lib/constants";
 
 /** String que vira null quando vazia (campos opcionais de formulário). */
@@ -111,6 +112,19 @@ export const personagemSchema = z.object({
   historia: textoOpcional(5000),
   comportamento: textoOpcional(2000),
 });
+
+/** POST /api/personagens/[id]/relacoes — vínculo entre dois personagens da mesma obra. */
+export const relacaoPersonagemSchema = z
+  .object({
+    origemId: z.string().trim().min(1).max(50),
+    destinoId: z.string().trim().min(1).max(50),
+    tipo: z.enum(TIPOS_RELACAO).default("OUTRO"),
+    descricao: textoOpcional(1000),
+  })
+  .refine((r) => r.origemId !== r.destinoId, {
+    message: "Uma relação precisa ser entre dois personagens diferentes",
+    path: ["destinoId"],
+  });
 
 export const ambienteSchema = z.object({
   nome: z.string().trim().min(1, "Nome é obrigatório").max(200),
@@ -440,6 +454,7 @@ export type PersonagemInput = z.infer<typeof personagemSchema>;
 export type AmbienteInput = z.infer<typeof ambienteSchema>;
 export type CriarCapituloInput = z.infer<typeof criarCapituloSchema>;
 export type EventoInput = z.infer<typeof eventoSchema>;
+export type RelacaoPersonagemInput = z.infer<typeof relacaoPersonagemSchema>;
 
 // Metadados de publicação
 export type AutorInput = z.infer<typeof autorSchema>;

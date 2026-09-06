@@ -7,6 +7,7 @@ import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } fr
 import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
 import { ImagemEntidade } from "@/components/ImagemEntidade";
 import { EstadoVazio } from "@/components/EstadoVazio";
+import { RelacoesPersonagem } from "@/components/RelacoesPersonagem";
 import { GRAFIC } from "@/lib/grafic";
 
 export type PersonagemDados = {
@@ -353,6 +354,14 @@ export function GerenciadorPersonagens({
               {p.psicologico && <p className="text-sm"><strong>Psicológico:</strong> {p.psicologico}</p>}
               {p.historia && <p className="text-sm"><strong>História:</strong> {p.historia}</p>}
               {p.comportamento && <p className="text-sm"><strong>Comportamento:</strong> {p.comportamento}</p>}
+              <RelacoesPersonagem
+                obraId={obraId}
+                personagemId={p.id}
+                personagemNome={p.nome}
+                outros={iniciais
+                  .filter((o) => o.id !== p.id)
+                  .map((o) => ({ id: o.id, nome: o.nome }))}
+              />
             </div>
             <div className="flex shrink-0 flex-col gap-2">
               <BotaoPromptImagem tipo="personagem" id={p.id} permitirGerar />

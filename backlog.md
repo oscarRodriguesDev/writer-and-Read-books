@@ -5,9 +5,9 @@
 
 ## FASE 1 — Models órfãos (banco pronto, falta UI/API) — ganho rápido
 
-- [ ] **1. Relações entre personagens** — Model `RelacaoPersonagem` existe no schema (origem/destino/tipo/descrição) e a IA já usa no contexto. Falta: rotas API de CRUD + tela no `GerenciadorPersonagens` (adicionar/remover relação entre personagens).
-  - Arquivos prováveis: `src/app/api/personagens/[id]/relacoes/route.ts`, `GerenciadorPersonagens.tsx`
-  - Sem migração (model já existe).
+- [x] **1. Relações entre personagens** — Model `RelacaoPersonagem` existe no schema (origem/destino/tipo/descrição) e a IA já usa no contexto. Falta: rotas API de CRUD + tela no `GerenciadorPersonagens` (adicionar/remover relação entre personagens).
+  - Implementado: `GET /api/personagens/[id]/relacoes`, `POST /api/obras/[obraId]/relacoes` (valida mesma obra, sem duplicata e sem auto-relação), `DELETE /api/relacoes/[id]`. Componente `RelacoesPersonagem` no card de cada personagem. Constantes `TIPOS_RELACAO`/`ROTULO_TIPO_RELACAO` + validator `relacaoPersonagemSchema`.
+  - Sem migração (model já existia). Testes de API validados (201/409/400/404).
 
 - [ ] **2. Regras do universo** — Model `RegraObra` existe (descricao + ativa) e a IA respeita no contexto. Falta: rotas API de CRUD + tela para cadastrar/ativar/desativar regras da obra.
   - Arquivos prováveis: `src/app/api/obras/[obraId]/regras/route.ts` (+ `[id]`), tela nova (aba "Universo" ou seção na Visão geral).

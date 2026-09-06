@@ -1,5 +1,24 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Backlog item 1 — Relações entre personagens
+
+### Estado final
+- Constantes `TIPOS_RELACAO` + `ROTULO_TIPO_RELACAO` (10 tipos) em `src/lib/constants.ts`
+- Validator `relacaoPersonagemSchema` (origem≠destino, tipos válidos) em `src/lib/validators/index.ts`
+- Rotas API:
+  - `GET /api/personagens/[id]/relacoes` — lista relações de um personagem (com nome de origem/destino)
+  - `POST /api/obras/[obraId]/relacoes` — cria; valida que ambos pertencem à obra, bloqueia duplicata (bidirecional) e auto-relação (409/400)
+  - `DELETE /api/relacoes/[id]` — remove
+- Componente `RelacoesPersonagem.tsx` integrado no card de cada personagem (listar, criar com select de destino/tipo/descrição, remover)
+- Testes de API validados: criar 201, duplicata 409, auto-relação 400, listar ok, deletar 200, inexistente 404
+- Build passando
+
+### Próximos passos sugeridos
+- Revisão visual da UI de relações no navegador
+- Item 2 do backlog: Regras do universo
+
+---
+
 ## 2026-09-06 - Sessão: Mapeamento da estrutura-alvo e criação do backlog
 
 ### Estado final
