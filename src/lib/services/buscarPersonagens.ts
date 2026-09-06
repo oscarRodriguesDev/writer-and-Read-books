@@ -38,6 +38,7 @@ export async function buscarPersonagens(
       psicologico: true,
       historia: true,
       comportamento: true,
+      objetivo: true,
     },
   });
   if (personagens.length === 0)
@@ -53,6 +54,7 @@ export async function buscarPersonagens(
         p.psicologico && `  psicológico: ${p.psicologico.slice(0, 300)}`,
         p.historia && `  história: ${p.historia.slice(0, 500)}`,
         p.comportamento && `  comportamento: ${p.comportamento.slice(0, 300)}`,
+        p.objetivo && `  objetivo: ${p.objetivo.slice(0, 300)}`,
       ]
         .filter(Boolean)
         .join("\n"),

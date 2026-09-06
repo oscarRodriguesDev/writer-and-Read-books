@@ -132,6 +132,8 @@ model Personagem {
   psicologico   String?
   historia      String?
   comportamento String?
+  // O que esse personagem quer alcançar na história
+  objetivo      String?
   observacoes   String?
   criadoEm      DateTime @default(now())
 

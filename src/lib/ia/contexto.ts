@@ -99,6 +99,7 @@ function textoCabecalhoObra(obra: ObraCompleta): string {
         p.historia && `história: ${truncar(p.historia, MAX_CAMPO)}`,
         p.comportamento &&
           `comportamento: ${truncar(p.comportamento, MAX_CAMPO)}`,
+        p.objetivo && `objetivo: ${truncar(p.objetivo, MAX_CAMPO)}`,
         p.observacoes && `obs: ${truncar(p.observacoes, MAX_CAMPO)}`,
       ].filter(Boolean);
 
