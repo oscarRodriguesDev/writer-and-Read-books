@@ -1,5 +1,68 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Edição de título e descrição na lista de capítulos
+
+### Estado final
+- `GerenciadorCapitulos` agora permite editar título e descrição (`objetivo`) inline na lista, via botão ✏️
+- Formulário inline com Título (input, obrigatório) e Descrição (textarea), Salvar/Cancelar
+- Salva via `PATCH /api/capitulos/[capituloId]` (rota já existente), com feedback de erro e `router.refresh()`
+- Sem alterações de schema ou migrações
+- Build passando (Turbopack + TS)
+
+### Próximos passos sugeridos
+- Teste visual manual da edição inline (estado de erro, cancelamento, atualização da lista)
+- Commit das mudanças pendentes (há alterações não commitadas da sessão de metadados na branch `vibecode`)
+
+---
+
+## 2026-09-06 - Sessão: Corretor ortográfico e gramatical nas cenas
+
+### Estado final
+- Engine de ortografia definida e implementada: `cspell-trie-lib` + `@cspell/dict-pt-br` (+ en_us e es_es), trie pré-compilada carregada ~408ms em singleton com cache por idioma
+- Módulo `src/lib/revisao/` completo: detecção ortográfica + gramatical (IA NVIDIA), sugestões, correção em massa conservadora (distância mínima única ≤ 2)
+- Rotas `POST /api/revisao/verificar` e `POST /api/revisao/corrigir` funcionais, com `idioma` (pt-BR/en/es)
+- UI do editor integrada: `TextareaComRevisao` (espelho + sublinhado wavy vermelho/azul + clique) + `PopupSugestoes` (substituir/ignorar/adicionar ao dicionário localStorage)
+- `EditorCapitulo` com badges por cena (Aa N, ab N, ⌛ gramática…, ✓ Corrigir ortografia (N)), debounce ortografia 800ms / gramática 3000ms, fila serial de IA, anti-corrida
+- `page.tsx` do capítulo lê e repassa `Obra.idioma`
+- Revisão agendada também após `usarGeracao`/`usarGeracaoCapitulo`
+- Espelho do textarea corrigido: texto do espelho transparente (sem duplicação visual) e `scrollbar-gutter: stable` + compensação única da largura da scrollbar (sublinhados alinhados mesmo quando a barra de rolagem aparece)
+- Tooltip com o motivo do sublinhado ao passar o mouse sobre trecho marcado (hit-test por posição, throttled por rAF); clique continua abrindo o popup de sugestões
+- Sublinhados nunca ficam em palavras erradas durante a digitação: marcas com offset defasado são puladas (validação `slice === trecho`), erros da cena são limpos imediatamente no `onChange` e o espelho usa métricas explícitas iguais às do textarea (fonte 14px/1.625, `word-break: break-word`)
+- Build sem erros (Turbopack + TS)
+- Testes API: pt-BR/EN/ES validados; gramática pontua corretamente quando a NVIDIA responde; com 503 do serviço → `avisoGramatical` amigável sem quebrar ortografia
+- Página do editor SSR renderiza o espelho de revisão
+
+### Próximos passos sugeridos
+- Teste visual manual do popup e alinhamento do espelho em navegador (quebras de linha, posicionamento do popup, modo escuro)
+- Validar UX longa: digitação contínua em cena grande (perf do espelho, 600 erros máximo)
+- Considerar commit das mudanças (há alterações não commitadas da sessão de metadados ainda na branch `vibecode`)
+- Adicionar mais idiomas (instalar `@cspell/dict-XX`, copiar `.trie.gz` para `src/lib/revisao/assets/`, registrar em `idiomas.ts`)
+
+---
+
+## 2026-08-27 - Sessão: Metadados de Publicação e Exportação Profissional
+
+### Estado final
+- Schema Prisma expandido com metadados profissionais (ISBN, autores, categorias, palavras-chave, direitos, capa, etc.)
+- Formulário de edição com 3 abas (Básicos, Publicação, Capa)
+- Exportação EPUB 3 com metadados Dublin Core completos, autores com roles, ISBN, categorias BISAC, palavras-chave, direitos, editora, edição, idioma, página de créditos, capa embutida
+- Exportação PDF profissional com capa completa e página de créditos
+- Exportação DOCX profissional com capa e página de créditos
+- Exportação Kindle reusa EPUB otimizado
+- Página da obra exibe todos os metadados
+- Build passando
+- TypeScript sem erros
+
+### Próximos passos sugeridos
+- Testar exportação via API real (`GET /api/obras/[obraId]/exportar/epub|pdf|docx|kindle`)
+- Validar EPUB gerado em dispositivos Kindle reais e leitores (Calibre, Apple Books, Kobo)
+- Adicionar upload de imagem de capa via interface (atualmente só URL)
+- Implementar busca/autocomplete de categorias BISAC/CLIL
+- Implementar gerenciamento de autores (CRUD separado)
+- Validação EPUB com epubcheck integrada
+
+---
+
 ## 2026-08-25 - Sessão: Correção exportação EPUB
 
 ### Estado final
