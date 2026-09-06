@@ -99,17 +99,15 @@ export function RelacoesPersonagem({ obraId, personagemId, personagemNome, outro
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-line bg-surface-elevated p-3">
-      <h4 className="text-sm font-semibold">🔗 Relações</h4>
-
+    <div className="space-y-3">
       {carregando ? (
-        <p className="mt-2 text-xs text-muted">Carregando…</p>
+        <p className="text-xs text-muted">Carregando…</p>
       ) : relacoes.length === 0 ? (
-        <p className="mt-2 text-xs text-muted">
+        <p className="text-xs text-muted">
           Nenhuma relação cadastrada para {personagemNome}.
         </p>
       ) : (
-        <ul className="mt-2 space-y-1.5">
+        <ul className="space-y-1.5">
           {relacoes.map((rel) => (
             <li
               key={rel.id}
@@ -141,33 +139,35 @@ export function RelacoesPersonagem({ obraId, personagemId, personagemNome, outro
         </ul>
       )}
 
-      <div className="mt-3 space-y-2">
+      <div className="space-y-2 rounded-md border border-line bg-surface-elevated p-3">
         <label className={labelCls}>Adicionar relação</label>
-        <select
-          value={novoDestino}
-          onChange={(e) => setNovoDestino(e.target.value)}
-          className={inputCls}
-          aria-label="Personagem de destino da relação"
-        >
-          <option value="">Selecione um personagem…</option>
-          {outros.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.nome}
-            </option>
-          ))}
-        </select>
-        <select
-          value={novoTipo}
-          onChange={(e) => setNovoTipo(e.target.value)}
-          className={inputCls}
-          aria-label="Tipo da relação"
-        >
-          {TIPOS_RELACAO.map((t) => (
-            <option key={t} value={t}>
-              {ROTULO_TIPO_RELACAO[t]}
-            </option>
-          ))}
-        </select>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <select
+            value={novoDestino}
+            onChange={(e) => setNovoDestino(e.target.value)}
+            className={inputCls}
+            aria-label="Personagem de destino da relação"
+          >
+            <option value="">Selecione um personagem…</option>
+            {outros.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nome}
+              </option>
+            ))}
+          </select>
+          <select
+            value={novoTipo}
+            onChange={(e) => setNovoTipo(e.target.value)}
+            className={inputCls}
+            aria-label="Tipo da relação"
+          >
+            {TIPOS_RELACAO.map((t) => (
+              <option key={t} value={t}>
+                {ROTULO_TIPO_RELACAO[t]}
+              </option>
+            ))}
+          </select>
+        </div>
         <input
           value={novaDescricao}
           onChange={(e) => setNovaDescricao(e.target.value)}

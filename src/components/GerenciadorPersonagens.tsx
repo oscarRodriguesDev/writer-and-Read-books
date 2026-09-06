@@ -3,11 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PAPEIS, ROTULO_PAPEL } from "@/lib/constants";
-import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
-import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
-import { ImagemEntidade } from "@/components/ImagemEntidade";
+import { inputCls, labelCls, btnPrimario, btnSecundario, cardCls } from "@/components/ui";
 import { EstadoVazio } from "@/components/EstadoVazio";
-import { RelacoesPersonagem } from "@/components/RelacoesPersonagem";
+import { CardPersonagem } from "@/components/CardPersonagem";
 import { GRAFIC } from "@/lib/grafic";
 
 export type PersonagemDados = {
@@ -19,6 +17,7 @@ export type PersonagemDados = {
   psicologico: string | null;
   historia: string | null;
   comportamento: string | null;
+  objetivo: string | null;
 };
 
 const CAMPOS_TEXTO = [
@@ -26,6 +25,7 @@ const CAMPOS_TEXTO = [
   { nome: "psicologico", rotulo: "Psicológico" },
   { nome: "historia", rotulo: "História" },
   { nome: "comportamento", rotulo: "Comportamento" },
+  { nome: "objetivo", rotulo: "Objetivo" },
 ] as const;
 
 function FormPersonagem({
@@ -330,49 +330,18 @@ export function GerenciadorPersonagens({
             />
           </div>
         ) : (
-          <div key={p.id} className={`${cardCls} flex items-start justify-between gap-4`}>
-            <ImagemEntidade tipo="personagem" id={p.id} url={p.imagemUrl} rotulo="Personagem" />
-            <div className="min-w-0">
-              <h3 className="font-semibold">
-                {p.nome}
-                {relevancia !== null && (
-                  <span className="ml-2 rounded-full bg-chipbg px-2 py-0.5 text-xs font-normal text-soft">
-                    ✨ {relevancia}% relevante
-                  </span>
-                )}
-              </h3>
-              {relevancia !== null &&
-                resultados.find((r) => r.id === p.id)?.motivo && (
-                  <p className="mt-1 rounded-md border border-line bg-surface p-2 text-xs text-muted">
-                    💡 {resultados.find((r) => r.id === p.id)!.motivo}
-                  </p>
-                )}
-              <span className="mt-1 inline-block rounded-full bg-chipbg px-2 py-0.5 text-xs text-soft">
-                {ROTULO_PAPEL[p.papel] ?? p.papel}
-              </span>
-              {p.fisico && <p className="mt-2 text-sm"><strong>Físico:</strong> {p.fisico}</p>}
-              {p.psicologico && <p className="text-sm"><strong>Psicológico:</strong> {p.psicologico}</p>}
-              {p.historia && <p className="text-sm"><strong>História:</strong> {p.historia}</p>}
-              {p.comportamento && <p className="text-sm"><strong>Comportamento:</strong> {p.comportamento}</p>}
-              <RelacoesPersonagem
-                obraId={obraId}
-                personagemId={p.id}
-                personagemNome={p.nome}
-                outros={iniciais
-                  .filter((o) => o.id !== p.id)
-                  .map((o) => ({ id: o.id, nome: o.nome }))}
-              />
-            </div>
-            <div className="flex shrink-0 flex-col gap-2">
-              <BotaoPromptImagem tipo="personagem" id={p.id} permitirGerar />
-              <button onClick={() => setEditandoId(p.id)} className={btnSecundario}>
-                Editar
-              </button>
-              <button onClick={() => excluir(p.id, p.nome)} className={btnPerigo}>
-                Excluir
-              </button>
-            </div>
-          </div>
+          <CardPersonagem
+            key={p.id}
+            obraId={obraId}
+            personagem={p}
+            relevancia={relevancia}
+            motivo={resultados.find((r) => r.id === p.id)?.motivo ?? null}
+            outros={iniciais
+              .filter((o) => o.id !== p.id)
+              .map((o) => ({ id: o.id, nome: o.nome }))}
+            aoEditar={() => setEditandoId(p.id)}
+            aoExcluir={() => void excluir(p.id, p.nome)}
+          />
         ),
       )}
     </div>
