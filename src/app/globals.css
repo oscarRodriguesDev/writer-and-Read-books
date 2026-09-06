@@ -277,7 +277,7 @@
        cima da cor base, mesclado de forma discreta. */
     background-color: var(--background);
     background-image: linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)),
-      url("/grafic/sem-emendas-fundo.jpg");
+      url("/grafic/sem-emendas-fundo-theme-light.jpg");
     background-size: auto, 1408px 768px;
     background-repeat: repeat-x, repeat;
     background-position: center, center;
@@ -291,7 +291,7 @@
   }
 
   .dark body {
-    background-image: url("/grafic/sem-emendas-fundo-theme-dark.jpg");
+    background-image: url("/grafic/sem-emendas-fundo-dark.jpg");
   }
 
   ::selection {
