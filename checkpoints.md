@@ -1,5 +1,22 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Arco narrativo do personagem (item 4)
+
+### Estado final
+- Migração `20260906233910_personagem_arco` aplicada: `arco TEXT` + `arcoDescricao TEXT` em `Personagem`
+- Validator: `arco` ≤200 chars, `arcoDescricao` ≤4000 chars
+- Formulário: input `arco` na grade (com sugestões no label: Herói/Redenção/Queda/Amadurecimento) + `arcoDescricao` nos campos de texto
+- Card: badge 📈 "Arco: X" no cabeçalho (ao lado do papel) + bloco "Arco — descrição" no perfil
+- IA enriquecida: `contexto.ts`, `buscarPersonagens.ts` e `promptImagem.ts` passam arco/descrição
+- Commit `2b7988b`; push pendente dos arquivos de controle
+- Build passando
+
+### Próximos passos sugeridos
+- **Teste visual do usuário** (badge de arco no card, campos no formulário)
+- Item 5 do backlog: Objetos do universo (novo model + CRUD + tela, requer migração)
+
+---
+
 ## 2026-09-06 - Sessão: Objetivo por personagem (item 3) + reorganização do card
 
 ### Estado final

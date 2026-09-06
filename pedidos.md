@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-06 - Backlog item 4: Arcos de personagem
+- **Commit**: `2b7988b`
+- **Descrição**: Campo `arco` (String?) + `arcoDescricao` no `Personagem` (ex.: "Herói", "Redenção") com formulário, exibição e contexto IA.
+- **Solução**: Migração `20260906233910_personagem_arco` (colunas TEXT), validator, input no formulário, badge 📈 no card + bloco descrição, contexto/busca/prompt-imagem passando arco.
+- **Arquivos**: `prisma/schema.prisma`, `prisma/migrations/20260906233910_personagem_arco/`, `src/lib/validators/index.ts`, `src/components/GerenciadorPersonagens.tsx`, `src/components/CardPersonagem.tsx`, `src/lib/ia/contexto.ts`, `src/lib/services/buscarPersonagens.ts`, `src/lib/services/promptImagem.ts`
+- **Testes**: build passa. Nota: usuário validou o conceito de "arco" (transformação/não-transformação do personagem) e aprovou campo livre.
+
 ## 2026-09-06 - Backlog item 3: Objetivos por personagem
 - **Commit**: `cf9dfa4`
 - **Descrição**: Campo `objetivo` no `Personagem` com formulário, card e contexto IA.

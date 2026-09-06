@@ -1,5 +1,34 @@
 # Memórias do Projeto
 
+## 2026-09-06 - Arco narrativo do personagem — Item 4 do backlog (Autoria: VIBECODE)
+
+### Contexto
+O autor precisa registrar o **arco narrativo** de cada personagem (ex.: "Herói", "Redenção", "Queda") com uma descrição opcional da transformação — o que conecta o personagem à evolução da história.
+
+### Decisões
+- **Colunas simples** (não model separado): `arco String?` (nome curto do arco, ex.: "Herói") + `arcoDescricao String?` (descrição da jornada/transformação). Migração `20260906233910_personagem_arco`.
+- **Limites**: `arco` ≤ 200 chars (campo curto); `arcoDescricao` ≤ 4000 chars.
+- **UI**:
+  - Formulário: input `arco` na grade com nome/papel (com sugestões "Herói", "Redenção", "Queda", "Amadurecimento" no label); `arcoDescricao` como campo de texto nos `CAMPOS_TEXTO`.
+  - Card: `arco` vira **badge 📈 "Arco: X"** no cabeçalho (perto do papel); `arcoDescricao` vira bloco rotulado no perfil.
+- **IA**: `contexto.ts` (ficha do personagem), `buscarPersonagens.ts` (evidência de busca) e `promptImagem.ts` (retrato do personagem) passam arco e descrição.
+
+### Arquivos alterados
+- `prisma/schema.prisma` + `prisma/migrations/20260906233910_personagem_arco/` — colunas `arco`/`arcoDescricao`
+- `src/lib/validators/index.ts` — `arco`/`arcoDescricao` em `personagemSchema`
+- `src/components/GerenciadorPersonagens.tsx` — tipo `PersonagemDados`, input `arco`, campo `arcoDescricao`
+- `src/components/CardPersonagem.tsx` — badge de arco no cabeçalho + bloco descrição no perfil
+- `src/lib/ia/contexto.ts`, `src/lib/services/buscarPersonagens.ts`, `src/lib/services/promptImagem.ts`
+
+### Testes
+- Migração aplicada; `prisma generate` ok; `npm run build` passa (Turbopack + TS).
+- Commit `2b7988b` (pending push).
+
+### Pendências
+- Teste visual do usuário (badge de arco, formulário).
+
+---
+
 ## 2026-09-06 - Objetivo por personagem + reorganização do card (itens 3 e UI) (Autoria: VIBECODE)
 
 ### Contexto

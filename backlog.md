@@ -20,8 +20,9 @@
   - Reactor de UI: novo `CardPersonagem` com abas Perfil/Relações resolveu a tela bagunçada do personagem.
   - Testes: build passa. Commit `cf9dfa4` (item 3) + `5f4c238` (reorganização UI).
 
-- [ ] **4. Arcos de personagem** — Campo `arco` (String?) no `Personagem` (ex.: "Herói", "Redenção") + descrição opcional `arcoDescricao` ou model separado. Formulário + exibição.
-  - Requer migração Prisma (adicionar colunas/model).
+- [x] **4. Arcos de personagem** — Campo `arco` (String?) no `Personagem` (ex.: "Herói", "Redenção") + descrição opcional `arcoDescricao` ou model separado. Formulário + exibição.
+  - Implementado: migração `20260906233910_personagem_arco` (colunas `arco TEXT` + `arcoDescricao TEXT`), validator (`arco` ≤200, `arcoDescricao` ≤4000), input `arco` no formulário + `arcoDescricao` nos campos de texto, badge 📈 "Arco: X" no cabeçalho do card + bloco descrição no perfil, contexto IA (contexto.ts), busca semântica (buscarPersonagens.ts) e prompt de imagem (promptImagem.ts).
+  - Testes: build passa. Commit `2b7988b`.
 
 ## FASE 3 — Universo (novos models)
 
