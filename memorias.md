@@ -1,5 +1,41 @@
 # Memórias do Projeto
 
+## 2026-09-06 - Artefatos do universo — Item 5 do backlog (Autoria: VIBECODE)
+
+### Contexto
+O autor não tinha onde registrar **objetos/relíquias/itens importantes** do universo da obra. O nome `Objeto` foi rejeitado por conflito com padrões globais (inclusive `Object` do JS); usuário aprovou **`Artefato`**.
+
+### Decisões
+- Model `Artefato` (obraId, nome, imagemUrl, descricao, historia) + relação em `Obra.artefatos`. Migração `20260906235052_artefatos`.
+- CRUD no padrão de ambientes: `POST /api/obras/[obraId]/artefatos` + `PATCH/DELETE /api/artefatos/[id]` (validator `artefatoSchema`: nome ≤200, descricao/historia ≤5000).
+- Upload de imagem reutiliza `ImagemEntidade`: tipo `"artefato"` adicionado em `ImagemEntidade.tsx`, nas 3 rotas de upload (`/api/upload`, `/api/upload/base64`, `/api/upload/url`) e no `urlImagemSchema`.
+- Tela: `GerenciadorArtefatos.tsx` (criar/editar/excluir com card + imagem) + página `/obras/[obraId]/artefatos` + aba "Artefatos" na `NavegacaoObra`.
+- IA: `carregarObra` inclui `artefatos` e o contexto ganha bloco `## ARTEFATOS` (nome + descrição + história) — a IA não pode mais "esquecer" um artefato ao gerar/revisar cenas.
+- **Estado vazio**: reutiliza `GRAFIC.vazioDashboard` (ainda não há composição dedicada "sem artefatos").
+- **Associação de artefatos a cenas (`CenaArtefato`) fica para etapa futura** — escopo desta entrega é CRUD + tela + contexto.
+
+### Arquivos alterados
+- `prisma/schema.prisma` + `prisma/migrations/20260906235052_artefatos/` — model `Artefato`
+- `src/lib/validators/index.ts` — `artefatoSchema` + `"artefato"` no `urlImagemSchema`
+- `src/app/api/obras/[obraId]/artefatos/route.ts` — POST
+- `src/app/api/artefatos/[id]/route.ts` — PATCH/DELETE
+- `src/app/api/upload/route.ts`, `upload/base64/route.ts`, `upload/url/route.ts` — tipo `artefato`
+- `src/components/GerenciadorArtefatos.tsx` — novo gerenciador
+- `src/components/ImagemEntidade.tsx` — tipo `"artefato"`
+- `src/app/obras/[obraId]/artefatos/page.tsx` — página nova
+- `src/components/NavegacaoObra.tsx` — aba "Artefatos"
+- `src/lib/ia/contexto.ts` — bloco `## ARTEFATOS`
+
+### Testes
+- Migração aplicada; `npm run build` passa (Turbopack + TS).
+- Commit `97366dd` (pending push).
+
+### Pendências
+- Teste visual do usuário (tela, upload de imagem, contexto).
+- Etapa futura: associar artefatos a cenas.
+
+---
+
 ## 2026-09-06 - Arco narrativo do personagem — Item 4 do backlog (Autoria: VIBECODE)
 
 ### Contexto

@@ -1,5 +1,24 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Artefatos do universo (item 5)
+
+### Estado final
+- Migração `20260906235052_artefatos` aplicada: model `Artefato` (obraId, nome, imagemUrl, descricao, historia)
+- CRUD: `POST /api/obras/[obraId]/artefatos` + `PATCH/DELETE /api/artefatos/[id]`
+- Upload de imagem habilitado para `artefato` (arquivo/base64/URL nas 3 rotas + `urlImagemSchema`)
+- Tela: `GerenciadorArtefatos` + página `/obras/[obraId]/artefatos` + aba "Artefatos" na navegação
+- Contexto IA com bloco `## ARTEFATOS` (obra agora carrega `artefatos`)
+- Estado vazio reutiliza `vazioDashboard` (sem composição dedicada ainda)
+- Commit `97366dd`; push pendente dos arquivos de controle
+- Build passando
+
+### Próximos passos sugeridos
+- **Teste visual do usuário** (CRUD de artefato, upload de imagem)
+- Etapa futura (anotado no backlog): associar artefatos a cenas (`CenaArtefato`)
+- Item 6 do backlog: Atos (FASE 4 — novo model `Ato` + `atoId`/`ordemDentroDoAto` em `Capitulo`, requer migração e cuidado com `@@unique([obraId, ordemNarrativa])`)
+
+---
+
 ## 2026-09-06 - Sessão: Arco narrativo do personagem (item 4)
 
 ### Estado final

@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-06 - Backlog item 5: Artefatos do universo
+- **Commit**: `97366dd`
+- **Descrição**: Model novo para objetos/relíquias/itens do universo (nome aprovado: `Artefato`; `Objeto` descartado por conflito de padrões).
+- **Solução**: Migração `20260906235052_artefatos`; validator + POST/PATCH/DELETE; upload de imagem (arquivo/base64/URL) com tipo `artefato`; `GerenciadorArtefatos` + página + aba; contexto IA com bloco `## ARTEFATOS`. Associação a cenas fica para etapa futura.
+- **Arquivos**: `prisma/schema.prisma`, `prisma/migrations/20260906235052_artefatos/`, `src/lib/validators/index.ts`, `src/app/api/obras/[obraId]/artefatos/route.ts`, `src/app/api/artefatos/[id]/route.ts`, `src/app/api/upload/{route,base64/route,url/route}.ts`, `src/components/GerenciadorArtefatos.tsx`, `src/components/ImagemEntidade.tsx`, `src/app/obras/[obraId]/artefatos/page.tsx`, `src/components/NavegacaoObra.tsx`, `src/lib/ia/contexto.ts`
+- **Testes**: build passa. Pendente teste visual do usuário.
+
 ## 2026-09-06 - Backlog item 4: Arcos de personagem
 - **Commit**: `2b7988b`
 - **Descrição**: Campo `arco` (String?) + `arcoDescricao` no `Personagem` (ex.: "Herói", "Redenção") com formulário, exibição e contexto IA.

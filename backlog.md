@@ -26,9 +26,11 @@
 
 ## FASE 3 — Universo (novos models)
 
-- [ ] **5. Objetos do universo** — Model novo `Objeto` (nome, descricao, historia, imagemUrl, obraId) + table `CenaObjeto` para associar objetos a cenas. CRUD + tela.
-  - Requer migração Prisma (novo model).
-  - Não usar nome `Objeto` se conflitar com padrões globais — alternativa: `ItemUniverso`/`Artefato`.
+- [x] **5. Objetos do universo** — Model novo `Objeto` (nome, descricao, historia, imagemUrl, obraId) + table `CenaObjeto` para associar objetos a cenas. CRUD + tela.
+  - Implementado como **`Artefato`** (nome aprovado pelo usuário; evita conflito com `Object`/padrões globais): migração `20260906235052_artefatos` (novo model `Artefato`: nome, imagemUrl, descricao, historia, obraId).
+  - Validator `artefatoSchema`; rotas `POST /api/obras/[obraId]/artefatos` e `PATCH/DELETE /api/artefatos/[id]`; upload de imagem por arquivo/base64/URL nos tipos de upload; componente `GerenciadorArtefatos`; página `/obras/[obraId]/artefatos` + aba "Artefatos" na navegação; contexto IA com bloco `## ARTEFATOS`.
+  - **Associação a cenas (`CenaObjeto`) fica para etapa futura** — fora do escopo desta entrega.
+  - Testes: build passa. Commit `97366dd`.
 
 ## FASE 4 — Estrutura (novos models)
 
