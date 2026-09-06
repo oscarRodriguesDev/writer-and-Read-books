@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { NavegacaoObra } from "@/components/NavegacaoObra";
 import { FormEditarObra } from "@/components/FormEditarObra";
-import { cardCls, btnSecundario } from "@/components/ui";
+import { btnSecundario } from "@/components/ui";
 import { BotaoExportar } from "@/components/BotaoExportar";
 
 export const dynamic = "force-dynamic";
@@ -52,45 +52,62 @@ export default async function ObraPage({
         <BotaoExportar obraId={obra.id} />
       </header>
       <NavegacaoObra obraId={obra.id} />
-
       <section className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className={cardCls}>
+        <div className={btnSecundario} style={{background: 'transparent', border: 'none', boxShadow: 'none', padding: 0}}>
           <p className="text-3xl font-bold">{obra._count.capitulos}</p>
           <p className="text-sm text-muted">Capítulos</p>
         </div>
-        <div className={cardCls}>
+        <div className={btnSecundario} style={{background: 'transparent', border: 'none', boxShadow: 'none', padding: 0}}>
           <p className="text-3xl font-bold">{obra._count.personagens}</p>
           <p className="text-sm text-muted">Personagens</p>
         </div>
-        <div className={cardCls}>
+        <div className={btnSecundario} style={{background: 'transparent', border: 'none', boxShadow: 'none', padding: 0}}>
           <p className="text-3xl font-bold">{obra._count.ambientes}</p>
           <p className="text-sm text-muted">Ambientes</p>
         </div>
-        <div className={cardCls}>
-          <p className="text-3xl font-bold">{totalPalavras}</p>
+        <div className={btnSecundario} style={{background: 'transparent', border: 'none', boxShadow: 'none', padding: 0}}>
+          <p className="text-3xl font-bold">{totalPalavras.toLocaleString("pt-BR")}</p>
           <p className="text-sm text-muted">Palavras</p>
         </div>
       </section>
 
-      <section className={`mt-6 ${cardCls}`}>
+      <section className={`mt-6 ${btnSecundario}`} style={{background: 'transparent', border: 'none', boxShadow: 'none', padding: '1.5rem'}}>
         <h2 className="mb-2 font-semibold">Dados da obra</h2>
-        <dl className="space-y-1 text-sm">
-          <div><dt className="inline font-medium">Status: </dt><dd className="inline">{obra.status}</dd></div>
-          {obra.subgenero && <div><dt className="inline font-medium">Subgênero: </dt><dd className="inline">{obra.subgenero}</dd></div>}
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          {obra.subtitulo && <div><dt className="inline font-medium">Subtítulo: </dt><dd className="inline">{obra.subtitulo}</dd></div>}
+          {obra.genero && <div><dt className="inline font-medium">Gênero: </dt><dd className="inline">{obra.genero}{obra.subgenero ? ` · ${obra.subgenero}` : ""}</dd></div>}
+          {obra.tema && <div><dt className="inline font-medium">Tema: </dt><dd className="inline">{obra.tema}</dd></div>}
           {obra.publicoAlvo && <div><dt className="inline font-medium">Público-alvo: </dt><dd className="inline">{obra.publicoAlvo}</dd></div>}
-          <div><dt className="inline font-medium">Tema: </dt><dd className="inline">{obra.tema ?? "—"}</dd></div>
-          <div><dt className="inline font-medium">Descrição: </dt><dd className="inline">{obra.descricao ?? "—"}</dd></div>
+          {obra.descricao && <div className="sm:col-span-2"><dt className="inline font-medium">Descrição: </dt><dd className="inline">{obra.descricao}</dd></div>}
+          <div><dt className="inline font-medium">Status: </dt><dd className="inline">{obra.status}</dd></div>
+          <div><dt className="inline font-medium">Palavras: </dt><dd className="inline">{totalPalavras.toLocaleString("pt-BR")}</dd></div>
+          {obra.isbn && <div><dt className="inline font-medium">ISBN: </dt><dd className="inline">{obra.isbn}</dd></div>}
+          {obra.isbn13 && <div><dt className="inline font-medium">ISBN-13: </dt><dd className="inline">{obra.isbn13}</dd></div>}
+          {obra.editora && <div><dt className="inline font-medium">Editora: </dt><dd className="inline">{obra.editora}</dd></div>}
+          {obra.edicao && <div><dt className="inline font-medium">Edição: </dt><dd className="inline">{obra.edicao}</dd></div>}
+          {obra.dataPublicacao && <div><dt className="inline font-medium">Publicação: </dt><dd className="inline">{formatarData(new Date(obra.dataPublicacao))}</dd></div>}
+          {obra.idioma && <div><dt className="inline font-medium">Idioma: </dt><dd className="inline">{obra.idioma}</dd></div>}
+          {obra.direitosAutorais && <div className="sm:col-span-2"><dt className="inline font-medium">Direitos: </dt><dd className="inline">{obra.direitosAutorais}</dd></div>}
         </dl>
         <FormEditarObra
           obraId={obra.id}
           inicial={{
             titulo: obra.titulo,
+            subtitulo: obra.subtitulo,
             genero: obra.genero,
             subgenero: obra.subgenero,
             tema: obra.tema,
             publicoAlvo: obra.publicoAlvo,
             descricao: obra.descricao,
             status: obra.status,
+            isbn: obra.isbn,
+            isbn13: obra.isbn13,
+            idioma: obra.idioma,
+            dataPublicacao: obra.dataPublicacao?.toISOString() ?? null,
+            editora: obra.editora,
+            edicao: obra.edicao,
+            direitosAutorais: obra.direitosAutorais,
+            capaUrl: obra.capaUrl,
           }}
         />
       </section>

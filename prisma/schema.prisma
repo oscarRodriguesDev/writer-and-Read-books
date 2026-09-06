@@ -14,6 +14,7 @@ datasource db {
 model Obra {
   id           String   @id @default(cuid())
   titulo       String
+  subtitulo    String?
   genero       String?
   subgenero    String?
   tema         String?
@@ -22,18 +23,30 @@ model Obra {
   // PLANEJAMENTO | ESCRITA | REVISAO | CONCLUIDA
   status       String   @default("PLANEJAMENTO")
   arquivada    Boolean  @default(false)
+  // Metadados de publicação
+  isbn         String?  @unique
+  isbn13       String?  @unique
+  idioma       String   @default("pt-BR")
+  dataPublicacao DateTime?
+  editora      String?
+  edicao       String?  @default("1")
+  direitosAutorais String?
+  capaUrl      String?
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  esqueleto   Esqueleto?
-  capitulos   Capitulo[]
-  personagens Personagem[]
-  ambientes   Ambiente[]
-  eventos     EventoLinhaDoTempo[]
-  analises    AnaliseIA[]
-  canonInfos  CanonInfo[]
-  regras      RegraObra[]
-  importacoes ImportacaoArquivo[]
+  esqueleto       Esqueleto?
+  capitulos       Capitulo[]
+  personagens     Personagem[]
+  ambientes       Ambiente[]
+  eventos         EventoLinhaDoTempo[]
+  analises        AnaliseIA[]
+  canonInfos      CanonInfo[]
+  regras          RegraObra[]
+  importacoes     ImportacaoArquivo[]
+  autores         AutorObra[]
+  categorias      CategoriaObra[]
+  palavrasChave   PalavraChaveObra[]
 }
 
 model Esqueleto {
@@ -292,4 +305,67 @@ model ImportacaoArquivo {
   criadoEm          DateTime @default(now())
 
   obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
+}
+
+// ===== NOVOS MODELS PARA METADADOS DE PUBLICAÇÃO =====
+
+model Autor {
+  id        String   @id @default(cuid())
+  nome      String
+  bio       String?
+  fotoUrl   String?
+  criadoEm  DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  obras     AutorObra[]
+}
+
+model AutorObra {
+  id        String   @id @default(cuid())
+  obraId    String
+  autorId   String
+  // AUTOR | COAUTOR | ORGANIZADOR | TRADUTOR | ILUSTRADOR | PREFACIADOR | POSFACIADOR
+  papel     String   @default("AUTOR")
+  ordem     Int      @default(0)
+  obra      Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  autor     Autor    @relation(fields: [autorId], references: [id], onDelete: Cascade)
+
+  @@unique([obraId, autorId])
+  @@index([obraId])
+  @@index([autorId])
+}
+
+model Categoria {
+  id        String   @id @default(cuid())
+  codigo    String   @unique // Ex: "FIC000000" (BISAC)
+  nome      String
+  paiId     String?
+  pai       Categoria?  @relation("Subcategorias", fields: [paiId], references: [id])
+  filhos    Categoria[] @relation("Subcategorias")
+  obras     CategoriaObra[]
+
+  @@index([paiId])
+}
+
+model CategoriaObra {
+  id          String   @id @default(cuid())
+  obraId      String
+  categoriaId String
+  principal   Boolean  @default(false)
+  obra        Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  @@unique([obraId, categoriaId])
+  @@index([obraId])
+  @@index([categoriaId])
+}
+
+model PalavraChaveObra {
+  id        String @id @default(cuid())
+  obraId    String
+  termo     String
+  obra      Obra   @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  @@unique([obraId, termo])
+  @@index([obraId])
 }

@@ -25,11 +25,32 @@ export const PAPEIS = [
 ] as const;
 export type Papel = (typeof PAPEIS)[number];
 
+export const PAPEIS_AUTOR = [
+  "AUTOR",
+  "COAUTOR",
+  "ORGANIZADOR",
+  "TRADUTOR",
+  "ILUSTRADOR",
+  "PREFACIADOR",
+  "POSFACIADOR",
+] as const;
+export type PapelAutor = (typeof PAPEIS_AUTOR)[number];
+
 // Rótulos em PT-BR para exibição
 export const ROTULO_PARTE: Record<ParteTipo, string> = {
   INICIO: "Início",
   MEIO: "Meio",
   FIM: "Fim",
+};
+
+export const ROTULO_PAPEL_AUTOR: Record<PapelAutor, string> = {
+  AUTOR: "Autor",
+  COAUTOR: "Coautor",
+  ORGANIZADOR: "Organizador",
+  TRADUTOR: "Tradutor",
+  ILUSTRADOR: "Ilustrador",
+  PREFACIADOR: "Prefaciador",
+  POSFACIADOR: "Posfaciador",
 };
 
 // ---- Análise IA ----

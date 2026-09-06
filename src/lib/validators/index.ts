@@ -32,19 +32,64 @@ export const criarObraSchema = z.object({
 });
 
 const STATUS_OBRA = ["PLANEJAMENTO", "ESCRITA", "REVISAO", "CONCLUIDA"] as const;
+const PAPEIS_AUTOR = ["AUTOR", "COAUTOR", "ORGANIZADOR", "TRADUTOR", "ILUSTRADOR", "PREFACIADOR", "POSFACIADOR"] as const;
 
 /** PATCH /api/obras/[obraId] — edição completa dos dados da obra (RP-07/08). */
 export const atualizarObraSchema = z
   .object({
     titulo: z.string().trim().min(1, "Título é obrigatório").max(200),
+    subtitulo: textoOpcional(200),
     genero: textoOpcional(100),
     subgenero: textoOpcional(100),
     tema: textoOpcional(200),
     publicoAlvo: textoOpcional(200),
     descricao: textoOpcional(2000),
     status: z.enum(STATUS_OBRA),
+    // Metadados de publicação
+    isbn: textoOpcional(13).refine((v) => !v || /^\d{10}(\d{3})?$/.test(v.replace(/-/g, "")), "ISBN inválido (10 ou 13 dígitos)"),
+    isbn13: textoOpcional(13).refine((v) => !v || /^\d{13}$/.test(v.replace(/-/g, "")), "ISBN-13 deve ter 13 dígitos"),
+    idioma: z.string().trim().min(2).max(10).default("pt-BR"),
+    dataPublicacao: z.string().datetime().nullish(),
+    editora: textoOpcional(200),
+    edicao: z.string().trim().max(50).default("1"),
+    direitosAutorais: textoOpcional(1000),
+    capaUrl: textoOpcional(500),
   })
   .partial();
+
+// ---- Metadados de Publicação ----
+
+/** Autor da obra. */
+export const autorSchema = z.object({
+  nome: z.string().trim().min(1, "Nome é obrigatório").max(200),
+  bio: textoOpcional(5000),
+  fotoUrl: textoOpcional(500),
+});
+
+/** Associação autor-obra com papel e ordem. */
+export const autorObraSchema = z.object({
+  autorId: z.string().trim().min(1).max(50),
+  papel: z.enum(PAPEIS_AUTOR).default("AUTOR"),
+  ordem: z.number().int().min(0).default(0),
+});
+
+/** Categoria (BISAC/CLIL). */
+export const categoriaSchema = z.object({
+  codigo: z.string().trim().min(1).max(20),
+  nome: z.string().trim().min(1).max(200),
+  paiId: textoOpcional(50),
+});
+
+/** Associação obra-categoria. */
+export const categoriaObraSchema = z.object({
+  categoriaId: z.string().trim().min(1).max(50),
+  principal: z.boolean().default(false),
+});
+
+/** Palavra-chave da obra. */
+export const palavraChaveObraSchema = z.object({
+  termo: z.string().trim().min(1).max(100),
+});
 
 export const esqueletoSchema = z.object({
   premissa: textoOpcional(5000),
@@ -353,6 +398,39 @@ export const filtroAchadosSchema = z.object({
   status: z.enum(STATUS_ACHADO).optional(),
 });
 
+/** Item de erro gramatical devolvido pela IA (RF-48 corretor gramatical). */
+const erroVerificacaoIaSchema = z.object({
+  trecho: z.string().trim().min(1, "Trecho vazio no erro gramatical").max(300),
+  sugestao: textoOpcional(2_000),
+  explicacao: textoOpcional(1_000),
+  categoria: textoOpcional(200),
+});
+
+/** Resposta esperada do provedor de IA na verificação gramatical. */
+export const respostaVerificacaoIaSchema = z.object({
+  erros: listaTolerante(erroVerificacaoIaSchema, 30),
+});
+
+/** POST /api/revisao/verificar — corpo aceito. */
+export const verificarTextoSchema = z.object({
+  texto: z.string().max(100_000),
+  escopo: z.enum(["ortografia", "gramatica", "ambos"]).default("ambos"),
+  palavrasNovas: z.array(z.string().trim().min(1).max(100)).max(10_000).default([]),
+  idioma: textoOpcional(10),
+});
+
+/** POST /api/revisao/corrigir — correção em massa ortográfica. */
+export const corrigirTextoSchema = z.object({
+  texto: z.string().max(100_000),
+  palavrasNovas: z.array(z.string().trim().min(1).max(100)).max(10_000).default([]),
+  idioma: textoOpcional(10),
+});
+
+export type ErroVerificacaoIa = z.infer<typeof erroVerificacaoIaSchema>;
+export type RespostaVerificacaoIa = z.infer<typeof respostaVerificacaoIaSchema>;
+export type VerificarTextoInput = z.infer<typeof verificarTextoSchema>;
+export type CorrigirTextoInput = z.infer<typeof corrigirTextoSchema>;
+
 export type RespostaAnaliseIa = z.infer<typeof respostaAnaliseIaSchema>;
 
 // Exportados para tipagem dos services
@@ -362,3 +440,10 @@ export type PersonagemInput = z.infer<typeof personagemSchema>;
 export type AmbienteInput = z.infer<typeof ambienteSchema>;
 export type CriarCapituloInput = z.infer<typeof criarCapituloSchema>;
 export type EventoInput = z.infer<typeof eventoSchema>;
+
+// Metadados de publicação
+export type AutorInput = z.infer<typeof autorSchema>;
+export type AutorObraInput = z.infer<typeof autorObraSchema>;
+export type CategoriaInput = z.infer<typeof categoriaSchema>;
+export type CategoriaObraInput = z.infer<typeof categoriaObraSchema>;
+export type PalavraChaveObraInput = z.infer<typeof palavraChaveObraSchema>;

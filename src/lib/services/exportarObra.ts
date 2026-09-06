@@ -26,18 +26,35 @@ export interface CapituloExportacao {
 export interface ObraExportacao {
   id: string;
   titulo: string;
+  subtitulo?: string | null;
   genero?: string | null;
   subgenero?: string | null;
   tema?: string | null;
   publicoAlvo?: string | null;
   descricao?: string | null;
   status: string;
+  // Metadados de publicação
+  isbn?: string | null;
+  isbn13?: string | null;
+  idioma?: string;
+  dataPublicacao?: string | null;
+  editora?: string | null;
+  edicao?: string | null;
+  direitosAutorais?: string | null;
+  capaUrl?: string | null;
   capitulos: CapituloExportacao[];
   totalPalavras: number;
 }
 
+/** ObraExportacao estendida com metadados computados para exportação. */
+export interface ObraExportacaoCompleta extends ObraExportacao {
+  _autores: Array<{ nome: string; papel: string; ordem: number }>;
+  _categorias: Array<{ codigo: string; nome: string; principal: boolean }>;
+  _palavrasChave: string[];
+}
+
 /** Carrega a obra completa com todos os capítulos e cenas para exportação. */
-export async function carregarObraParaExportacao(obraId: string): Promise<ObraExportacao> {
+export async function carregarObraParaExportacao(obraId: string): Promise<ObraExportacaoCompleta> {
   const obra = await prisma.obra.findUnique({
     where: { id: obraId },
     include: {
@@ -45,6 +62,14 @@ export async function carregarObraParaExportacao(obraId: string): Promise<ObraEx
         include: { partes: { include: { cenas: true } } },
         orderBy: [{ ordemNarrativa: "asc" }, { ordemEscrita: "asc" }],
       },
+      autores: {
+        include: { autor: true },
+        orderBy: { ordem: "asc" },
+      },
+      categorias: {
+        include: { categoria: true },
+      },
+      palavrasChave: true,
     },
   });
   if (!obra) throw new ErroAplicacao("Obra não encontrada", 404);
@@ -91,17 +116,51 @@ export async function carregarObraParaExportacao(obraId: string): Promise<ObraEx
     0,
   );
 
+  // Prepara autores para metadados
+  const autores = obra.autores.map((ao) => ({
+    nome: ao.autor.nome,
+    papel: ao.papel,
+    ordem: ao.ordem,
+  }));
+
+  // Prepara categorias
+  const categorias = obra.categorias.map((co) => ({
+    codigo: co.categoria.codigo,
+    nome: co.categoria.nome,
+    principal: co.principal,
+  }));
+
+  // Prepara palavras-chave
+  const palavrasChave = obra.palavrasChave.map((p) => p.termo);
+
   return {
     id: obra.id,
     titulo: obra.titulo,
+    subtitulo: obra.subtitulo,
     genero: obra.genero,
     subgenero: obra.subgenero,
     tema: obra.tema,
     publicoAlvo: obra.publicoAlvo,
     descricao: obra.descricao,
     status: obra.status,
+    isbn: obra.isbn,
+    isbn13: obra.isbn13,
+    idioma: obra.idioma,
+    dataPublicacao: obra.dataPublicacao?.toISOString() ?? null,
+    editora: obra.editora,
+    edicao: obra.edicao,
+    direitosAutorais: obra.direitosAutorais,
+    capaUrl: obra.capaUrl,
     capitulos: capitulosExportacao,
     totalPalavras,
+    // Campos extras para uso nas funções de geração
+    _autores: autores,
+    _categorias: categorias,
+    _palavrasChave: palavrasChave,
+  } as ObraExportacao & {
+    _autores: Array<{ nome: string; papel: string; ordem: number }>;
+    _categorias: Array<{ codigo: string; nome: string; principal: boolean }>;
+    _palavrasChave: string[];
   };
 }
 
@@ -172,7 +231,7 @@ function gerarUuid(): string {
 
 /** Gera o content.opf (Package Document EPUB 3). */
 function gerarOpf(
-  obra: ObraExportacao,
+  obra: ObraExportacaoCompleta,
   capitulosHtml: Array<{ id: string; href: string; title: string }>,
   uuid: string,
   kindle = false,
@@ -186,6 +245,12 @@ function gerarOpf(
   ];
   const spineItems = [`    <itemref idref="nav" linear="no"/>`];
 
+  // Capa (se houver imagem)
+  if (obra.capaUrl) {
+    manifestItems.push(`    <item id="cover-image" href="images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>`);
+    spineItems.unshift(`    <itemref idref="cover-image" linear="no"/>`);
+  }
+
   capitulosHtml.forEach((cap, i) => {
     const itemId = `ch${i + 1}`;
     manifestItems.push(
@@ -194,22 +259,79 @@ function gerarOpf(
     spineItems.push(`    <itemref idref="${itemId}"/>`);
   });
 
+  // Página de créditos
+  manifestItems.push(`    <item id="creditos" href="creditos.xhtml" media-type="application/xhtml+xml"/>`);
+  spineItems.push(`    <itemref idref="creditos"/>`);
+
   const metadados = [
     `<dc:identifier id="bookid">${dcId}</dc:identifier>`,
     `<dc:title>${escapeXml(obra.titulo)}</dc:title>`,
-    `<dc:language>pt-BR</dc:language>`,
-    `<dc:creator id="creator">Autor</dc:creator>`,
-    `<dc:publisher>Book Writer App</dc:publisher>`,
-    `<dc:date>${now}</dc:date>`,
+    `<dc:language>${escapeXml(obra.idioma || "pt-BR")}</dc:language>`,
+    `<dc:publisher>${escapeXml(obra.editora || "Book Writer App")}</dc:publisher>`,
+    `<dc:date>${obra.dataPublicacao ? escapeXml(obra.dataPublicacao.split("T")[0]) : now}</dc:date>`,
     `<meta property="dcterms:modified">${new Date().toISOString()}</meta>`,
-    `<meta name="cover" content="cover-image"/>`,
   ];
 
+  // Autores com roles (marc:relators)
+  obra._autores.forEach((autor, idx) => {
+    const creatorId = `creator${idx + 1}`;
+    const roleMap: Record<string, string> = {
+      AUTOR: "aut",
+      COAUTOR: "aut",
+      ORGANIZADOR: "edt",
+      TRADUTOR: "trl",
+      ILUSTRADOR: "ill",
+      PREFACIADOR: "prf",
+      POSFACIADOR: "aft",
+    };
+    const role = roleMap[autor.papel] || "aut";
+    metadados.push(`<dc:creator id="${creatorId}">${escapeXml(autor.nome)}</dc:creator>`);
+    metadados.push(`<meta refines="#${creatorId}" property="role" scheme="marc:relators">${role}</meta>`);
+    metadados.push(`<meta refines="#${creatorId}" property="display-seq">${autor.ordem || idx + 1}</meta>`);
+  });
+
+  // ISBN
+  if (obra.isbn13) {
+    metadados.push(`<dc:identifier id="isbn13" scheme="ISBN">${escapeXml(obra.isbn13)}</dc:identifier>`);
+  } else if (obra.isbn) {
+    metadados.push(`<dc:identifier id="isbn" scheme="ISBN">${escapeXml(obra.isbn)}</dc:identifier>`);
+  }
+
+  // Gênero/categorias
   if (obra.genero) {
     metadados.push(`<dc:subject>${escapeXml(obra.genero)}${obra.subgenero ? ` · ${escapeXml(obra.subgenero)}` : ""}</dc:subject>`);
   }
+  // Categorias BISAC/CLIL
+  obra._categorias.forEach((cat) => {
+    if (cat.codigo) {
+      metadados.push(`<dc:subject scheme="BISAC">${escapeXml(cat.codigo)}</dc:subject>`);
+    }
+    metadados.push(`<dc:subject>${escapeXml(cat.nome)}</dc:subject>`);
+  });
+
+  // Palavras-chave
+  obra._palavrasChave.forEach((kw) => {
+    metadados.push(`<dc:subject>${escapeXml(kw)}</dc:subject>`);
+  });
+
+  // Descrição
   if (obra.descricao) {
     metadados.push(`<dc:description>${escapeXml(obra.descricao)}</dc:description>`);
+  }
+
+  // Direitos autorais
+  if (obra.direitosAutorais) {
+    metadados.push(`<dc:rights>${escapeXml(obra.direitosAutorais)}</dc:rights>`);
+  }
+
+  // Capa
+  if (obra.capaUrl) {
+    metadados.push(`<meta name="cover" content="cover-image"/>`);
+  }
+
+  // Edição
+  if (obra.edicao && obra.edicao !== "1") {
+    metadados.push(`<meta property="dcterms:edition">${escapeXml(obra.edicao)}</meta>`);
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -225,13 +347,19 @@ ${spineItems.join("\n")}
   </spine>
   <guide>
     <reference type="toc" title="Sumário" href="toc.xhtml"/>
+    <reference type="credits" title="Créditos" href="creditos.xhtml"/>
   </guide>
 </package>`;
 }
 
 /** Gera o toc.ncx (NCX TOC para compatibilidade EPUB 2). */
-function gerarNcx(obra: ObraExportacao, capitulosHtml: Array<{ id: string; href: string; title: string }>, uuid: string): string {
+function gerarNcx(
+  obra: ObraExportacaoCompleta,
+  capitulosHtml: Array<{ id: string; href: string; title: string }>,
+  uuid: string,
+): string {
   const now = new Date().toISOString();
+  const autorPrincipal = obra._autores.find((a) => a.papel === "AUTOR") || obra._autores[0];
   const navPoints = capitulosHtml.map((cap, i) => `
     <navPoint id="${cap.id}" playOrder="${i + 1}">
       <navLabel><text>${escapeXml(cap.title)}</text></navLabel>
@@ -239,7 +367,7 @@ function gerarNcx(obra: ObraExportacao, capitulosHtml: Array<{ id: string; href:
     </navPoint>`).join("");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="pt-BR">
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="${obra.idioma || "pt-BR"}">
   <head>
     <meta name="dtb:uid" content="${uuid}"/>
     <meta name="dtb:depth" content="1"/>
@@ -247,7 +375,7 @@ function gerarNcx(obra: ObraExportacao, capitulosHtml: Array<{ id: string; href:
     <meta name="dtb:maxPageNumber" content="0"/>
   </head>
   <docTitle><text>${escapeXml(obra.titulo)}</text></docTitle>
-  <docAuthor><text>Autor</text></docAuthor>
+  <docAuthor><text>${escapeXml(autorPrincipal?.nome || "Autor")}</text></docAuthor>
   <navMap>
 ${navPoints}
   </navMap>
@@ -260,7 +388,7 @@ function gerarTocXhtml(obra: ObraExportacao, capitulosHtml: Array<{ id: string; 
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="pt-BR">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${obra.idioma || "pt-BR"}">
   <head>
     <meta charset="UTF-8"/>
     <title>Sumário</title>
@@ -273,6 +401,74 @@ function gerarTocXhtml(obra: ObraExportacao, capitulosHtml: Array<{ id: string; 
 ${items}
       </ol>
     </nav>
+  </body>
+</html>`;
+}
+
+/** Gera a página de créditos. */
+function gerarCreditosXhtml(obra: ObraExportacaoCompleta): string {
+  const autoresHtml = obra._autores
+    .map((a) => {
+      const papelLabel: Record<string, string> = {
+        AUTOR: "Autor",
+        COAUTOR: "Coautor",
+        ORGANIZADOR: "Organizador",
+        TRADUTOR: "Tradutor",
+        ILUSTRADOR: "Ilustrador",
+        PREFACIADOR: "Prefaciador",
+        POSFACIADOR: "Posfaciador",
+      };
+      return `<p>${escapeXml(a.nome)} — ${papelLabel[a.papel] || a.papel}</p>`;
+    })
+    .join("\n");
+
+  const categoriasHtml = obra._categorias
+    .map((c) => `<li>${escapeXml(c.nome)}${c.codigo ? ` (${c.codigo})` : ""}${c.principal ? " <strong>[Principal]</strong>" : ""}</li>`)
+    .join("\n");
+
+  const palavrasChaveHtml = obra._palavrasChave.map((k) => `<span class="tag">${escapeXml(k)}</span>`).join(" ");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${obra.idioma || "pt-BR"}">
+  <head>
+    <meta charset="UTF-8"/>
+    <title>Créditos</title>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+  </head>
+  <body>
+    <div class="metadata">
+      <h1>Créditos</h1>
+      <h2>${escapeXml(obra.titulo)}${obra.subtitulo ? `: ${escapeXml(obra.subtitulo)}` : ""}</h2>
+      
+      <h3>Autores</h3>
+      ${autoresHtml || "<p>Não informado</p>"}
+      
+      ${obra.editora ? `<h3>Editora</h3><p>${escapeXml(obra.editora)}</p>` : ""}
+      ${obra.edicao && obra.edicao !== "1" ? `<h3>Edição</h3><p>${escapeXml(obra.edicao)}</p>` : ""}
+      ${obra.dataPublicacao ? `<h3>Data de publicação</h3><p>${escapeXml(new Date(obra.dataPublicacao).toLocaleDateString("pt-BR"))}</p>` : ""}
+      
+      <h3>ISBN</h3>
+      <p>${obra.isbn13 ? escapeXml(obra.isbn13) : obra.isbn ? escapeXml(obra.isbn) : "Não informado"}</p>
+      
+      <h3>Idioma</h3>
+      <p>${escapeXml(obra.idioma || "pt-BR")}</p>
+      
+      ${obra.direitosAutorais ? `<h3>Direitos autorais</h3><p>${escapeXml(obra.direitosAutorais)}</p>` : ""}
+      
+      ${categoriasHtml ? `
+      <h3>Categorias</h3>
+      <ul>${categoriasHtml}</ul>
+      ` : ""}
+      
+      ${palavrasChaveHtml ? `
+      <h3>Palavras-chave</h3>
+      <p>${palavrasChaveHtml}</p>
+      ` : ""}
+      
+      <hr/>
+      <p class="metadata">Gerado por Book Writer App</p>
+    </div>
   </body>
 </html>`;
 }
@@ -309,13 +505,14 @@ ${conteudo}
 /** Gera a página de capa/título. */
 function gerarCapaXhtml(obra: ObraExportacao): string {
   const metadados = [];
-  if (obra.genero) metadados.push(`Gênero: ${escapeXml(obra.genero)}${obra.subgenero ? ` · ${escapeXml(obra.subgenero)}` : ""}`);
-  metadados.push(`Status: ${escapeXml(obra.status)}`);
-  metadados.push(`Palavras: ${obra.totalPalavras.toLocaleString("pt-BR")}`);
+  if (obra.subtitulo) metadados.push(`<h2>${escapeXml(obra.subtitulo)}</h2>`);
+  if (obra.genero) metadados.push(`<p>Gênero: ${escapeXml(obra.genero)}${obra.subgenero ? ` · ${escapeXml(obra.subgenero)}` : ""}</p>`);
+  metadados.push(`<p>Status: ${escapeXml(obra.status)}</p>`);
+  metadados.push(`<p>Palavras: ${obra.totalPalavras.toLocaleString("pt-BR")}</p>`);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="pt-BR">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${obra.idioma || "pt-BR"}">
   <head>
     <meta charset="UTF-8"/>
     <title>${escapeXml(obra.titulo)}</title>
@@ -324,7 +521,7 @@ function gerarCapaXhtml(obra: ObraExportacao): string {
   <body>
     <div class="metadata">
       <h1>${escapeXml(obra.titulo)}</h1>
-      ${metadados.map((m) => `<p>${m}</p>`).join("\n")}
+      ${metadados.join("\n")}
       ${obra.descricao ? `<p>${escapeXml(obra.descricao)}</p>` : ""}
     </div>
   </body>
@@ -332,7 +529,7 @@ function gerarCapaXhtml(obra: ObraExportacao): string {
 }
 
 /** Exporta para EPUB usando JSZip (implementação nativa, sem dependências problemáticas). */
-export async function exportarEPUB(obra: ObraExportacao, kindle = false): Promise<Buffer> {
+export async function exportarEPUB(obra: ObraExportacaoCompleta, kindle = false): Promise<Buffer> {
   const zip = new JSZip();
   const uuid = gerarUuid();
 
@@ -368,14 +565,32 @@ export async function exportarEPUB(obra: ObraExportacao, kindle = false): Promis
     capitulosHtml.push({ id: itemId, href, title: cap.titulo });
   });
 
-  // 6. TOC NCX
+  // 6. Créditos
+  zip.file("OEBPS/creditos.xhtml", gerarCreditosXhtml(obra));
+
+  // 7. TOC NCX
   zip.file("OEBPS/toc.ncx", gerarNcx(obra, capitulosHtml, uuid));
 
-  // 7. TOC XHTML (NAV)
+  // 8. TOC XHTML (NAV)
   zip.file("OEBPS/toc.xhtml", gerarTocXhtml(obra, capitulosHtml));
 
-  // 8. content.opf
+  // 9. content.opf
   zip.file("OEBPS/content.opf", gerarOpf(obra, capitulosHtml, uuid, kindle));
+
+  // 10. Imagem de capa (se houver URL local)
+  if (obra.capaUrl && obra.capaUrl.startsWith("/uploads/")) {
+    try {
+      const fs = await import("fs");
+      const path = await import("path");
+      const fullPath = path.join(process.cwd(), "public", obra.capaUrl);
+      if (fs.existsSync(fullPath)) {
+        const imageBuffer = fs.readFileSync(fullPath);
+        zip.file("OEBPS/images/cover.jpg", imageBuffer);
+      }
+    } catch {
+      // Ignora erro de imagem - EPUB ainda será válido sem capa
+    }
+  }
 
   // Gera o buffer final
   const buffer = await zip.generateAsync({
@@ -388,7 +603,7 @@ export async function exportarEPUB(obra: ObraExportacao, kindle = false): Promis
 }
 
 /** Exporta para PDF. */
-export async function exportarPDF(obra: ObraExportacao): Promise<Buffer> {
+export async function exportarPDF(obra: ObraExportacaoCompleta): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 72, size: "A4" });
     const chunks: Buffer[] = [];
@@ -401,6 +616,10 @@ export async function exportarPDF(obra: ObraExportacao): Promise<Buffer> {
 
     // Capa / Título
     doc.fontSize(28).font("Helvetica-Bold").text(obra.titulo, { align: "center" });
+    if (obra.subtitulo) {
+      doc.moveDown(0.3);
+      doc.fontSize(16).font("Helvetica-Oblique").text(obra.subtitulo, { align: "center" });
+    }
     doc.moveDown(0.5);
 
     if (obra.genero) {
@@ -408,12 +627,51 @@ export async function exportarPDF(obra: ObraExportacao): Promise<Buffer> {
       doc.moveDown(0.3);
     }
 
-    doc.fontSize(12).font("Helvetica-Oblique").text(`Status: ${obra.status} · ${obra.totalPalavras.toLocaleString("pt-BR")} palavras`, { align: "center" });
+    // Autores
+    if (obra._autores.length > 0) {
+      const autorPrincipal = obra._autores.find((a) => a.papel === "AUTOR") || obra._autores[0];
+      doc.fontSize(12).font("Helvetica").text(`Por ${autorPrincipal.nome}`, { align: "center" });
+      if (obra._autores.length > 1) {
+        const outros = obra._autores.filter((a) => a !== autorPrincipal);
+        outros.forEach((a) => {
+          const papelLabel: Record<string, string> = {
+            COAUTOR: "Coautor",
+            ORGANIZADOR: "Organizador",
+            TRADUTOR: "Tradutor",
+            ILUSTRADOR: "Ilustrador",
+            PREFACIADOR: "Prefaciador",
+            POSFACIADOR: "Posfaciador",
+          };
+          doc.fontSize(11).font("Helvetica-Oblique").text(`${papelLabel[a.papel] || a.papel}: ${a.nome}`, { align: "center" });
+        });
+      }
+      doc.moveDown(0.3);
+    }
+
+    doc.fontSize(12).font("Helvetica-Oblique").text(`${obra.totalPalavras.toLocaleString("pt-BR")} palavras`, { align: "center" });
     doc.moveDown(2);
 
     if (obra.descricao) {
       doc.fontSize(11).font("Helvetica").text(obra.descricao, { align: "justify" });
       doc.moveDown(2);
+    }
+
+    // Metadados de publicação na capa
+    const metadadosPub: string[] = [];
+    if (obra.editora) metadadosPub.push(`Editora: ${obra.editora}`);
+    if (obra.edicao && obra.edicao !== "1") metadadosPub.push(`Edição: ${obra.edicao}`);
+    if (obra.dataPublicacao) metadadosPub.push(`Publicado em: ${new Date(obra.dataPublicacao).toLocaleDateString("pt-BR")}`);
+    if (obra.isbn13) metadadosPub.push(`ISBN-13: ${obra.isbn13}`);
+    else if (obra.isbn) metadadosPub.push(`ISBN: ${obra.isbn}`);
+    if (obra.direitosAutorais) metadadosPub.push(`Direitos: ${obra.direitosAutorais}`);
+    
+    if (metadadosPub.length > 0) {
+      doc.fontSize(10).font("Helvetica");
+      metadadosPub.forEach((m) => {
+        doc.text(m, { align: "center" });
+        doc.moveDown(0.2);
+      });
+      doc.moveDown(1);
     }
 
     // Sumário
@@ -462,12 +720,76 @@ export async function exportarPDF(obra: ObraExportacao): Promise<Buffer> {
       }
     });
 
+    // Página de créditos no final
+    doc.addPage();
+    doc.fontSize(16).font("Helvetica-Bold").text("Créditos", { align: "center" });
+    doc.moveDown(1);
+
+    doc.fontSize(14).font("Helvetica-Bold").text(obra.titulo, { align: "center" });
+    if (obra.subtitulo) {
+      doc.moveDown(0.3);
+      doc.fontSize(12).font("Helvetica-Oblique").text(obra.subtitulo, { align: "center" });
+    }
+    doc.moveDown(1);
+
+    // Autores
+    if (obra._autores.length > 0) {
+      doc.fontSize(12).font("Helvetica-Bold").text("Autores", { align: "left" });
+      doc.moveDown(0.5);
+      obra._autores.forEach((a) => {
+        const papelLabel: Record<string, string> = {
+          AUTOR: "Autor",
+          COAUTOR: "Coautor",
+          ORGANIZADOR: "Organizador",
+          TRADUTOR: "Tradutor",
+          ILUSTRADOR: "Ilustrador",
+          PREFACIADOR: "Prefaciador",
+          POSFACIADOR: "Posfaciador",
+        };
+        doc.fontSize(11).font("Helvetica").text(`${a.nome} — ${papelLabel[a.papel] || a.papel}`, { align: "left" });
+      });
+      doc.moveDown(1);
+    }
+
+    // Dados de publicação
+    const creditos: string[] = [];
+    if (obra.editora) creditos.push(`Editora: ${obra.editora}`);
+    if (obra.edicao && obra.edicao !== "1") creditos.push(`Edição: ${obra.edicao}`);
+    if (obra.dataPublicacao) creditos.push(`Data de publicação: ${new Date(obra.dataPublicacao).toLocaleDateString("pt-BR")}`);
+    if (obra.isbn13) creditos.push(`ISBN-13: ${obra.isbn13}`);
+    else if (obra.isbn) creditos.push(`ISBN: ${obra.isbn}`);
+    if (obra.idioma) creditos.push(`Idioma: ${obra.idioma}`);
+    if (obra.direitosAutorais) creditos.push(`Direitos autorais: ${obra.direitosAutorais}`);
+    
+    creditos.forEach((c) => {
+      doc.fontSize(11).font("Helvetica").text(c, { align: "left" });
+      doc.moveDown(0.3);
+    });
+
+    // Categorias
+    if (obra._categorias.length > 0) {
+      doc.moveDown(0.5);
+      doc.fontSize(12).font("Helvetica-Bold").text("Categorias", { align: "left" });
+      doc.moveDown(0.5);
+      obra._categorias.forEach((c) => {
+        doc.fontSize(11).font("Helvetica").text(`${c.nome}${c.codigo ? ` (${c.codigo})` : ""}${c.principal ? " [Principal]" : ""}`, { align: "left" });
+      });
+    }
+
+    // Palavras-chave
+    if (obra._palavrasChave.length > 0) {
+      doc.moveDown(0.5);
+      doc.fontSize(12).font("Helvetica-Bold").text("Palavras-chave", { align: "left" });
+      doc.moveDown(0.5);
+      doc.fontSize(11).font("Helvetica").text(obra._palavrasChave.join(", "), { align: "left" });
+    }
+
     doc.end();
   });
 }
 
 /** Exporta para DOCX. */
-export async function exportarDOCX(obra: ObraExportacao): Promise<Buffer> {
+export async function exportarDOCX(obra: ObraExportacaoCompleta): Promise<Buffer> {
   const children: Paragraph[] = [];
 
   children.push(
@@ -479,10 +801,40 @@ export async function exportarDOCX(obra: ObraExportacao): Promise<Buffer> {
     }),
   );
 
+  if (obra.subtitulo) {
+    children.push(
+      new Paragraph({
+        text: obra.subtitulo,
+        heading: HeadingLevel.HEADING_1,
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200 },
+      }),
+    );
+  }
+
   const metadados: string[] = [];
   if (obra.genero) metadados.push(`Gênero: ${obra.genero}${obra.subgenero ? ` · ${obra.subgenero}` : ""}`);
-  metadados.push(`Status: ${obra.status}`);
   metadados.push(`Palavras: ${obra.totalPalavras.toLocaleString("pt-BR")}`);
+
+  // Autores
+  if (obra._autores.length > 0) {
+    const autorPrincipal = obra._autores.find((a) => a.papel === "AUTOR") || obra._autores[0];
+    metadados.push(`Autor: ${autorPrincipal.nome}`);
+    if (obra._autores.length > 1) {
+      const outros = obra._autores.filter((a) => a !== autorPrincipal);
+      outros.forEach((a) => {
+        const papelLabel: Record<string, string> = {
+          COAUTOR: "Coautor",
+          ORGANIZADOR: "Organizador",
+          TRADUTOR: "Tradutor",
+          ILUSTRADOR: "Ilustrador",
+          PREFACIADOR: "Prefaciador",
+          POSFACIADOR: "Posfaciador",
+        };
+        metadados.push(`${papelLabel[a.papel] || a.papel}: ${a.nome}`);
+      });
+    }
+  }
 
   children.push(
     new Paragraph({
@@ -491,6 +843,25 @@ export async function exportarDOCX(obra: ObraExportacao): Promise<Buffer> {
       spacing: { after: 300 },
     }),
   );
+
+  // Metadados de publicação
+  const pubData: string[] = [];
+  if (obra.editora) pubData.push(`Editora: ${obra.editora}`);
+  if (obra.edicao && obra.edicao !== "1") pubData.push(`Edição: ${obra.edicao}`);
+  if (obra.dataPublicacao) pubData.push(`Publicado em: ${new Date(obra.dataPublicacao).toLocaleDateString("pt-BR")}`);
+  if (obra.isbn13) pubData.push(`ISBN-13: ${obra.isbn13}`);
+  else if (obra.isbn) pubData.push(`ISBN: ${obra.isbn}`);
+  if (obra.direitosAutorais) pubData.push(`Direitos: ${obra.direitosAutorais}`);
+
+  if (pubData.length > 0) {
+    children.push(
+      new Paragraph({
+        children: pubData.map((m) => new TextRun({ text: m, size: 20, italics: true })),
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 300 },
+      }),
+    );
+  }
 
   if (obra.descricao) {
     children.push(
@@ -576,6 +947,116 @@ export async function exportarDOCX(obra: ObraExportacao): Promise<Buffer> {
     }
   });
 
+  // Página de créditos no final
+  children.push(new Paragraph({ children: [new TextRun({ text: "", break: 1 })] }));
+  children.push(
+    new Paragraph({
+      text: "Créditos",
+      heading: HeadingLevel.HEADING_1,
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 400, after: 200 },
+    }),
+  );
+
+  children.push(
+    new Paragraph({
+      text: obra.titulo,
+      heading: HeadingLevel.HEADING_2,
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 100 },
+    }),
+  );
+
+  if (obra.subtitulo) {
+    children.push(
+      new Paragraph({
+        text: obra.subtitulo,
+        heading: HeadingLevel.HEADING_3,
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200 },
+      }),
+    );
+  }
+
+  if (obra._autores.length > 0) {
+    children.push(
+      new Paragraph({
+        text: "Autores",
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 200, after: 100 },
+      }),
+    );
+    obra._autores.forEach((a) => {
+      const papelLabel: Record<string, string> = {
+        AUTOR: "Autor",
+        COAUTOR: "Coautor",
+        ORGANIZADOR: "Organizador",
+        TRADUTOR: "Tradutor",
+        ILUSTRADOR: "Ilustrador",
+        PREFACIADOR: "Prefaciador",
+        POSFACIADOR: "Posfaciador",
+      };
+      children.push(
+        new Paragraph({
+          text: `${a.nome} — ${papelLabel[a.papel] || a.papel}`,
+          spacing: { after: 100 },
+        }),
+      );
+    });
+  }
+
+  const creditos: string[] = [];
+  if (obra.editora) creditos.push(`Editora: ${obra.editora}`);
+  if (obra.edicao && obra.edicao !== "1") creditos.push(`Edição: ${obra.edicao}`);
+  if (obra.dataPublicacao) creditos.push(`Data de publicação: ${new Date(obra.dataPublicacao).toLocaleDateString("pt-BR")}`);
+  if (obra.isbn13) creditos.push(`ISBN-13: ${obra.isbn13}`);
+  else if (obra.isbn) creditos.push(`ISBN: ${obra.isbn}`);
+  if (obra.idioma) creditos.push(`Idioma: ${obra.idioma}`);
+  if (obra.direitosAutorais) creditos.push(`Direitos autorais: ${obra.direitosAutorais}`);
+
+  creditos.forEach((c) => {
+    children.push(
+      new Paragraph({
+        text: c,
+        spacing: { after: 100 },
+      }),
+    );
+  });
+
+  if (obra._categorias.length > 0) {
+    children.push(
+      new Paragraph({
+        text: "Categorias",
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 200, after: 100 },
+      }),
+    );
+    obra._categorias.forEach((c) => {
+      children.push(
+        new Paragraph({
+          text: `${c.nome}${c.codigo ? ` (${c.codigo})` : ""}${c.principal ? " [Principal]" : ""}`,
+          spacing: { after: 100 },
+        }),
+      );
+    });
+  }
+
+  if (obra._palavrasChave.length > 0) {
+    children.push(
+      new Paragraph({
+        text: "Palavras-chave",
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 200, after: 100 },
+      }),
+    );
+    children.push(
+      new Paragraph({
+        text: obra._palavrasChave.join(", "),
+        spacing: { after: 100 },
+      }),
+    );
+  }
+
   const doc = new Document({
     sections: [{ properties: {}, children }],
   });
@@ -584,7 +1065,7 @@ export async function exportarDOCX(obra: ObraExportacao): Promise<Buffer> {
 }
 
 /** Exporta para Kindle (EPUB otimizado para Kindle). */
-export async function exportarKindle(obra: ObraExportacao): Promise<Buffer> {
+export async function exportarKindle(obra: ObraExportacaoCompleta): Promise<Buffer> {
   return exportarEPUB(obra, true);
 }
 
