@@ -11,7 +11,7 @@ import { respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
  * basta trocar a escrita de arquivo nesta rota.
  */
 
-const TIPOS = ["personagem", "ambiente", "capitulo"] as const;
+const TIPOS = ["personagem", "ambiente", "capitulo", "artefato"] as const;
 type Tipo = (typeof TIPOS)[number];
 
 const EXTENSOES: Record<string, string> = {
@@ -24,6 +24,7 @@ const TAMANHO_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 async function buscarRegistro(tipo: Tipo, id: string) {
   if (tipo === "personagem") return prisma.personagem.findUnique({ where: { id } });
   if (tipo === "ambiente") return prisma.ambiente.findUnique({ where: { id } });
+  if (tipo === "artefato") return prisma.artefato.findUnique({ where: { id } });
   return prisma.capitulo.findUnique({ where: { id } });
 }
 
@@ -32,6 +33,8 @@ async function salvarImagemUrl(tipo: Tipo, id: string, url: string | null) {
     await prisma.personagem.update({ where: { id }, data: { imagemUrl: url } });
   else if (tipo === "ambiente")
     await prisma.ambiente.update({ where: { id }, data: { imagemUrl: url } });
+  else if (tipo === "artefato")
+    await prisma.artefato.update({ where: { id }, data: { imagemUrl: url } });
   else await prisma.capitulo.update({ where: { id }, data: { imagemUrl: url } });
 }
 

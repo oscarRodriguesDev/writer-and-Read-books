@@ -8,6 +8,7 @@ const ABAS = [
   { href: "/esqueleto", rotulo: "Esqueleto" },
   { href: "/personagens", rotulo: "Personagens" },
   { href: "/ambientes", rotulo: "Ambientes" },
+  { href: "/artefatos", rotulo: "Artefatos" },
   { href: "/regras", rotulo: "Regras" },
   { href: "/linha-do-tempo", rotulo: "Linha do Tempo" },
   { href: "/capitulos", rotulo: "Capítulos" },

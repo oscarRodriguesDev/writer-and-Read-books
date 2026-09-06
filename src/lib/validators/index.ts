@@ -146,6 +146,12 @@ export const ambienteSchema = z.object({
   importanciaNarrativa: textoOpcional(1000),
 });
 
+export const artefatoSchema = z.object({
+  nome: z.string().trim().min(1, "Nome é obrigatório").max(200),
+  descricao: textoOpcional(5000),
+  historia: textoOpcional(5000),
+});
+
 export const criarCapituloSchema = z.object({
   titulo: z.string().trim().min(1, "Título é obrigatório").max(200),
   objetivo: textoOpcional(500),
@@ -390,7 +396,7 @@ export const moverEventoSchema = z.object({
 
 /** POST /api/upload/url — define a imagem de um registro por URL externa. */
 export const urlImagemSchema = z.object({
-  tipo: z.enum(["personagem", "ambiente", "capitulo"]),
+  tipo: z.enum(["personagem", "ambiente", "capitulo", "artefato"]),
   id: z.string().trim().min(1).max(50),
   url: z
     .string()

@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Tipo = "personagem" | "ambiente" | "capitulo";
+type Tipo = "personagem" | "ambiente" | "capitulo" | "artefato";
 
 /**
  * Imagem representativa de personagem/ambiente/capítulo: exibe thumbnail,

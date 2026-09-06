@@ -12,7 +12,7 @@ import { respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
  * Aceita tanto Base64 puro quanto Data URL ("data:image/png;base64,…").
  */
 
-const TIPOS = ["personagem", "ambiente", "capitulo"] as const;
+const TIPOS = ["personagem", "ambiente", "capitulo", "artefato"] as const;
 type Tipo = (typeof TIPOS)[number];
 
 const MIME_PARA_EXT: Record<string, string> = {
@@ -27,6 +27,8 @@ async function salvarImagemUrl(tipo: Tipo, id: string, url: string | null) {
     await prisma.personagem.update({ where: { id }, data: { imagemUrl: url } });
   else if (tipo === "ambiente")
     await prisma.ambiente.update({ where: { id }, data: { imagemUrl: url } });
+  else if (tipo === "artefato")
+    await prisma.artefato.update({ where: { id }, data: { imagemUrl: url } });
   else await prisma.capitulo.update({ where: { id }, data: { imagemUrl: url } });
 }
 
@@ -70,6 +72,9 @@ export async function POST(req: Request) {
         return respostaErro("Registro não encontrado", 404);
     } else if (tipo === "ambiente") {
       if (!(await prisma.ambiente.findUnique({ where: { id } })))
+        return respostaErro("Registro não encontrado", 404);
+    } else if (tipo === "artefato") {
+      if (!(await prisma.artefato.findUnique({ where: { id } })))
         return respostaErro("Registro não encontrado", 404);
     } else {
       if (!(await prisma.capitulo.findUnique({ where: { id } })))

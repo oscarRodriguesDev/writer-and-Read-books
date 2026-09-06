@@ -39,6 +39,7 @@ model Obra {
   capitulos       Capitulo[]
   personagens     Personagem[]
   ambientes       Ambiente[]
+  artefatos       Artefato[]
   eventos         EventoLinhaDoTempo[]
   analises        AnaliseIA[]
   canonInfos      CanonInfo[]
@@ -176,6 +177,22 @@ model Ambiente {
 
   obra    Obra           @relation(fields: [obraId], references: [id], onDelete: Cascade)
   cenas   CenaAmbiente[]
+
+  @@index([obraId])
+}
+
+model Artefato {
+  id          String   @id @default(cuid())
+  obraId      String
+  nome        String
+  // Imagem representativa (caminho público)
+  imagemUrl   String?
+  descricao   String?
+  historia    String?
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
 
   @@index([obraId])
 }

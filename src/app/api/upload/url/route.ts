@@ -43,6 +43,10 @@ export async function POST(req: Request) {
       const registro = await prisma.ambiente.findUnique({ where: { id } });
       if (!registro) return respostaErro("Registro não encontrado", 404);
       await prisma.ambiente.update({ where: { id }, data: { imagemUrl: url } });
+    } else if (tipo === "artefato") {
+      const registro = await prisma.artefato.findUnique({ where: { id } });
+      if (!registro) return respostaErro("Registro não encontrado", 404);
+      await prisma.artefato.update({ where: { id }, data: { imagemUrl: url } });
     } else {
       const registro = await prisma.capitulo.findUnique({ where: { id } });
       if (!registro) return respostaErro("Registro não encontrado", 404);
