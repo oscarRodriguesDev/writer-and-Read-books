@@ -11,7 +11,7 @@ function LayoutContent({ children, obraId, obraTitulo }: { children: ReactNode; 
   useKeyboardShortcuts();
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen flex">
       <Sidebar obraId={obraId} />
       <TopBar obraId={obraId} obraTitulo={obraTitulo} />
       <main
