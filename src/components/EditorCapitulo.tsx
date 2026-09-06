@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ROTULO_PARTE } from "@/lib/constants";
 import type { ParteTipo } from "@/lib/constants";
 import { inputCls, labelCls, btnSecundario } from "@/components/ui";
+import type { ErroRevisao } from "@/lib/revisao/types";
+import { TextareaComRevisao } from "@/components/TextareaComRevisao";
 import {
   PainelAssociacoesCena,
   type SelecaoCena,
@@ -78,6 +80,25 @@ function patchJson(url: string, corpo: unknown) {
   });
 }
 
+const CHAVE_DICIONARIO_PESSOAL = "revisao:dicionario-pessoal";
+
+function carregarDicionarioPessoal(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const bruto = window.localStorage.getItem(CHAVE_DICIONARIO_PESSOAL);
+    const valor = bruto ? JSON.parse(bruto) : [];
+    return Array.isArray(valor)
+      ? valor.filter((v): v is string => typeof v === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function chaveErro(e: ErroRevisao): string {
+  return `${e.tipo}:${e.inicio}:${e.trecho}`;
+}
+
 const ROTULO_ESTADO: Record<EstadoSave, string> = {
   ocioso: "",
   salvando: "Salvando…",
@@ -97,11 +118,13 @@ export function EditorCapitulo({
   capitulo,
   elenco,
   ambientesObra,
+  idioma = "pt-BR",
 }: {
   obraId: string;
   capitulo: CapituloEditorDados;
   elenco: Array<{ id: string; nome: string }>;
   ambientesObra: Array<{ id: string; nome: string }>;
+  idioma?: string;
 }) {
   const { agendar, estado } = useAutosave();
   const router = useRouter();
@@ -143,6 +166,215 @@ export function EditorCapitulo({
         objetivo: dados.objetivo,
       }),
     );
+  }
+
+  // ---- Corretor ortográfico e gramatical (RF-48) ----
+  const [errosOrtografia, setErrosOrtografia] = useState<Record<string, ErroRevisao[]>>({});
+  const [errosGramatica, setErrosGramatica] = useState<Record<string, ErroRevisao[]>>({});
+  const [gramaticaEmCurso, setGramaticaEmCurso] = useState<Record<string, boolean>>({});
+  const [dicionarioPessoal, setDicionarioPessoal] = useState<string[]>(() => carregarDicionarioPessoal());
+  const [ignoradasSessao, setIgnoradasSessao] = useState<Record<string, string[]>>({});
+  const [resumoCorrecao, setResumoCorrecao] = useState<Record<string, string>>({});
+
+  const cenasRef = useRef(cenas);
+  useEffect(() => {
+    cenasRef.current = cenas;
+  });
+
+  // Fila serial: apenas uma chamada de gramática (IA) por vez.
+  const filaGramatica = useRef<Promise<void>>(Promise.resolve());
+  const timersRevisao = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+
+  const vocabulario = useMemo(
+    () => [
+      ...elenco.map((p) => p.nome),
+      ...ambientesObra.map((a) => a.nome),
+      ...dicionarioPessoal,
+    ],
+    [elenco, ambientesObra, dicionarioPessoal],
+  );
+
+  /** Erros da cena para exibição: ortografia + gramática, sem ignorados, ordenados. */
+  function errosVisiveis(cenaId: string): ErroRevisao[] {
+    const ignoradas = new Set(ignoradasSessao[cenaId] ?? []);
+    return [...(errosOrtografia[cenaId] ?? []), ...(errosGramatica[cenaId] ?? [])]
+      .filter((e) => !ignoradas.has(chaveErro(e)))
+      .sort((a, b) => a.inicio - b.inicio);
+  }
+
+  /** Contagens para os badges e o botão de correção em massa. */
+  function contagemCena(cenaId: string): { ort: number; gram: number; alta: number } {
+    const ignoradas = new Set(ignoradasSessao[cenaId] ?? []);
+    const orto = (errosOrtografia[cenaId] ?? []).filter(
+      (e) => !ignoradas.has(chaveErro(e)),
+    );
+    const gram = (errosGramatica[cenaId] ?? []).filter(
+      (e) => !ignoradas.has(chaveErro(e)),
+    );
+    return {
+      ort: orto.length,
+      gram: gram.length,
+      alta: orto.filter((e) => e.confianca === "ALTA").length,
+    };
+  }
+
+  function agendarRevisaoOrtografia(cenaId: string, atrasoMs = 800) {
+    clearTimeout(timersRevisao.current.get(`ort-${cenaId}`));
+    timersRevisao.current.set(
+      `ort-${cenaId}`,
+      setTimeout(() => executarVerificacaoOrtografia(cenaId), atrasoMs),
+    );
+  }
+
+  async function executarVerificacaoOrtografia(cenaId: string) {
+    const texto = cenasRef.current[cenaId]?.conteudo ?? "";
+    if (!texto.trim()) {
+      setErrosOrtografia((m) => ({ ...m, [cenaId]: [] }));
+      return;
+    }
+    try {
+      const res = await fetch("/api/revisao/verificar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          texto,
+          escopo: "ortografia",
+          palavrasNovas: vocabulario,
+          idioma,
+        }),
+      });
+      const corpo = await res.json().catch(() => null);
+      if (!corpo || typeof corpo.erros === "undefined") return;
+      if (cenasRef.current[cenaId]?.conteudo !== texto) return; // texto mudou → descarta
+      setErrosOrtografia((m) => ({ ...m, [cenaId]: corpo.erros }));
+    } catch {
+      // Silencioso: não incomodar o autor enquanto digita.
+    }
+  }
+
+  function agendarRevisaoGramatica(cenaId: string, atrasoMs = 3000) {
+    clearTimeout(timersRevisao.current.get(`gram-${cenaId}`));
+    timersRevisao.current.set(
+      `gram-${cenaId}`,
+      setTimeout(() => {
+        filaGramatica.current = filaGramatica.current.then(() =>
+          executarVerificacaoGramatica(cenaId),
+        );
+      }, atrasoMs),
+    );
+  }
+
+  async function executarVerificacaoGramatica(cenaId: string) {
+    const texto = cenasRef.current[cenaId]?.conteudo ?? "";
+    if (texto.trim().length < 40) {
+      setErrosGramatica((m) => ({ ...m, [cenaId]: [] }));
+      return;
+    }
+    setGramaticaEmCurso((m) => ({ ...m, [cenaId]: true }));
+    try {
+      const res = await fetch("/api/revisao/verificar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          texto,
+          escopo: "gramatica",
+          palavrasNovas: vocabulario,
+          idioma,
+        }),
+      });
+      const corpo = await res.json().catch(() => null);
+      if (!corpo || typeof corpo.erros === "undefined") return;
+      if (cenasRef.current[cenaId]?.conteudo !== texto) return;
+      setErrosGramatica((m) => ({ ...m, [cenaId]: corpo.erros }));
+    } catch {
+      // Silencioso: a falta de IA não deve bloquear a escrita.
+    } finally {
+      setGramaticaEmCurso((m) => ({ ...m, [cenaId]: false }));
+    }
+  }
+
+  // Quando o dicionário pessoal muda, reverifica as cenas preenchidas.
+  useEffect(() => {
+    for (const parte of capitulo.partes)
+      for (const cena of parte.cenas)
+        if (cenasRef.current[cena.id]?.conteudo.trim())
+          agendarRevisaoOrtografia(cena.id, 250);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vocabulario]);
+
+  function substituirSugestao(cenaId: string, inicio: number, fim: number, sugestao: string) {
+    const conteudo = cenas[cenaId].conteudo;
+    const novo = conteudo.slice(0, inicio) + sugestao + conteudo.slice(fim);
+    setCenas((m) => ({ ...m, [cenaId]: { ...m[cenaId], conteudo: novo } }));
+    salvarCena(cenaId);
+    agendarRevisaoOrtografia(cenaId, 300);
+  }
+
+  function ignorarErro(cenaId: string, erro: ErroRevisao) {
+    setIgnoradasSessao((m) => ({
+      ...m,
+      [cenaId]: [...(m[cenaId] ?? []), chaveErro(erro)],
+    }));
+  }
+
+  function adicionarAoDicionario(cenaId: string, palavra: string) {
+    const chave = palavra.toLocaleLowerCase("pt-BR");
+    setDicionarioPessoal((atual) => {
+      const existe = atual.some(
+        (p) => p.toLocaleLowerCase("pt-BR") === chave,
+      );
+      const novo = existe ? atual : [...atual, palavra];
+      if (!existe && typeof window !== "undefined")
+        window.localStorage.setItem(
+          CHAVE_DICIONARIO_PESSOAL,
+          JSON.stringify(novo),
+        );
+      return novo;
+    });
+    // Efeito imediato: remove as ocorrências da palavra da exibição.
+    setErrosOrtografia((m) => ({
+      ...m,
+      [cenaId]: (m[cenaId] ?? []).filter(
+        (e) => e.trecho.toLocaleLowerCase("pt-BR") !== chave,
+      ),
+    }));
+  }
+
+  async function corrigirOrtografiaCena(cenaId: string) {
+    const texto = cenas[cenaId].conteudo;
+    setResumoCorrecao((m) => ({ ...m, [cenaId]: "" }));
+    try {
+      const res = await fetch("/api/revisao/corrigir", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texto, palavrasNovas: vocabulario, idioma }),
+      });
+      const corpo = await res.json().catch(() => null);
+      if (!res.ok || !corpo)
+        throw new Error(corpo?.erro ?? "Falha na correção.");
+      if (corpo.correcoes > 0) {
+        setCenas((m) => ({
+          ...m,
+          [cenaId]: { ...m[cenaId], conteudo: corpo.texto },
+        }));
+        salvarCena(cenaId);
+        agendarRevisaoOrtografia(cenaId, 300);
+        setResumoCorrecao((m) => ({
+          ...m,
+          [cenaId]: `✓ ${corpo.correcoes} correção(ões).${corpo.ignoradas > 0 ? ` ${corpo.ignoradas} sem sugestão segura.` : ""}`,
+        }));
+      } else {
+        setResumoCorrecao((m) => ({
+          ...m,
+          [cenaId]: "Nenhuma correção automática segura encontrada.",
+        }));
+      }
+    } catch (e) {
+      setResumoCorrecao((m) => ({
+        ...m,
+        [cenaId]: e instanceof Error ? e.message : "Falha na correção.",
+      }));
+    }
   }
 
   // ---- Geração assistida por IA (RF-46) ----
@@ -200,6 +432,8 @@ export function EditorCapitulo({
     setCenas((m) => ({ ...m, [cenaId]: { ...m[cenaId], conteudo: texto } }));
     salvarCena(cenaId);
     setPreview((m) => ({ ...m, [cenaId]: "" }));
+    agendarRevisaoOrtografia(cenaId, 250);
+    agendarRevisaoGramatica(cenaId, 800);
   }
 
   // ---- Extração de entidades da cena (RF-18/19/20/74) ----
@@ -381,6 +615,8 @@ export function EditorCapitulo({
         conteudo: dados.conteudo,
         objetivo: dados.objetivo,
       });
+      agendarRevisaoOrtografia(cenaId, 250);
+      agendarRevisaoGramatica(cenaId, 800);
     }
     setPreviewCapitulo({});
     setPromptCapitulo("");
@@ -553,23 +789,76 @@ export function EditorCapitulo({
             <div className="space-y-4">
               {parte.cenas.map((cena, i) => (
                 <div key={cena.id} className="rounded-md border border-line p-2">
-                  <p className="mb-1 px-1 text-xs font-medium uppercase tracking-wide text-faint">
-                    Cena {i + 1}
-                  </p>
-                  <textarea
+                  {(() => {
+                    const c = contagemCena(cena.id);
+                    return (
+                      <p className="mb-1 flex flex-wrap items-center gap-1.5 px-1 text-xs font-medium uppercase tracking-wide text-faint">
+                        <span>Cena {i + 1}</span>
+                        {c.ort > 0 && (
+                          <span
+                            className="rounded bg-red-light px-1.5 py-0.5 font-semibold text-red-dark"
+                            title="Erros de ortografia — clique na palavra para corrigir"
+                          >
+                            Aa {c.ort}
+                          </span>
+                        )}
+                        {c.gram > 0 && (
+                          <span
+                            className="rounded bg-blue-light px-1.5 py-0.5 font-semibold text-blue-dark"
+                            title="Erros de gramática — clique no trecho para ver a sugestão"
+                          >
+                            ab {c.gram}
+                          </span>
+                        )}
+                        {gramaticaEmCurso[cena.id] && (
+                          <span className="normal-case text-muted">
+                            ⌛ gramática…
+                          </span>
+                        )}
+                        {c.alta > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => corrigirOrtografiaCena(cena.id)}
+                            title="Aplica as correções ortográficas com sugestão segura (até 2 trocas de letras)"
+                            className="ml-auto rounded border border-green-500 bg-green-50 px-1.5 py-0.5 font-semibold normal-case text-green-700 transition-colors hover:bg-green-100"
+                          >
+                            ✓ Corrigir ortografia ({c.alta})
+                          </button>
+                        )}
+                      </p>
+                    );
+                  })()}
+                  <TextareaComRevisao
                     value={cenas[cena.id].conteudo}
-                    onChange={(e) => {
+                    erros={errosVisiveis(cena.id)}
+                    onChangeTexto={(novo) => {
                       setCenas((m) => ({
                         ...m,
-                        [cena.id]: { ...m[cena.id], conteudo: e.target.value },
+                        [cena.id]: { ...m[cena.id], conteudo: novo },
                       }));
                       salvarCena(cena.id);
+                      // Limpa sublinhados imediatamente: os erros atuais estão
+                      // com offsets do texto antigo e não valem mais.
+                      setErrosOrtografia((m) => ({ ...m, [cena.id]: [] }));
+                      setErrosGramatica((m) => ({ ...m, [cena.id]: [] }));
+                      agendarRevisaoOrtografia(cena.id);
+                      agendarRevisaoGramatica(cena.id);
                     }}
-                    rows={8}
+                    aoSubstituir={(inicio, fim, sug) =>
+                      substituirSugestao(cena.id, inicio, fim, sug)
+                    }
+                    aoIgnorar={(erro) => ignorarErro(cena.id, erro)}
+                    aoAdicionarDicionario={(palavra) =>
+                      adicionarAoDicionario(cena.id, palavra)
+                    }
                     placeholder="Escreva o conteúdo da cena…"
-                    aria-label={`Conteúdo da cena ${i + 1}`}
-                    className="w-full resize-y rounded-md border border-line bg-surface p-2 text-sm leading-relaxed outline-none focus:border-faint"
+                    ariaLabel={`Conteúdo da cena ${i + 1}`}
                   />
+                  {resumoCorrecao[cena.id] && (
+                    <p className="mt-1 text-xs text-soft">
+                      {resumoCorrecao[cena.id]}
+                    </p>
+                  )}
                   <input
                     value={cenas[cena.id].objetivo}
                     onChange={(e) => {

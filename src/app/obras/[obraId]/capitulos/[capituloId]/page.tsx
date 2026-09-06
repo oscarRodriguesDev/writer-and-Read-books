@@ -32,6 +32,7 @@ export default async function EditorCapituloPage({
     prisma.obra.findUnique({
       where: { id: obraId },
       select: {
+        idioma: true,
         personagens: { select: { id: true, nome: true }, orderBy: { nome: "asc" } },
         ambientes: { select: { id: true, nome: true }, orderBy: { nome: "asc" } },
       },
@@ -82,6 +83,7 @@ export default async function EditorCapituloPage({
         }}
         elenco={obra.personagens}
         ambientesObra={obra.ambientes}
+        idioma={obra.idioma}
       />
     </>
   );
