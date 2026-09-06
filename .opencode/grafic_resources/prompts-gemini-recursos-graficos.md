@@ -396,7 +396,7 @@ de banner.
 | `sucesso-celebrando.png` | `BotaoExportar.tsx` (exportação concluída) | ✅ aplicado |
 | `sucesso-joinha.png` | Feedback de salvar / correção concluída | ⏳ pendente de uso |
 | `decor-divisoria.png` | `app/obras/[obraId]/page.tsx` (divisórias) | ⏳ aguardando arquivo |
-| `decor-fundo-tile.png` | Fundo de login / capa (CSS background) | ✅ aplicado (`sem-emendas-fundo.jpg`) |
+| `decor-fundo-tile.png` | Fundo de login / capa (CSS background) | ✅ aplicado (`sem-emendas-fundo.jpg` + variante dark `sem-emendas-fundo-theme-dark.jpg`) |
 | `avatar-personagem.png` | `ImagemEntidade.tsx` — personagem sem imagem | ⏳ aguardando arquivo |
 | `avatar-ambiente.png` | `ImagemEntidade.tsx` — ambiente sem imagem | ⏳ aguardando arquivo |
 | `avatar-capitulo.png` | `ImagemEntidade.tsx` — capítulo sem imagem | ⏳ aguardando arquivo |

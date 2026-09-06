@@ -38,8 +38,9 @@ export const GRAFIC = {
   vazioAmbientes: `${COMPOSITIONS}/comic-no-envs.png`,
   vazioLinhaTempo: `${COMPOSITIONS}/comic-no-timeline.png`,
   vazioCapitulos: `${COMPOSITIONS}/comic-sem-capitulos.png`,
-  /* Fundo padrão sem emenda (tile) */
+  /* Fundos padrão sem emenda (tile) */
   fundoTile: `${FUNDOS}/sem-emendas-fundo.jpg`,
+  fundoTileDark: `${FUNDOS}/sem-emendas-fundo-theme-dark.jpg`,
 } as const;
 
 export type ChaveGrafic = keyof typeof GRAFIC;

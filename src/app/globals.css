@@ -291,8 +291,7 @@
   }
 
   .dark body {
-    background-image: linear-gradient(rgba(10, 10, 10, 0.45), rgba(10, 10, 10, 0.45)),
-      url("/grafic/sem-emendas-fundo.jpg");
+    background-image: url("/grafic/sem-emendas-fundo-theme-dark.jpg");
   }
 
   ::selection {
