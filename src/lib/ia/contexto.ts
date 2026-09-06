@@ -100,6 +100,9 @@ function textoCabecalhoObra(obra: ObraCompleta): string {
         p.comportamento &&
           `comportamento: ${truncar(p.comportamento, MAX_CAMPO)}`,
         p.objetivo && `objetivo: ${truncar(p.objetivo, MAX_CAMPO)}`,
+        p.arco && `arco: ${truncar(p.arco, MAX_CAMPO)}`,
+        p.arcoDescricao &&
+          `arco (descrição): ${truncar(p.arcoDescricao, MAX_CAMPO)}`,
         p.observacoes && `obs: ${truncar(p.observacoes, MAX_CAMPO)}`,
       ].filter(Boolean);
 

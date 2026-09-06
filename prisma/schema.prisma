@@ -134,6 +134,10 @@ model Personagem {
   comportamento String?
   // O que esse personagem quer alcançar na história
   objetivo      String?
+  // Arco narrativo do personagem (ex.: "Herói", "Redenção", "Queda")
+  arco          String?
+  // Descrição opcional do arco (transformação, jornada)
+  arcoDescricao String?
   observacoes   String?
   criadoEm      DateTime @default(now())
 

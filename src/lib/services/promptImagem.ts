@@ -94,6 +94,8 @@ ${personagem.psicologico && `Personalidade: ${personagem.psicologico}`}
 ${personagem.historia && `História: ${personagem.historia.slice(0, 2000)}`}
 ${personagem.comportamento && `Comportamento: ${personagem.comportamento}`}
 ${personagem.objetivo && `Objetivo: ${personagem.objetivo}`}
+${personagem.arco && `Arco narrativo: ${personagem.arco}`}
+${personagem.arcoDescricao && `Arco (descrição): ${personagem.arcoDescricao.slice(0, 1000)}`}
 
 Crie um prompt de retrato/ilustração deste personagem (retrato de corpo inteiro ou meio corpo, expressivo, coerente com a personalidade).`;
   } else {

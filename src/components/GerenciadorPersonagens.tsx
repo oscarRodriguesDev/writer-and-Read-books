@@ -18,6 +18,8 @@ export type PersonagemDados = {
   historia: string | null;
   comportamento: string | null;
   objetivo: string | null;
+  arco: string | null;
+  arcoDescricao: string | null;
 };
 
 const CAMPOS_TEXTO = [
@@ -26,6 +28,7 @@ const CAMPOS_TEXTO = [
   { nome: "historia", rotulo: "História" },
   { nome: "comportamento", rotulo: "Comportamento" },
   { nome: "objetivo", rotulo: "Objetivo" },
+  { nome: "arcoDescricao", rotulo: "Arco — descrição" },
 ] as const;
 
 function FormPersonagem({
@@ -68,6 +71,12 @@ function FormPersonagem({
               <option key={p} value={p}>{ROTULO_PAPEL[p]}</option>
             ))}
           </select>
+        </div>
+        <div className="sm:col-span-2">
+          <label className={labelCls}>
+            Arco narrativo <span className="text-faint">(ex.: "Herói", "Redenção", "Queda", "Amadurecimento")</span>
+          </label>
+          <input name="arco" maxLength={200} defaultValue={inicial?.arco ?? ""} placeholder="Transformação do personagem ao longo da história" className={inputCls} />
         </div>
       </div>
       {CAMPOS_TEXTO.map((c) => (

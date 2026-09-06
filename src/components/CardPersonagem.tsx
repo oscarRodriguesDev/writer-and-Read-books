@@ -14,6 +14,7 @@ const CAMPOS_PERFIL: Array<{ chave: keyof PersonagemDados; rotulo: string }> = [
   { chave: "psicologico", rotulo: "Psicológico" },
   { chave: "comportamento", rotulo: "Comportamento" },
   { chave: "historia", rotulo: "História" },
+  { chave: "arcoDescricao", rotulo: "Arco — descrição" },
 ];
 
 type Props = {
@@ -62,9 +63,16 @@ export function CardPersonagem({
               </span>
             )}
           </h3>
-          <span className="mt-1 inline-block rounded-full bg-chipbg px-2 py-0.5 text-xs text-soft">
-            {ROTULO_PAPEL[p.papel] ?? p.papel}
-          </span>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            <span className="inline-block rounded-full bg-chipbg px-2 py-0.5 text-xs text-soft">
+              {ROTULO_PAPEL[p.papel] ?? p.papel}
+            </span>
+            {p.arco && (
+              <span className="inline-block rounded-full bg-chipbg px-2 py-0.5 text-xs text-soft">
+                📈 Arco: {p.arco}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex shrink-0 gap-2">
           <BotaoPromptImagem tipo="personagem" id={p.id} permitirGerar />

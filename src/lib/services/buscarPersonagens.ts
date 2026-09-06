@@ -39,6 +39,8 @@ export async function buscarPersonagens(
       historia: true,
       comportamento: true,
       objetivo: true,
+      arco: true,
+      arcoDescricao: true,
     },
   });
   if (personagens.length === 0)
@@ -55,6 +57,8 @@ export async function buscarPersonagens(
         p.historia && `  história: ${p.historia.slice(0, 500)}`,
         p.comportamento && `  comportamento: ${p.comportamento.slice(0, 300)}`,
         p.objetivo && `  objetivo: ${p.objetivo.slice(0, 300)}`,
+        p.arco && `  arco: ${p.arco.slice(0, 300)}`,
+        p.arcoDescricao && `  arco (descrição): ${p.arcoDescricao.slice(0, 400)}`,
       ]
         .filter(Boolean)
         .join("\n"),

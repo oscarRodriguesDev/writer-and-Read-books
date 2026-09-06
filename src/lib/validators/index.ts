@@ -112,6 +112,8 @@ export const personagemSchema = z.object({
   historia: textoOpcional(5000),
   comportamento: textoOpcional(2000),
   objetivo: textoOpcional(2000),
+  arco: textoOpcional(200),
+  arcoDescricao: textoOpcional(4000),
 });
 
 /** POST /api/personagens/[id]/relacoes — vínculo entre dois personagens da mesma obra. */
