@@ -6,6 +6,7 @@
 
 const ICONES = "/grafic/icones";
 const COMPOSITIONS = "/grafic/compositions";
+const FUNDOS = "/grafic";
 
 /** Ícones de navegação/módulos. */
 export const GRAFIC = {
@@ -37,6 +38,8 @@ export const GRAFIC = {
   vazioAmbientes: `${COMPOSITIONS}/comic-no-envs.png`,
   vazioLinhaTempo: `${COMPOSITIONS}/comic-no-timeline.png`,
   vazioCapitulos: `${COMPOSITIONS}/comic-sem-capitulos.png`,
+  /* Fundo padrão sem emenda (tile) */
+  fundoTile: `${FUNDOS}/sem-emendas-fundo.jpg`,
 } as const;
 
 export type ChaveGrafic = keyof typeof GRAFIC;

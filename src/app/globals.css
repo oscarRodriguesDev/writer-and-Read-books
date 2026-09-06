@@ -273,7 +273,14 @@
   }
 
   body {
-    background: var(--background);
+    /* Fundo padrão com o tile cômico "sem emenda". Repetição suave por
+       cima da cor base, mesclado de forma discreta. */
+    background-color: var(--background);
+    background-image: linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)),
+      url("/grafic/sem-emendas-fundo.jpg");
+    background-size: auto, 1408px 768px;
+    background-repeat: repeat-x, repeat;
+    background-position: center, center;
     color: var(--foreground);
     font-family: var(--font-sans);
     font-size: var(--text-body);
@@ -281,6 +288,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+
+  .dark body {
+    background-image: linear-gradient(rgba(10, 10, 10, 0.45), rgba(10, 10, 10, 0.45)),
+      url("/grafic/sem-emendas-fundo.jpg");
   }
 
   ::selection {
