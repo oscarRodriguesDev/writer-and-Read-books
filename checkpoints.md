@@ -1,5 +1,22 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Objetivo por personagem (item 3) + reorganização do card
+
+### Estado final
+- Migração `20260906215446_personagem_objetivo` aplicada: `ALTER TABLE "Personagem" ADD COLUMN "objetivo" TEXT`
+- `objetivo` adicionado a: validator `personagemSchema`, formulário, contexto IA (`contexto.ts`), busca semântica (`buscarPersonagens.ts`) e prompt de imagem (`promptImagem.ts`)
+- Novo componente `CardPersonagem.tsx` com cabeçalho condensado + abas **Perfil** (imagem + campos rotulados) e **Relações** (lista + formulário em grade)
+- `GerenciadorPersonagens.tsx` atualizado para usar `CardPersonagem`; imports órfãos removidos
+- `RelacoesPersonagem.tsx` sem card aninhado (aba limpa) e formulário de relação em grade 2 colunas
+- Commits: `cf9dfa4` (item 3) e `5f4c238` (UI); push em `origin/vibecode`
+- Build passando
+
+### Próximos passos sugeridos
+- **Teste visual do usuário** da nova tela de personagens (abas Perfil/Relações, imagem no perfil, formulário de relação)
+- Item 4 do backlog: Arcos de personagem (`arco` String? + `arcoDescricao`, requer migração)
+
+---
+
 ## 2026-09-06 - Sessão: Backlog item 2 — Regras do universo
 
 ### Estado final

@@ -15,8 +15,10 @@
 
 ## FASE 2 — Personagens (expansão do model Personagem)
 
-- [ ] **3. Objetivos por personagem** — Campo `objetivo` (String?) no `Personagem` (hoje só existe objetivo do protagonista no Esqueleto). Formulário + exibição.
-  - Requer migração Prisma (adicionar coluna).
+- [x] **3. Objetivos por personagem** — Campo `objetivo` (String?) no `Personagem` (hoje só existe objetivo do protagonista no Esqueleto). Formulário + exibição.
+  - Implementado: migração `20260906215446_personagem_objetivo` (`ALTER TABLE Personagem ADD COLUMN objetivo TEXT`), campo no validator/formulário/card, contexto IA (contexto.ts), busca semântica (buscarPersonagens.ts) e prompt de imagem (promptImagem.ts) passam o objetivo.
+  - Reactor de UI: novo `CardPersonagem` com abas Perfil/Relações resolveu a tela bagunçada do personagem.
+  - Testes: build passa. Commit `cf9dfa4` (item 3) + `5f4c238` (reorganização UI).
 
 - [ ] **4. Arcos de personagem** — Campo `arco` (String?) no `Personagem` (ex.: "Herói", "Redenção") + descrição opcional `arcoDescricao` ou model separado. Formulário + exibição.
   - Requer migração Prisma (adicionar colunas/model).

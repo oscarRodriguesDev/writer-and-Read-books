@@ -1,21 +1,35 @@
 # Pedidos
 
+## 2026-09-06 - Backlog item 3: Objetivos por personagem
+- **Commit**: `cf9dfa4`
+- **Descrição**: Campo `objetivo` no `Personagem` com formulário, card e contexto IA.
+- **Solução**: Migração `20260906215446_personagem_objetivo` (coluna TEXT), validator/forms/card atualizados, contexto, busca semântica e prompt de imagem passando o objetivo.
+- **Arquivos**: `prisma/schema.prisma`, `prisma/migrations/20260906215446_personagem_objetivo/`, `src/lib/validators/index.ts`, `src/lib/ia/contexto.ts`, `src/lib/services/buscarPersonagens.ts`, `src/lib/services/promptImagem.ts`
+- **Testes**: build passa.
+
+## 2026-09-06 - Reorganizar card de personagem (UI bagunçada)
+- **Commit**: `5f4c238`
+- **Descrição**: Usuário reportou tela de personagens "muito bagunçada" (campos + relações empilhados).
+- **Solução**: Novo `CardPersonagem` com cabeçalho condensado + abas Perfil (imagem + campos rotulados) e Relações (lista + formulário em grade); `RelacoesPersonagem` sem card aninhado.
+- **Arquivos**: `src/components/CardPersonagem.tsx` (novo), `src/components/GerenciadorPersonagens.tsx`, `src/components/RelacoesPersonagem.tsx`
+- **Testes**: build passa. Pendente teste visual do usuário.
+
 ## 2026-09-06 - Backlog item 2: Regras do universo
-- **Commit**: (pendente)
+- **Commit**: `a0e3505`
 - **Descrição**: Model `RegraObra` existia sem tela/API. Criado CRUD + página própria.
 - **Solução**: Validator, rotas GET/POST (obra) e PATCH/DELETE (item), componente `GerenciadorRegras`, página `/obras/[obraId]/regras`, aba "Regras" na navegação.
 - **Arquivos**: `src/lib/validators/index.ts`, `src/app/api/obras/[obraId]/regras/route.ts`, `src/app/api/regras/[id]/route.ts`, `src/components/GerenciadorRegras.tsx`, `src/app/obras/[obraId]/regras/page.tsx`, `src/components/NavegacaoObra.tsx`
 - **Testes**: build passa; API validada (201/400/200); sem migração.
 
 ## 2026-09-06 - Backlog item 1: Relações entre personagens
-- **Commit**: (pendente)
+- **Commit**: `e46765e`
 - **Descrição**: Model `RelacaoPersonagem` existia sem tela/API. Criado CRUD completo.
 - **Solução**: Constantes de tipos, validator, rotas GET/POST/DELETE, componente `RelacoesPersonagem` no card do personagem.
 - **Arquivos**: `src/lib/constants.ts`, `src/lib/validators/index.ts`, `src/app/api/obras/[obraId]/relacoes/route.ts`, `src/app/api/personagens/[id]/relacoes/route.ts`, `src/app/api/relacoes/[id]/route.ts`, `src/components/RelacoesPersonagem.tsx`, `src/components/GerenciadorPersonagens.tsx`
 - **Testes**: build passa; API validada (201/409/400/200/404); sem migração.
 
 ## 2026-09-06 - Criar backlog do projeto
-- **Commit**: (pendente)
+- **Commit**: `318d33e`
 - **Descrição**: Usuário pediu para salvar tudo que falta fazer em ordem de prioridade e apresentar item a item.
 - **Solução**: Criado `backlog.md` com 16 tarefas em 6 fases (models órfãos → personagens → universo → estrutura → IA → acabamento).
 - **Arquivos**: `backlog.md`, `checkpoints.md`

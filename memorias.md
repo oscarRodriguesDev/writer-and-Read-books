@@ -1,5 +1,34 @@
 # Memórias do Projeto
 
+## 2026-09-06 - Objetivo por personagem + reorganização do card (itens 3 e UI) (Autoria: VIBECODE)
+
+### Contexto
+O autor precisava registrar o **objetivo** de cada personagem (o campo só existia para o protagonista no Esqueleto). Ao testar, o usuário reclamou que a tela de personagens estava "muito bagunçada" — o card empilhava imagem + todos os campos + relações em um único bloco.
+
+### Decisões
+- **Objetivo**: nova coluna `objetivo TEXT` no `Personagem` via migração `20260906215446_personagem_objetivo`. Campo adicionado ao validator `personagemSchema`, formulário, card, contexto da IA, busca semântica e prompt de imagem.
+- **Reorganização do card** (`CardPersonagem.tsx`): card com cabeçalho condensado (nome + papel + botões 🤖/Editar/Excluir) + **abas "Perfil" | "Relações"**.
+  - Perfil: imagem (`ImagemEntidade`) ao lado dos campos rotulados (Objetivo, Físico, Psicológico, Comportamento, História) — cada um com título uppercase discreto.
+  - Relações: `RelacoesPersonagem` **sem card aninhado** (removido wrapper com borda/título duplicado); formulário "Adicionar relação" em grade de 2 colunas numa mini-caixa.
+- A imagem NÃO fica mais no cabeçalho do card (o `ImagemEntidade` é alto: 112px + linha de botões Trocar/Colar/URL/Base64/Remover) — foi movida para dentro da aba Perfil.
+
+### Arquivos alterados
+- `prisma/schema.prisma` + `prisma/migrations/20260906215446_personagem_objetivo/` — coluna `objetivo`
+- `src/lib/validators/index.ts` — `objetivo` em `personagemSchema`
+- `src/lib/ia/contexto.ts`, `src/lib/services/buscarPersonagens.ts`, `src/lib/services/promptImagem.ts` — objetivo no contexto IA
+- `src/components/CardPersonagem.tsx` — **novo** componente com abas
+- `src/components/GerenciadorPersonagens.tsx` — usa `CardPersonagem` (removidos imports de `ImagemEntidade`/`BotaoPromptImagem`/`RelacoesPersonagem`/`btnPerigo`)
+- `src/components/RelacoesPersonagem.tsx` — sem wrapper de card; formulário em grade
+
+### Testes
+- Build `npm run build` passa (Turbopack + TS).
+- Commits: `cf9dfa4` (item 3) e `5f4c238` (UI). Push em `vibecode`.
+
+### Pendências
+- **Teste visual do usuário** no navegador (desktop e mobile): abas, posição da imagem no perfil, formulário de relação em grade.
+
+---
+
 ## 2026-09-06 - Regras do universo — Item 2 do backlog (Autoria: VIBECODE)
 
 ### Contexto
