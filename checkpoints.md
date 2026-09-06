@@ -1,5 +1,24 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Backlog item 2 — Regras do universo
+
+### Estado final
+- Validator `regraObraSchema` + `atualizarRegraObraSchema` em `src/lib/validators/index.ts`
+- Rotas API:
+  - `GET/POST /api/obras/[obraId]/regras` — lista (ativas primeiro) / cria regra
+  - `PATCH/DELETE /api/regras/[id]` — edita descrição/ativa / remove
+- Página nova `src/app/obras/[obraId]/regras/page.tsx` + aba "Regras" na `NavegacaoObra`
+- Componente `GerenciadorRegras.tsx`: criar regra, badge Ativa/Inativa, desativar/ativar, excluir
+- Sem migração (model `RegraObra` já existia)
+- Testes de API: criar 201, descrição vazia 400, patch ativa/texto 200, delete 200
+- Build passando
+
+### Próximos passos sugeridos
+- Revisão visual da aba Regras no navegador
+- Item 3 do backlog: Objetivos por personagem (requer migração)
+
+---
+
 ## 2026-09-06 - Sessão: Backlog item 1 — Relações entre personagens
 
 ### Estado final

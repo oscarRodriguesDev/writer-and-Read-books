@@ -9,9 +9,9 @@
   - Implementado: `GET /api/personagens/[id]/relacoes`, `POST /api/obras/[obraId]/relacoes` (valida mesma obra, sem duplicata e sem auto-relação), `DELETE /api/relacoes/[id]`. Componente `RelacoesPersonagem` no card de cada personagem. Constantes `TIPOS_RELACAO`/`ROTULO_TIPO_RELACAO` + validator `relacaoPersonagemSchema`.
   - Sem migração (model já existia). Testes de API validados (201/409/400/404).
 
-- [ ] **2. Regras do universo** — Model `RegraObra` existe (descricao + ativa) e a IA respeita no contexto. Falta: rotas API de CRUD + tela para cadastrar/ativar/desativar regras da obra.
-  - Arquivos prováveis: `src/app/api/obras/[obraId]/regras/route.ts` (+ `[id]`), tela nova (aba "Universo" ou seção na Visão geral).
-  - Sem migração (model já existe).
+- [x] **2. Regras do universo** — Model `RegraObra` existe (descricao + ativa) e a IA respeita no contexto. Falta: rotas API de CRUD + tela para cadastrar/ativar/desativar regras da obra.
+  - Implementado: `GET/POST /api/obras/[obraId]/regras`, `PATCH/DELETE /api/regras/[id]`. Página nova `/obras/[obraId]/regras` com aba "Regras" na navegação. Componente `GerenciadorRegras` (criar, ativar/desativar, excluir, badge de status).
+  - Sem migração (model já existia). Testes de API validados (201/400/200/delete).
 
 ## FASE 2 — Personagens (expansão do model Personagem)
 

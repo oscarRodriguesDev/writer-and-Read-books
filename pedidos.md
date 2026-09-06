@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-06 - Backlog item 2: Regras do universo
+- **Commit**: (pendente)
+- **Descrição**: Model `RegraObra` existia sem tela/API. Criado CRUD + página própria.
+- **Solução**: Validator, rotas GET/POST (obra) e PATCH/DELETE (item), componente `GerenciadorRegras`, página `/obras/[obraId]/regras`, aba "Regras" na navegação.
+- **Arquivos**: `src/lib/validators/index.ts`, `src/app/api/obras/[obraId]/regras/route.ts`, `src/app/api/regras/[id]/route.ts`, `src/components/GerenciadorRegras.tsx`, `src/app/obras/[obraId]/regras/page.tsx`, `src/components/NavegacaoObra.tsx`
+- **Testes**: build passa; API validada (201/400/200); sem migração.
+
 ## 2026-09-06 - Backlog item 1: Relações entre personagens
 - **Commit**: (pendente)
 - **Descrição**: Model `RelacaoPersonagem` existia sem tela/API. Criado CRUD completo.

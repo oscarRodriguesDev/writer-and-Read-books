@@ -1,5 +1,30 @@
 # Memórias do Projeto
 
+## 2026-09-06 - Regras do universo — Item 2 do backlog (Autoria: VIBECODE)
+
+### Contexto
+O model `RegraObra` existia no banco e era usado pela IA como contexto (geração, revisão, correção e análise respeitam `descricao` + `ativa`) — mas não havia nenhuma tela para o autor cadastrar ou ativar/desativar regras.
+
+### Decisões
+- Regra é uma descrição livre (até 3000 chars) com flag `ativa`; a IA só considera as regras ativas (`where: { ativa: true }` no `contexto.ts`).
+- Lista ordena ativas primeiro; regra inativa fica com opacidade reduzida e badge "Inativa".
+- Nova rota dedicada `/obras/[obraId]/regras` com aba própria na navegação (entre Ambientes e Linha do Tempo).
+- PATCH parcial aceita descrição e/ou ativa; DELETE remove definitivamente.
+- Sem migração Prisma.
+
+### Arquivos alterados
+- `src/lib/validators/index.ts` — `regraObraSchema`, `atualizarRegraObraSchema`, tipo `RegraObraInput`
+- `src/app/api/obras/[obraId]/regras/route.ts` — GET/POST
+- `src/app/api/regras/[id]/route.ts` — PATCH/DELETE
+- `src/components/GerenciadorRegras.tsx` — novo gerenciador
+- `src/app/obras/[obraId]/regras/page.tsx` — página nova
+- `src/components/NavegacaoObra.tsx` — aba "Regras"
+
+### Testes
+- Build passa. Smoke test da API: criar 201, descrição em branco 400, PATCH ativa/texto 200, DELETE 200, lista vazia após exclusão.
+
+---
+
 ## 2026-09-06 - Relações entre personagens — Item 1 do backlog (Autoria: VIBECODE)
 
 ### Contexto

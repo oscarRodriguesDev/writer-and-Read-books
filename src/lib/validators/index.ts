@@ -126,6 +126,15 @@ export const relacaoPersonagemSchema = z
     path: ["destinoId"],
   });
 
+/** POST /api/obras/[obraId]/regras — regra do universo da obra. */
+export const regraObraSchema = z.object({
+  descricao: z.string().trim().min(1, "Descreva a regra").max(3000),
+  ativa: z.boolean().default(true),
+});
+
+/** PATCH /api/regras/[id] — atualiza descrição e/ou status de ativação. */
+export const atualizarRegraObraSchema = regraObraSchema.partial();
+
 export const ambienteSchema = z.object({
   nome: z.string().trim().min(1, "Nome é obrigatório").max(200),
   localizacao: textoOpcional(300),
@@ -455,6 +464,7 @@ export type AmbienteInput = z.infer<typeof ambienteSchema>;
 export type CriarCapituloInput = z.infer<typeof criarCapituloSchema>;
 export type EventoInput = z.infer<typeof eventoSchema>;
 export type RelacaoPersonagemInput = z.infer<typeof relacaoPersonagemSchema>;
+export type RegraObraInput = z.infer<typeof regraObraSchema>;
 
 // Metadados de publicação
 export type AutorInput = z.infer<typeof autorSchema>;
