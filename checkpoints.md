@@ -1,5 +1,18 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Mapeamento da estrutura-alvo e criação do backlog
+
+### Estado final
+- Diagnosticado o estado atual vs. estrutura-alvo (Estrutura, Personagens, Universo, Cronologia, Texto, Inteligência)
+- Models órfãos encontrados: `RelacaoPersonagem` e `RegraObra` (no banco, sem UI/API)
+- Faltam: Atos, Objetivos/Arcos por personagem, Objetos, categoria IA de furo de roteiro
+- Criado `backlog.md` com 16 tarefas em 6 fases de prioridade
+
+### Próximos passos sugeridos
+- Executar tarefas do backlog em ordem, uma a uma
+
+---
+
 ## 2026-09-06 - Sessão: 2ª leva de recursos gráficos — estados vazios
 
 ### Estado final

@@ -1,0 +1,59 @@
+# Backlog — Tarefas pendentes (ordem de prioridade)
+
+> Salvo em 2026-09-06 a partir do mapeamento da estrutura-alvo vs. estado atual.
+> Ao terminar uma tarefa: marcar `[x]`, atualizar `memorias.md`, `checkpoints.md` e `pedidos.md`.
+
+## FASE 1 — Models órfãos (banco pronto, falta UI/API) — ganho rápido
+
+- [ ] **1. Relações entre personagens** — Model `RelacaoPersonagem` existe no schema (origem/destino/tipo/descrição) e a IA já usa no contexto. Falta: rotas API de CRUD + tela no `GerenciadorPersonagens` (adicionar/remover relação entre personagens).
+  - Arquivos prováveis: `src/app/api/personagens/[id]/relacoes/route.ts`, `GerenciadorPersonagens.tsx`
+  - Sem migração (model já existe).
+
+- [ ] **2. Regras do universo** — Model `RegraObra` existe (descricao + ativa) e a IA respeita no contexto. Falta: rotas API de CRUD + tela para cadastrar/ativar/desativar regras da obra.
+  - Arquivos prováveis: `src/app/api/obras/[obraId]/regras/route.ts` (+ `[id]`), tela nova (aba "Universo" ou seção na Visão geral).
+  - Sem migração (model já existe).
+
+## FASE 2 — Personagens (expansão do model Personagem)
+
+- [ ] **3. Objetivos por personagem** — Campo `objetivo` (String?) no `Personagem` (hoje só existe objetivo do protagonista no Esqueleto). Formulário + exibição.
+  - Requer migração Prisma (adicionar coluna).
+
+- [ ] **4. Arcos de personagem** — Campo `arco` (String?) no `Personagem` (ex.: "Herói", "Redenção") + descrição opcional `arcoDescricao` ou model separado. Formulário + exibição.
+  - Requer migração Prisma (adicionar colunas/model).
+
+## FASE 3 — Universo (novos models)
+
+- [ ] **5. Objetos do universo** — Model novo `Objeto` (nome, descricao, historia, imagemUrl, obraId) + table `CenaObjeto` para associar objetos a cenas. CRUD + tela.
+  - Requer migração Prisma (novo model).
+  - Não usar nome `Objeto` se conflitar com padrões globais — alternativa: `ItemUniverso`/`Artefato`.
+
+## FASE 4 — Estrutura (novos models)
+
+- [ ] **6. Atos** — Model novo `Ato` (obraId, titulo, sinopse, ordem) + campo `atoId` no `Capitulo` e `ordemDentroDoAto`. Tela de gerenciamento (criar atos, mover capítulos entre atos, reordenar).
+  - Requer migração Prisma (novo model + coluna em Capitulo).
+  - Cuidado com a constraint `@@unique([obraId, ordemNarrativa])` do Capitulo.
+
+## FASE 5 — Inteligência (IA)
+
+- [ ] **7. Categoria IA "furo de roteiro"** — Nova categoria de achado explícita (ex.: `FURO_ROTEIRO`) além de ESTRUTURA/CAUSALIDADE que cobrem parcialmente hoje. Ajustar `CATEGORIAS_ACHADO`, `ROTULO_CATEGORIA_ACHADO`, prompt em `src/lib/ia/prompt.ts` e filtros do `PainelAnaliseObra`.
+  - Requer migração? Campo `categoria` é String — sem migração obrigatória, apenas constante.
+
+## FASE 6 — Acabamento / pendências anteriores
+
+- [ ] **8. Teste visual dos recursos gráficos** — Validar mascotes, estados vazios e fundos (tile claro/escuro) em navegador, tema claro/escuro.
+- [ ] **9. Remover duplicado** — `public/grafic/icones/mascote-escritor (2).png` (cópia desnecessária).
+- [ ] **10. Demais recursos gráficos do Gemini** — Se geradas: `ia-*`, `decor-*`, `avatar-*`, `banner-modo-leitor`, `sucesso-joinha`.
+- [ ] **11. Upload de capa via interface** — Hoje `FormEditarObra` aceita só URL; usar `api/upload`, `api/upload/url` ou `api/upload/base64` já existentes.
+- [ ] **12. Busca/autocomplete de categorias BISAC/CLIL** — Atualmente categorias são selecionadas manualmente.
+- [ ] **13. CRUD de autores separado** — Model `Autor`/`AutorObra` existem; falta gerenciamento dedicado.
+- [ ] **14. validação EPUB (epubcheck)** integrada à exportação.
+- [ ] **15. Mais idiomas no corretor** — pt-BR/en/es hoje; ampliar dicionários `@cspell/dict-XX`.
+- [ ] **16. Decidir nome da aplicação** — Sugestões já entregues; aguardando escolha (fica agendado "pensar depois").
+
+---
+
+## Legenda de prioridade
+- **FASE 1**: banco já pronto — entrega rápida, alto valor (relações e regras são dados que a IA já consome).
+- **FASE 2/3/4**: expansão de schema (novas migrações).
+- **FASE 5**: melhoria da análise IA.
+- **FASE 6**: acabamento e pendências antigas.
