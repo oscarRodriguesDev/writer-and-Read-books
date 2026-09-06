@@ -1,5 +1,20 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Prompts de recursos gráficos cômicos (Gemini)
+
+### Estado final
+- Criada pasta `.opencode/grafic_resources/` com `prompts-gemini-recursos-graficos.md`
+- 10 seções de prompts: mascote (polvo escritor), empty states, ícones, estados de IA, badges, sucesso, decorativos, avatares, modo leitor + regras gerais
+- Estilo: flat illustration pastel, tom cômico, fundo transparente, consistência do mascote
+- Objetivo: tirar a seriedade do sistema e estimular a criatividade dos escritores
+
+### Próximos passos sugeridos
+- Gerar imagens no Gemini e adicioná-las a `public/` com nomes (ex.: `mascote-escritor.png`)
+- Substituir emojis atuais nos componentes (Sidebar, BotaoExportar, GerenciadorCapitulos, etc.)
+- Teste visual em temas claro/escuro
+
+---
+
 ## 2026-09-06 - Sessão: Edição de título e descrição na lista de capítulos
 
 ### Estado final
