@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { inputCls, labelCls, btnPrimario, btnSecundario, cardCls } from "@/components/ui";
 import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
 import { ImagemEntidade } from "@/components/ImagemEntidade";
+import { GRAFIC } from "@/lib/grafic";
 
 export type CapituloDados = {
   id: string;
@@ -219,9 +220,10 @@ export function GerenciadorCapitulos({
                   onClick={() => iniciarEdicao(c)}
                   aria-label={`Editar ${c.titulo}`}
                   title="Editar título e descrição"
-                  className={btnSecundario}
+                  className={`${btnSecundario} flex items-center gap-1`}
                 >
-                  ✏️
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={GRAFIC.iconeRenomear} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />
                 </button>
               )}
               <BotaoPromptImagem tipo="capitulo" id={c.id} rotulo="🎨" permitirGerar />

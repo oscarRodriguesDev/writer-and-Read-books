@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { GRAFIC } from "@/lib/grafic";
 
 type Tema = "claro" | "escuro";
 
@@ -30,26 +31,35 @@ export default function AlternadorTema() {
     <div
       role="radiogroup"
       aria-label="Escolher tema"
-      className="flex overflow-hidden rounded-md shadow-sm"
+      className="flex items-center gap-1.5"
     >
-      <button
-        type="button"
-        role="radio"
-        aria-checked={tema === "claro"}
-        onClick={() => escolher("claro")}
-        className={`${base} ${tema === "claro" ? ativo : inativo}`}
-      >
-        Claro
-      </button>
-      <button
-        type="button"
-        role="radio"
-        aria-checked={tema === "escuro"}
-        onClick={() => escolher("escuro")}
-        className={`${base} ${tema === "escuro" ? ativo : inativo}`}
-      >
-        Escuro
-      </button>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={GRAFIC.iconeTema}
+        alt=""
+        aria-hidden="true"
+        className="h-5 w-5 object-contain"
+      />
+      <div className="flex overflow-hidden rounded-md shadow-sm">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={tema === "claro"}
+          onClick={() => escolher("claro")}
+          className={`${base} ${tema === "claro" ? ativo : inativo}`}
+        >
+          Claro
+        </button>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={tema === "escuro"}
+          onClick={() => escolher("escuro")}
+          className={`${base} ${tema === "escuro" ? ativo : inativo}`}
+        >
+          Escuro
+        </button>
+      </div>
     </div>
   );
 }

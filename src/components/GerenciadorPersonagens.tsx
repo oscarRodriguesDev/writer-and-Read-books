@@ -6,6 +6,7 @@ import { PAPEIS, ROTULO_PAPEL } from "@/lib/constants";
 import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
 import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
 import { ImagemEntidade } from "@/components/ImagemEntidade";
+import { GRAFIC } from "@/lib/grafic";
 
 export type PersonagemDados = {
   id: string;
@@ -274,7 +275,11 @@ export function GerenciadorPersonagens({
             className={btnPrimario}
             title="Lê toda a obra, lista os personagens e cadastra os que ainda não existem"
           >
-            {mapeando ? "⏳ Analisando a obra inteira…" : "🧠 Mapear personagens do texto"}
+            <span className="flex items-center gap-1.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={GRAFIC.mascoteTech} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />
+              {mapeando ? "⏳ Analisando a obra inteira…" : "🧠 Mapear personagens do texto"}
+            </span>
           </button>
           <span className="text-xs text-muted">
             A IA lê tudo que foi escrito e cria os personagens que ainda não

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { cardCls } from "@/components/ui";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { GRAFIC } from "@/lib/grafic";
 
 interface Obra {
   id: string;
@@ -26,11 +27,11 @@ const statusLabels: Record<string, string> = {
   CONCLUIDA: "Concluída",
 };
 
-const statusColors: Record<string, string> = {
-  PLANEJAMENTO: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  ESCRITA: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-  REVISAO: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-  CONCLUIDA: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+const statusIcons: Record<string, string> = {
+  PLANEJAMENTO: GRAFIC.seloPlanejamento,
+  ESCRITA: GRAFIC.seloEscrita,
+  REVISAO: GRAFIC.seloRevisao,
+  CONCLUIDA: GRAFIC.seloConcluida,
 };
 
 function formatNumber(num: number): string {
@@ -55,7 +56,7 @@ interface WorkCardProps {
 
 export function WorkCard({ obra, onDelete }: WorkCardProps) {
   const statusLabel = statusLabels[obra.status] || obra.status;
-  const statusColor = statusColors[obra.status] || "bg-gray-100 text-gray-800";
+  const statusIcon = statusIcons[obra.status];
 
   return (
     <div className={`${cardCls} relative group overflow-hidden rounded-xl bg-surface p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-accent/40`}>
@@ -100,9 +101,20 @@ export function WorkCard({ obra, onDelete }: WorkCardProps) {
         )}
 
         <div className="flex flex-wrap items-center gap-2 mb-3">
-          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColor}`}>
-            {statusLabel}
-          </span>
+          {statusIcon ? (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-1.5 py-0.5 text-xs font-medium"
+              title={statusLabel}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={statusIcon} alt={statusLabel} className="h-6 w-6 object-contain" />
+              <span>{statusLabel}</span>
+            </span>
+          ) : (
+            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium`}>
+              {statusLabel}
+            </span>
+          )}
           {obra.totalPalavras !== undefined && obra.totalPalavras > 0 && (
             <span className="inline-flex items-center gap-1 text-xs text-muted">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

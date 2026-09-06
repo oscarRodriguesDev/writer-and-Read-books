@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "./SidebarContext";
+import { GRAFIC } from "@/lib/grafic";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Obras", icon: "📚" },
+  { href: "/", label: "Obras", icon: GRAFIC.iconeLivros },
   { href: "/obras/nova", label: "Nova Obra", icon: "➕" },
   { href: "/importar", label: "Importar", icon: "📥" },
 ];
@@ -13,11 +14,11 @@ const NAV_ITEMS = [
 const OBRA_NAV_ITEMS = [
   { href: "", label: "Visão geral", icon: "📋" },
   { href: "/esqueleto", label: "Esqueleto", icon: "🦴" },
-  { href: "/personagens", label: "Personagens", icon: "👥" },
-  { href: "/ambientes", label: "Ambientes", icon: "🏙️" },
-  { href: "/linha-do-tempo", label: "Linha do Tempo", icon: "📅" },
-  { href: "/capitulos", label: "Capítulos", icon: "📖" },
-  { href: "/analise", label: "Análise IA", icon: "🤖" },
+  { href: "/personagens", label: "Personagens", icon: GRAFIC.iconePersonagens },
+  { href: "/ambientes", label: "Ambientes", icon: GRAFIC.iconeAmbientes },
+  { href: "/linha-do-tempo", label: "Linha do Tempo", icon: GRAFIC.iconeLinhaDoTempo },
+  { href: "/capitulos", label: "Capítulos", icon: GRAFIC.iconeCapitulos },
+  { href: "/analise", label: "Análise IA", icon: GRAFIC.iconeAnaliseIa },
   { href: "/ler", label: "Ler", icon: "👁️" },
 ];
 
@@ -68,7 +69,13 @@ export default function Sidebar({ obraId }: { obraId?: string }) {
               className="flex items-center gap-3 font-bold text-lg text-foreground transition-opacity"
               aria-label="Book Writer & Reader - Início"
             >
-              <span className="text-2xl">📖</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={GRAFIC.mascoteEscritor}
+                alt=""
+                aria-hidden="true"
+                className="h-8 w-8 rounded-full object-cover"
+              />
               {!isCollapsed && <span className="whitespace-nowrap">Book Writer</span>}
             </Link>
             <button
@@ -99,9 +106,19 @@ export default function Sidebar({ obraId }: { obraId?: string }) {
                 }`}
                 aria-current={item.active ? "page" : undefined}
               >
-                <span className="flex-shrink-0 text-lg" aria-hidden="true">
-                  {item.icon}
-                </span>
+                {item.icon.startsWith("/") ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={item.icon}
+                    alt=""
+                    aria-hidden="true"
+                    className="flex-shrink-0 h-5 w-5 object-contain"
+                  />
+                ) : (
+                  <span className="flex-shrink-0 text-lg" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                )}
                 {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
               </Link>
             ))}

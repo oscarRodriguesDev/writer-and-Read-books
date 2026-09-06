@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { btnSecundario } from "@/components/ui";
+import { GRAFIC } from "@/lib/grafic";
 
 type FormatoExportacao = "epub" | "pdf" | "docx" | "kindle";
 
@@ -104,7 +105,9 @@ export function BotaoExportar({ obraId }: { obraId: string }) {
         </div>
       )}
       {sucesso && (
-        <div className="fixed bottom-4 right-4 z-50 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700 shadow-lg animate-slide-up">
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700 shadow-lg animate-slide-up">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={GRAFIC.sucessoCelebrando} alt="" aria-hidden="true" className="h-10 w-10 object-contain" />
           ✅ Exportação concluída! Arquivo salvo na pasta Downloads.
         </div>
       )}

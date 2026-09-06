@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
 import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
 import { ImagemEntidade } from "@/components/ImagemEntidade";
+import { GRAFIC } from "@/lib/grafic";
 
 export type AmbienteDados = {
   id: string;
@@ -177,7 +178,11 @@ export function GerenciadorAmbientes({
             className={btnPrimario}
             title="Lê toda a obra e cadastra os ambientes/locais que ainda não existem"
           >
-            {mapeando ? "⏳ Analisando a obra inteira…" : "🧠 Mapear ambientes do texto"}
+            <span className="flex items-center gap-1.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={GRAFIC.mascoteTech} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />
+              {mapeando ? "⏳ Analisando a obra inteira…" : "🧠 Mapear ambientes do texto"}
+            </span>
           </button>
           <span className="text-xs text-muted">
             A IA lê tudo que foi escrito e cria os locais que ainda não estão

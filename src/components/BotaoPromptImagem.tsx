@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { GRAFIC } from "@/lib/grafic";
 
 /**
  * Botão "🎨 Prompt de imagem": pede à IA um prompt representativo
@@ -28,6 +29,8 @@ export function BotaoPromptImagem({
   const [prompt, setPrompt] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
+
+  const [mostrandoMascote, setMostrandoMascote] = useState(false);
 
   async function gerarImagem() {
     setErro(null);
@@ -70,6 +73,8 @@ export function BotaoPromptImagem({
         throw new Error(corpo?.erro ?? "Falha ao gerar o prompt.");
       setPrompt(corpo.prompt);
       setAberto(true);
+      setMostrandoMascote(true);
+      setTimeout(() => setMostrandoMascote(false), 4000);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao gerar o prompt.");
     } finally {
@@ -99,6 +104,13 @@ export function BotaoPromptImagem({
       >
         {gerando ? "⏳ Criando prompt…" : rotulo}
       </button>
+      {mostrandoMascote && prompt && (
+        <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={GRAFIC.mascotePensando} alt="" aria-hidden="true" className="h-5 w-5 object-contain" />
+          Pronto! Aqui vai uma ideia de imagem para o seu {tipo}…
+        </p>
+      )}
 
       {permitirGerar && (
         <button

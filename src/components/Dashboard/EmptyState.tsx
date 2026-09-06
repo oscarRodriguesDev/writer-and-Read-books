@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { btnPrimario, btnSecundario } from "@/components/ui";
+import { GRAFIC } from "@/lib/grafic";
 
 const features = [
   {
@@ -36,10 +37,13 @@ const features = [
 export function EmptyState() {
   return (
     <div className="flex flex-col items-center text-center py-16 px-4">
-      <div className="mb-8 w-24 h-24 rounded-full bg-chipbg flex items-center justify-center mx-auto">
-        <svg className="w-12 h-12 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 00-2-2V7m2 13V7m0 0l-4 4m4-4l4 4" />
-        </svg>
+      <div className="mb-8 w-28 h-28 rounded-full bg-chipbg flex items-center justify-center mx-auto overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={GRAFIC.mascoteChorando}
+          alt="Mascote do Book Writer"
+          className="h-24 w-24 object-contain"
+        />
       </div>
 
       <h2 className="mb-3 text-2xl font-bold">Comece sua primeira obra</h2>

@@ -359,46 +359,52 @@ de banner.
 
 ## Integração na aplicação
 
-Depois de gerar e salvar os PNGs em `public/grafic/`, cada recurso entra nos
-seguintes locais (esta é a referência que o time de dev usará):
+> **Status**: primeira leva aplicada em 2026-09-06 (ícones, mascotes, selos, sucesso).
+> As demais serão aplicadas quando os arquivos chegarem em `public/grafic/`.
 
-| Arquivo (`public/grafic/…`) | Onde entra na aplicação |
-|---|---|
-| `mascote-escritor.png` | Logo/sidebar (`Sidebar.tsx`), tela de login/loading |
-| `mascote-escrevendo.png` | Estado de escrita (editor, badge "salvando") |
-| `mascote-pensando.png` | Estados de espera / sugestões da IA |
-| `mascote-feliz.png` | Sucesso (obra concluída, commit de capítulo) |
-| `mascote-chorando.png` | Estado vazio dramático (sem dados) |
-| `mascote-dormindo.png` | Sem atividade / inativo |
-| `empty-dashboard.png` | `Dashboard/EmptyState.tsx` |
-| `empty-personagens.png` | `GerenciadorPersonagens.tsx` (lista vazia) |
-| `empty-capitulos.png` | `GerenciadorCapitulos.tsx` (lista vazia) |
-| `empty-ambientes.png` | `GerenciadorAmbientes.tsx` (lista vazia) |
-| `empty-linha-do-tempo.png` | `GerenciadorLinhaDoTempo.tsx` (lista vazia) |
-| `icone-livros.png` | Sidebar — item "Obras" (`Sidebar.tsx`) |
-| `icone-personagens.png` | Sidebar — item "Personagens" |
-| `icone-capitulos.png` | Sidebar — item "Capítulos" |
-| `icone-ambientes.png` | Sidebar — item "Ambientes" |
-| `icone-linha-do-tempo.png` | Sidebar — item "Linha do tempo" |
-| `icone-analise-ia.png` | `PainelAnaliseObra.tsx` / `PainelAchadosCena.tsx` |
-| `icone-configuracoes.png` | Sidebar / menu de conta (se aplicável) |
-| `icone-exportar.png` | `BotaoExportar.tsx` |
-| `icone-tema.png` | `AlternadorTema.tsx` |
-| `ia-gerando.png` | `EditorCapitulo.tsx` (gerar cena/capítulo) |
-| `ia-analisando.png` | `EditorCapitulo.tsx` + gerências (reconhecer/mapear) |
-| `ia-revisando.png` | `EditorCapitulo.tsx` (revisão dirigida) |
-| `selo-planejamento.png` | `Dashboard/WorkCard.tsx` — selo PLANEJAMENTO |
-| `selo-escrita.png` | `Dashboard/WorkCard.tsx` — selo ESCRITA |
-| `selo-revisao.png` | `Dashboard/WorkCard.tsx` — selo REVISÃO |
-| `selo-concluida.png` | `Dashboard/WorkCard.tsx` — selo CONCLUÍDA |
-| `sucesso-celebrando.png` | `BotaoExportar.tsx` (exportação concluída) |
-| `sucesso-joinha.png` | Feedback de salvar / correção concluída |
-| `decor-divisoria.png` | `app/obras/[obraId]/page.tsx` (divisórias) |
-| `decor-fundo-tile.png` | Fundo de login / capa (CSS background) |
-| `avatar-personagem.png` | `ImagemEntidade.tsx` — personagem sem imagem |
-| `avatar-ambiente.png` | `ImagemEntidade.tsx` — ambiente sem imagem |
-| `avatar-capitulo.png` | `ImagemEntidade.tsx` — capítulo sem imagem |
-| `banner-modo-leitor.png` | `app/ler/[obraId]/page.tsx` + editor |
+| Arquivo (`public/grafic/…`) | Onde entra na aplicação | Status |
+|---|---|---|
+| `mascote-escritor.png` | Logo/sidebar (`Sidebar.tsx`), tela de login/loading | ✅ aplicado (Sidebar) |
+| `mascote-escrevendo.png` | Estado de escrita (editor, badge "salvando") | ⏳ aguardando arquivo |
+| `mascote-pensando.png` | Estados de espera / sugestões da IA (`BotaoPromptImagem`) | ✅ aplicado |
+| `mascote-feliz.png` | Sucesso (obra concluída, commit de capítulo) | ⏳ pendente de uso |
+| `mascote-chorando.png` | Estado vazio dramático (`Dashboard/EmptyState.tsx`) | ✅ aplicado |
+| `mascote-dormindo.png` | Sem atividade / inativo | ⏳ pendente de uso |
+| `mascote-tech.png` | Estados de IA gerando/mapeando (`EditorCapitulo`, Gerenciadores) | ✅ aplicado |
+| `empty-dashboard.png` | `Dashboard/EmptyState.tsx` | ⏳ aguardando arquivo |
+| `empty-personagens.png` | `GerenciadorPersonagens.tsx` (lista vazia) | ⏳ aguardando arquivo |
+| `empty-capitulos.png` | `GerenciadorCapitulos.tsx` (lista vazia) | ⏳ aguardando arquivo |
+| `empty-ambientes.png` | `GerenciadorAmbientes.tsx` (lista vazia) | ⏳ aguardando arquivo |
+| `empty-linha-do-tempo.png` | `GerenciadorLinhaDoTempo.tsx` (lista vazia) | ⏳ aguardando arquivo |
+| `icone-livros.png` (`meus-livros.png`) | Sidebar — item "Obras" (`Sidebar.tsx`) | ✅ aplicado |
+| `icone-personagens.png` (`personagens.png`) | Sidebar — item "Personagens" | ✅ aplicado |
+| `icone-capitulos.png` (`capitulos.png`) | Sidebar — item "Capítulos" | ✅ aplicado |
+| `icone-ambientes.png` (`ambientes.png`) | Sidebar — item "Ambientes" | ✅ aplicado |
+| `icone-linha-do-tempo.png` (`time-line.png`) | Sidebar — item "Linha do Tempo" | ✅ aplicado |
+| `icone-analise-ia.png` (`analise-ia.png`) | Sidebar — item "Análise IA" | ✅ aplicado |
+| `icone-configuracoes.png` (`configuracoes.png`) | Sidebar / menu de conta (se aplicável) | ✅ arquivo pronto p/ uso |
+| `icone-exportar.png` | `BotaoExportar.tsx` | ⏳ aguardando arquivo |
+| `icone-tema.png` (`theme-select.png`) | `AlternadorTema.tsx` | ✅ aplicado |
+| `icone-renomear.png` (`renomear.png`) | `GerenciadorCapitulos.tsx` (botão editar) | ✅ aplicado |
+| `ia-gerando.png` | `EditorCapitulo.tsx` (gerar cena/capítulo) — usa mascote-tech | ⏳ aguardando arquivo |
+| `ia-analisando.png` | `EditorCapitulo.tsx` + gerências (reconhecer/mapear) | ⏳ aguardando arquivo |
+| `ia-revisando.png` | `EditorCapitulo.tsx` (revisão dirigida) | ⏳ aguardando arquivo |
+| `selo-planejamento.png` (`status-planejamento.png`) | `Dashboard/WorkCard.tsx` — selo PLANEJAMENTO | ✅ aplicado |
+| `selo-escrita.png` (`status-escrita.png`) | `Dashboard/WorkCard.tsx` — selo ESCRITA | ✅ aplicado |
+| `selo-revisao.png` (`status-review.png`) | `Dashboard/WorkCard.tsx` — selo REVISÃO | ✅ aplicado |
+| `selo-concluida.png` (`status-done.png`) | `Dashboard/WorkCard.tsx` — selo CONCLUÍDA | ✅ aplicado |
+| `sucesso-celebrando.png` | `BotaoExportar.tsx` (exportação concluída) | ✅ aplicado |
+| `sucesso-joinha.png` | Feedback de salvar / correção concluída | ⏳ pendente de uso |
+| `decor-divisoria.png` | `app/obras/[obraId]/page.tsx` (divisórias) | ⏳ aguardando arquivo |
+| `decor-fundo-tile.png` | Fundo de login / capa (CSS background) | ⏳ aguardando arquivo |
+| `avatar-personagem.png` | `ImagemEntidade.tsx` — personagem sem imagem | ⏳ aguardando arquivo |
+| `avatar-ambiente.png` | `ImagemEntidade.tsx` — ambiente sem imagem | ⏳ aguardando arquivo |
+| `avatar-capitulo.png` | `ImagemEntidade.tsx` — capítulo sem imagem | ⏳ aguardando arquivo |
+| `banner-modo-leitor.png` | `app/ler/[obraId]/page.tsx` + editor | ⏳ aguardando arquivo |
+
+> **Nota**: os caminhos estão centralizados em `src/lib/grafic.ts` (constante `GRAFIC`).
+> Para aplicar uma imagem nova: crie o arquivo em `public/grafic/icones/` e registre
+> o caminho em `GRAFIC`, depois use nos componentes.
 
 ### Checklist de integração (quando os arquivos chegarem)
 

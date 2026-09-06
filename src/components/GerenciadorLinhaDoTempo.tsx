@@ -7,6 +7,7 @@ import {
   ROTULO_ESCALA_TEMPORAL,
 } from "@/lib/constants";
 import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
+import { GRAFIC } from "@/lib/grafic";
 
 export type EventoDados = {
   id: string;
@@ -552,7 +553,11 @@ export function GerenciadorLinhaDoTempo({
             disabled={mapeando}
             className={btnPrimario}
           >
-            {mapeando ? "⏳ Analisando a obra inteira…" : "🧠 Gerar linha do tempo a partir do texto"}
+            <span className="flex items-center gap-1.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={GRAFIC.mascoteTech} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />
+              {mapeando ? "⏳ Analisando a obra inteira…" : "🧠 Gerar linha do tempo a partir do texto"}
+            </span>
           </button>
           {!criando && inserindoEm === null && (
             <button onClick={() => setCriando(true)} className={btnSecundario}>

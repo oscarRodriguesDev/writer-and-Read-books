@@ -8,6 +8,7 @@ import type { ParteTipo } from "@/lib/constants";
 import { inputCls, labelCls, btnSecundario } from "@/components/ui";
 import type { ErroRevisao } from "@/lib/revisao/types";
 import { TextareaComRevisao } from "@/components/TextareaComRevisao";
+import { GRAFIC } from "@/lib/grafic";
 import {
   PainelAssociacoesCena,
   type SelecaoCena,
@@ -727,7 +728,11 @@ export function EditorCapitulo({
             className={`mt-1 ${btnSecundario}`}
             title="Roda o reconhecimento de entidades em todas as cenas preenchidas"
           >
-            {extraindoCap ? "⏳ Analisando cenas…" : "🧠 Reconhecer todas as cenas"}
+            <span className="flex items-center gap-1.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={GRAFIC.mascoteTech} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />
+              {extraindoCap ? "⏳ Analisando cenas…" : "🧠 Reconhecer todas as cenas"}
+            </span>
           </button>
           {resumoCap && (
             <p className="mt-1 max-w-xs text-xs text-muted">{resumoCap}</p>
@@ -880,9 +885,13 @@ export function EditorCapitulo({
                       disabled={gerando[cena.id]}
                       className={btnSecundario}
                     >
-                      {gerando[cena.id]
-                        ? "⏳ Gerando… pode levar até 2 min"
-                        : "✨ Gerar com IA"}
+                      <span className="flex items-center gap-1.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={GRAFIC.mascoteTech} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />
+                        {gerando[cena.id]
+                          ? "⏳ Gerando… pode levar até 2 min"
+                          : "✨ Gerar com IA"}
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -891,9 +900,13 @@ export function EditorCapitulo({
                       className={btnSecundario}
                       title="Reconhece personagens, ambientes e tempo narrativo do texto e aplica nas associações e na linha do tempo"
                     >
-                      {extraindo[cena.id]
-                        ? "⏳ Analisando texto…"
-                        : "🧠 Reconhecer entidades"}
+                      <span className="flex items-center gap-1.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={GRAFIC.mascotePensando} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />
+                        {extraindo[cena.id]
+                          ? "⏳ Analisando texto…"
+                          : "🧠 Reconhecer entidades"}
+                      </span>
                     </button>
                   </div>
                   {resumoExtracao[cena.id] && (

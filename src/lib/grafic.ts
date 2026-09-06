@@ -1,0 +1,35 @@
+/**
+ * Caminhos centralizados dos recursos gráficos em /public/grafic.
+ * Centralizar evita erros de digitação e facilita adicionar novas imagens
+ * geradas no Gemini (basta criar o arquivo e registrar o caminho aqui).
+ */
+
+const ICONES = "/grafic/icones";
+
+/** Ícones de navegação/módulos. */
+export const GRAFIC = {
+  mascoteEscritor: `${ICONES}/mascote-escritor.png`,
+  mascoteEscrevendo: `${ICONES}/mascote-escritor.png`, // variação ainda não gerada
+  mascotePensando: `${ICONES}/mascote-pensando.png`,
+  mascoteFeliz: `${ICONES}/mascote-feliz.png`,
+  mascoteChorando: `${ICONES}/mascote-chorando.png`,
+  mascoteDormindo: `${ICONES}/mascote-dormindo.png`,
+  mascoteTech: `${ICONES}/mascote-tech.png`, // estado "gerando/IA"
+  iconeLivros: `${ICONES}/meus-livros.png`,
+  iconePersonagens: `${ICONES}/personagens.png`,
+  iconeCapitulos: `${ICONES}/capitulos.png`,
+  iconeAmbientes: `${ICONES}/ambientes.png`,
+  iconeLinhaDoTempo: `${ICONES}/time-line.png`,
+  iconeAnaliseIa: `${ICONES}/analise-ia.png`,
+  iconeConfiguracoes: `${ICONES}/configuracoes.png`,
+  iconeTema: `${ICONES}/theme-select.png`,
+  iconeRenomear: `${ICONES}/renomear.png`,
+  seloPlanejamento: `${ICONES}/status-planejamento.png`,
+  seloEscrita: `${ICONES}/status-escrita.png`,
+  seloRevisao: `${ICONES}/status-review.png`,
+  seloConcluida: `${ICONES}/status-done.png`,
+  sucessoCelebrando: `${ICONES}/sucesso-celebrando.png`,
+  sucessoJoinha: `${ICONES}/sucesso-joinha.png`,
+} as const;
+
+export type ChaveGrafic = keyof typeof GRAFIC;
