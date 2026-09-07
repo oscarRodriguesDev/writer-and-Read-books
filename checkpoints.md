@@ -1,5 +1,97 @@
 # Checkpoints
 
+## 2026-09-07 - Sessão: Commits liberados + saudação pelo nome artístico
+
+### Estado final
+- **Commit autorizado pelo usuário** — enviados (local + remoto, branch `vibecode`):
+  - `e84b902` feat(auth): cadastro e login com Auth.js v5 + proteção de rotas (schema + migrações `adiciona_usuario`/`vincula_obras_usuario`, next-auth v5 + bcryptjs, /login, /cadastro, proxy, upload tipo perfil, generos em constants).
+  - `7c7d97e` feat(obras): isolar obras por usuário (dono) nas rotas e páginas (helper `auth-obras`, notFound/404, actions checando dono).
+  - `a214d49` feat(perfil): página /perfil com edição de dados, conta e senha.
+  - *(novo)* feat: saudação do dashboard com nome artístico.
+  - *(novo)* docs: arquivos de controle (memorias/checkpoints/pedidos).
+- **Saudação "Olá, escritor" → nome do usuário**: usuário pediu a saudação pelo nome; depois esclareceu: usa o **nome artístico** (`Usuario.nomeAutor`). `src/app/page.tsx` busca `nomeAutor`/`nome` no banco (fallback: nome real → "escritor") e passa `nomeUsuario` ao `DashboardHeader` (client, prop nova).
+- JWT só carrega `user.name` (nome real) — por isso o pseudônimo é lido no banco na página (não está no token).
+- Build passa (compila + TS + prerender).
+
+### Próximos passos
+- Teste visual do usuário: saudação com pseudônimo no dashboard; perfil (editar/foto/senha); dropdown TopBar.
+- Hardening pendente (anotado): rotas de recurso direto por id + upload de personagem/ambiente/capitulo/artefato sem checagem de dono.
+
+---
+
+## 2026-09-07 - Sessão: Página de perfil (/perfil)
+
+### Estado final
+- **Rota `/perfil`** criada (server component, `force-dynamic`, autenticada; conta sem senhaHash; contagem de obras no header). Tipo `PerfilDados` em `src/lib/perfil.ts`.
+- **Edição inline por bloco** (cardCls papel): Perfil (nome, idade, nomeAutor, telefone, bio, site, gêneros chips), Conta (username/email + senha atual), Segurança (troca de senha). Feedback inline + estados de carregamento.
+- **Server actions** (`src/app/actions/usuario.ts`): id sempre da sessão; Zod server-side; bcrypt custo 10; P2002 → erro amigável; revalidatePath("/perfil").
+- **Validators** `src/lib/validators/usuario.ts` (perfil/conta/senha); helpers de `autenticacao.ts` exportados (`textoOpcional`, `idadeOpcional`, `generosLiterariosSchema`, `siteOpcional`); `GENEROS_LITERARIOS` movido para `constants.ts` (FormCadastro reutiliza).
+- **AvatarPerfil**: upload/remoção de foto via `/api/upload` tipo `perfil` (JPG/PNG/WebP ≤5MB); **fix de titularidade**: `/api/upload` agora rejeita foto perfil de outro usuário (403) no POST e DELETE.
+- **Acesso**: TopBar dropdown do usuário (antes morto) → "Meu perfil" + "Sair" (fecha com clique fora/Escape); Sidebar com item "Perfil"; breadcrumb "Perfil".
+- **Sem migração** (parecer db-admin): schema `Usuario` já cobre tudo.
+- Comportamento JWT stateless: trocar email/username não invalida a sessão atual (menu pode mostrar o antigo até o próximo login — aviso no UI); mantém logado após trocar senha.
+- **Build passa** (compila + TS + prerender).
+- **Commit NÃO feito** — aguarda OK do usuário (branch `vibecode`; acúmulo: papel + auth + isolamento + perfil).
+
+### Próximos passos
+- Teste visual do usuário: editar perfil, foto (upload/remover), senha, email/username, dropdown TopBar, menu lateral.
+- Perguntar ao usuário: autoriza **commit**?
+- Hardening anotado: rotas de recurso direto + upload de entidades (personagem/ambiente/capitulo/artefato) sem checagem de dono.
+
+---
+
+## 2026-09-07 - Sessão: Isolamento por usuário (cada autor vê só as próprias obras)
+
+### Estado final
+- **Schema**: `Obra.usuarioId String?` (nullable de propósito) + relação `Usuario?` (onDelete: Cascade) + `@@index([usuarioId])`; `Usuario.obras Obra[]`. Migração **`20260907205904_vincula_obras_usuario`** aplicada (9 migrações).
+- **Backfill**: obras órfãs vinculadas ao usuário **skarix** (Oscar Rodrigues, `cmtrpzioc0000j4dovdadfenw`, oskharm12@gmail.com); scripts `scripts/_tmp_*` e `_tmp.sql` removidos.
+- **Helper** `src/lib/auth-obras.ts`: `obterUsuarioId()` + `obterObraDoUsuario(obraId, include?)` (findFirst `{id, usuarioId}`; `null` não vaza existência).
+- **Protegidos**: dashboard e `/importar` (filtro por dono), `GET/POST /api/obras` (401 sem sessão), `PATCH/DELETE /api/obras/[obraId]`, `/api/importar` (posse), `/ler/[obraId]`, 10 páginas da obra + editor de capítulo (notFound), 11 rotas aninhadas de recursos + 8 de IA/exportação (404), server actions `excluirObra`/`arquivarObra`/`desarquivarObra`.
+- **Páginas**: `notFound()`; **APIs**: `respostaErro(…, 404)`; sem sessão → 401.
+- **Build passa** (compila + TS + prerender). Perrengues resolvidos: digitação `[!obra, capitulo]`; tipagem do payload do helper com `ObraGetPayload`; editor de capítulo usa checagem + `findUnique` com `select` (helper só aceita `include`).
+- **Erro runtime `prisma.usuario is undefined`** = PrismaClient velho no `globalThis`; resolvido reiniciando o servidor (usuário). Mudanças de schema exigem reinício se o processo estava aberto.
+- **Commit NÃO feito** — aguarda OK do usuário (branch `vibecode`; acúmulo: papel + auth + isolamento).
+
+### Próximos passos
+- **Hardening futuro** (anotado): rotas de recurso direto (`PATCH/DELETE /api/personagens/[id]`, `/api/capitulos/[id]`, `/api/ambientes/[id]`, `/api/artefatos/[id]`, `/api/atos/[id]`, `/api/eventos/[id]`, `/api/cenas/[id]`, `/api/relacoes/[id]`, `/api/regras/[id]`, `/api/achados/[id]`, `mover`, `associacoes` — sem checagem de dono por ID direto).
+- Teste visual do usuário (com seu usuário: dashboard só com suas obras, acessar obra pela URL direta).
+- Perguntar ao usuário: autoriza **commit**?
+
+---
+
+## 2026-09-07 - Sessão: Cadastro/login com Auth.js v5 + finalização do fundo de papel
+
+### Estado final
+- **Fundo de papel completo**: TopBar, NavegacaoObra (pills, sem separadores, sem Início/Obras), `CabecalhoObra.tsx` compartilhado aplicado nas 10 páginas da obra (todas `max-w-5xl`), BotaoExportar em papel, breadcrumb "Início" removido. Build passando.
+- **Auth.js v5** (`next-auth@5.0.0-beta.32`) + `bcryptjs`; sem adapter Prisma (Credentials + JWT).
+- Model `Usuario` criado + migração `20260907203506_adiciona_usuario` aplicada (8 migrações ao total).
+- `.env`: `AUTH_SECRET` + `AUTH_TRUST_HOST=true`.
+- `src/auth.ts` (callbacks jwt/session com id/username), `src/types/next-auth.d.ts`, `src/proxy.ts` (proteção de rotas; /login e /cadastro públicas), rotas `[...nextauth]` (GET/POST, runtime nodejs) e `/api/auth/cadastro` (bcrypt, P2002→409).
+- `FormLogin.tsx` (Suspense na página), `FormCadastro.tsx` (todos os campos + foto + gêneros; cadastro → upload perfil → login automático), páginas `/login` e `/cadastro` (card papel centralizado).
+- `/api/upload`: tipo `"perfil"` (salva em `Usuario.fotoUrl`); `urlImagemSchema` aceita `"perfil"`.
+- `AppLayoutWrapper`: `/login` e `/cadastro` fora do Layout (sem Sidebar/TopBar).
+- Build **passa** (compila + TS + prerender). Problemas resolvidos no caminho: `next-auth@latest` instala v4 (sem `handlers`) → v5 beta; destructuring de `handlers` quebrava a coleta de config no Next 16 → `export const GET = handlers.GET`; `useSearchParams` sem Suspense; `@ts-expect-error` órfão; `registro.imagemUrl` vs `fotoUrl` no upload; `req` implícito no proxy.
+- **Commit NÃO feito** — aguarda OK do usuário (branch `vibecode`; há todo o trabalho de papel + auth).
+
+### Próximos passos
+- Teste visual do usuário: cadastro completo (com foto), login, logout, proteção de rotas, redirecionamento pós-login, telas sem sidebar.
+- Perguntar ao usuário: autoriza **commit**? Decidir pendências (obras órfãs, LGPD 13–15, `skills/token-economy.md` inexistente).
+
+---
+
+## 2026-09-07 - Sessão: Análise de requisitos — autenticação (cadastro)
+
+### Estado final
+- Tarefa de **pesquisa/análise apenas** (nenhum código alterado, sem commit).
+- Documento de requisitos entregue na conversa: 10 campos de cadastro com validações, 15 gêneros literários, 2 dados adicionais aprovados (bio, objetivo), RNs (unicidade, login automático, LGPD/termos), segurança (bcryptjs custo 12, Zod server-side, Auth.js v5 + Credentials/JWT, rate limit, timing attack).
+- **Gaps para decisão do usuário**: obras órfãs sem dono; tratamento LGPD 13–15; telefone opcional?; vínculo futuro nomeAutor ↔ model `Autor`; arquivo `skills/token-economy.md` referenciado no config **não existe** (criar/atualizar referência).
+
+### Próximos passos
+- Usuário valida os gaps (item 8 do documento) → VIBECODE implementa: model `Usuario` (+ `Obra.usuarioId`), `POST /api/auth/registrar`, página `/cadastro`, tipo `"perfil"` nas rotas de upload.
+- Pendências de sessões anteriores seguem: testar visual do leitor/fundo papel e commit das mudanças não commitadas (aguardando OK do usuário).
+
+---
+
 ## 2026-09-07 - Sessão: Leitor de livro + fundo papel global + regra de testes
 
 ### Estado final

@@ -1,5 +1,35 @@
 # Pedidos
 
+## 2026-09-07 - Saudação do dashboard com nome artístico
+- **Commit**: *(este commit)*
+- **Descrição**: "Olá, escritor" deveria usar o nome do escritor; usuário esclareceu: **nome artístico** (`Usuario.nomeAutor`).
+- **Solução**: `src/app/page.tsx` (server) lê `nomeAutor`/`nome` no banco (fallback: nome real → "escritor") e passa `nomeUsuario` ao `DashboardHeader` (client) → `<h1>Olá, {nomeUsuario}</h1>`. JWT carrega só o nome real, por isso a leitura é no banco.
+- **Testes**: build passa. Pendente teste visual.
+
+## 2026-09-07 - Página de perfil
+- **Commit**: `a214d49`
+- **Descrição**: Rota `/perfil` com edição de dados, conta e senha.
+- **Solução**: server actions autenticadas (id da sessão), Zod, bcrypt custo 10, P2002; foto com upload/remoção e fix de titularidade; dropdown TopBar (Meu perfil/Sair) e item no menu; sem migração.
+- **Testes**: build passa. Pendente teste visual.
+
+## 2026-09-07 - Isolamento de obras por usuário
+- **Commit**: `7c7d97e`
+- **Descrição**: Cada autor vê só as próprias obras.
+- **Solução**: `Obra.usuarioId` + backfill para skarix; helper `auth-obras`; páginas notFound/APIs 404; 401 sem sessão; server actions checam dono.
+- **Testes**: build passa. Pendente teste visual.
+
+## 2026-09-07 - Cadastro e login (Auth.js v5)
+- **Commit**: `e84b902`
+- **Descrição**: Cadastro/login + model Usuario + vínculo ora-obras.
+- **Solução**: next-auth@5.0.0-beta.32 + bcryptjs; /login e /cadastro fora do layout; proxy de proteção; `/api/upload` tipo perfil; generos em constants.
+- **Testes**: build passa. Pendente teste visual.
+
+## 2026-09-07 - Análise de requisitos: área de autenticação (cadastro)
+- **Commit**: (nenhum — pesquisa/análise, sem alteração de código)
+- **Descrição**: Documento de requisitos da página de cadastro + futura página de login (NextAuth/Auth.js). Campos definidos (nome, idade, gêneros, nomeAutor, foto, username, senha, email, telefone, termos), validações (Zod, idade 13–120, unicidade email/username), gêneros literários (15), regras de negócio (login automático pós-cadastro, 409 p/ duplicados), segurança (bcryptjs custo 12, server-side, rate limit, timing attack, Auth.js v5 + JWT).
+- **Gaps registrados**: (1) obras existentes sem dono — assinalar após 1º cadastro; (2) LGPD 13–15 (consentimento parental) — validar; (3) telefone opcional?; (4) vínculo future `nomeAutor` × model `Autor`; (5) `skills/token-economy.md` referenciado no config não existe.
+- **Próximo passo**: validação das decisões pendentes pelo usuário → então VIBECODE implementa (schema + rota + página).
+
 ## 2026-09-06 - Excluir capítulos na lista
 - **Commit**: `544b81d`
 - **Descrição**: Rota `/obras/[obraId]/capitulos` não tinha remoção de capítulos (nenhum botão/rota). 

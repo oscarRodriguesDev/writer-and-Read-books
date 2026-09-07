@@ -1,5 +1,162 @@
 # Memórias do Projeto
 
+## 2026-09-07 - Saudação do dashboard usa o nome artístico (Autoria: VIBECODE)
+
+### Decisão
+O usuário apontou que a saudação "Olá, escritor" do dashboard deveria usar o **nome do escritor**, e depois especificou: o **nome artístico** (`Usuario.nomeAutor`, pseudônimo).
+
+### Implementação
+- `src/app/page.tsx` (server): busca `nomeAutor`/`nome` do usuário logado no banco e monta `nomeSaudacao = nomeAutor ?? nome ?? "escritor"` (fallback), passando como prop `nomeUsuario` ao `DashboardHeader`.
+- `src/components/Dashboard/DashboardHeader.tsx`: nova prop `nomeUsuario` (client) → `<h1>Olá, {nomeUsuario}</h1>`.
+- O token JWT carrega `user.name` (nome real) — por isso a leitura do pseudônimo é feita no banco na página.
+
+### Testes
+`npm run build` passa.
+
+---
+
+## 2026-09-07 - Página de perfil (/perfil) (Autoria: VIBECODE)
+
+### Contexto
+Usuário pediu "quero uma página de perfil". Especialistas consultados em paralelo: analista-requisitos (requisitos MoSCoW + gaps), uiux (design inline por bloco), db-admin (parecer: **sem migração**, schema `Usuario` já cobre tudo). Implementado escopo mínimo + fix de segurança no upload de perfil.
+
+### Decisões
+- **Rota `/perfil`** (dentro do Layout normal): server component `force-dynamic`, `auth()` → usuário por select **sem senhaHash** + `count` de obras do usuário; não logado → `redirect("/login")`. Tipo `PerfilDados` em `src/lib/perfil.ts` (compartilhado server/client).
+- **Edição inline por bloco** (design aprovado): 3 cards `cardCls` — **Perfil** (nome, idade 13–120, nomeAutor, telefone, bio ≤500, site URL, gêneros chips), **Conta** (username/email exigem senha atual), **Segurança** (troca de senha). Feedback inline (sucesso/erro/aviso), estados de carregamento, `router.refresh()` pós-salvar.
+- **Server actions** em `src/app/actions/usuario.ts` (padrão `actions/obras.ts`): `atualizarDadosPerfil`, `atualizarDadosConta`, `atualizarSenha`. Id vem **sempre da sessão** (`auth()`), nunca do body. Zod server-side; bcrypt custo 10; P2002 → "Email ou nome de usuário já cadastrado".
+- **Validators** `src/lib/validators/usuario.ts`: `atualizarPerfilSchema`, `atualizarContaSchema` (refine: ao menos 1 campo; exige senhaAtual), `atualizarSenhaSchema` (nova ≠ atual, confirmar igual). Helpers reutilizados de `autenticacao.ts` — que passaram a **exportar** `textoOpcional`, `idadeOpcional`, `generosLiterariosSchema`, `siteOpcional`.
+- **`GENEROS_LITERARIOS` movido** para `src/lib/constants.ts` (FormCadastro e perfil compartilham; removida lista duplicada).
+- **AvatarPerfil** (`src/components/perfil/`): avatar circular (foto ou inicial do nome), "Trocar foto" (JPG/PNG/WebP ≤5MB) e "Remover" via `/api/upload` tipo `perfil`.
+- **Fix de segurança (gap do analista)**: `/api/upload` (POST e DELETE) agora **só permite foto `perfil` do próprio usuário logado** (`auth()` id === id do form) → 403. Os demais tipos (personagem/ambiente/capitulo/artefato) seguem **sem checagem de dono** — anotado como hardening.
+- **Acesso**: TopBar — o botão "Menu do usuário" que estava **morto** virou dropdown funcional ("👤 Meu perfil" → `/perfil`; "🚪 Sair" → `signOut({ callbackUrl: "/login" })`; fecha com clique fora/Escape). Sidebar ganhou item **"Perfil"** no NAV_ITEMS; breadcrumb "Perfil" adicionado.
+- JWT stateless: trocar email/username **não invalida** a sessão atual; o menu pode mostrar o username antigo até o próximo login (aviso informado no UI). Mantém logado pós-troca de senha (outras sessões caem quando o token expira).
+
+### Arquivos alterados/criados
+- `src/lib/constants.ts` — `GENEROS_LITERARIOS`
+- `src/lib/validators/autenticacao.ts` — helpers exportados + `siteOpcional`
+- `src/lib/validators/usuario.ts` — NOVO
+- `src/app/actions/usuario.ts` — NOVO (server actions)
+- `src/lib/perfil.ts` — NOVO (tipo PerfilDados)
+- `src/app/perfil/page.tsx` — NOVO
+- `src/components/perfil/PaginaPerfil.tsx`, `AvatarPerfil.tsx` — NOVOS
+- `src/app/api/upload/route.ts` — titularidade perfil (403)
+- `src/components/layout/TopBar.tsx` — dropdown do usuário funcional
+- `src/components/layout/Sidebar.tsx` — item "Perfil"
+- `src/components/auth/FormCadastro.tsx` — importa `GENEROS_LITERARIOS` de constants
+
+### Testes
+- `npm run build` passa (compila + TS + prerender). Teste visual/runtime é do usuário (regra): fluxo completo do perfil.
+
+### Pendências
+- Teste visual do usuário: editar perfil, trocar foto (upload/remover), trocar senha, trocar email/username, dropdown da TopBar, item no menu.
+- Hardening anotado: rotas de recurso direto (PATCH/DELETE por id) e upload de personagem/ambiente/capitulo/artefato ainda sem checagem de dono.
+- Futuro (anotado): verificação de email (LGPD), exclusão de conta, vínculo `nomeAutor` ↔ model `Autor` de publicação, `senhaAlteradaEm` para revogar sessões na troca de senha.
+- **Commit ainda não autorizado** (acúmulo: papel + auth + isolamento + perfil).
+
+---
+
+## 2026-09-07 - Isolamento por usuário: cada autor vê só as próprias obras (Autoria: VIBECODE)
+
+### Contexto
+Após criar a conta (usuário skarix / oskharm12@gmail.com), o usuário pediu: (1) as obras existentes devem pertencer a ele; (2) cada usuário deve ver somente as obras que ele escreveu. O `Obra.usuarioId` deixou de ser "tarefa futura" e virou recurso implementado.
+
+### Decisões
+- **`Obra.usuarioId String?`** (nullable de propósito; todo código de criação sempre preenche) + relação `usuario Usuario?` com **`onDelete: Cascade`** + `@@index([usuarioId])`; `Usuario.obras Obra[]`. Migração **`20260907205904_vincula_obras_usuario`** aplicada (9 migrações no total).
+- **Backfill**: scripts temporários (`scripts/_tmp_*`) listaram usuários e vincularam as 2 obras órfãs ("O Retorno de Vulto", "Manual para minha proxima vida") ao usuário **skarix** (`cmtrpzioc0000j4dovdadfenw`). Scripts REMOVIDOS após uso.
+- **Helper `src/lib/auth-obras.ts`**: `obterUsuarioId()` (id da sessão) e `obterObraDoUsuario<T extends Prisma.ObraInclude>(obraId, include?)` → `prisma.obra.findFirst({ where: { id: obraId, usuarioId }, include })`, retornando `Promise<ObraGetPayload<{include:T}> | null>`. `null` = não existe OU não é do usuário (não vaza existência).
+- **Padrão de negação**: páginas → `notFound()` (404); APIs → `respostaErro("Obra não encontrada", 404)`; rotas protegidas sem sessão → 401.
+- `GET /api/obras` filtra por `usuarioId`; `POST /api/obras` e `/api/importar` exigem sessão (401) e gravam `usuarioId`; `/api/importar` ao importar obra existente valida posse.
+- Protegidas: dashboard, `/importar`, `/ler/[obraId]`, **10 páginas da obra** + editor de capítulo, e rotas aninhadas personagens/ambientes/artefatos/atos/esqueleto/regras/capitulos/achados/relacoes/eventos/eventos-inserir (GET+POST) + IA/exportação (`analisar`, `esqueleto/sugerir`, `personagens/buscar`, `personagens/mapear`, `ambientes/mapear`, `eventos/mapear`, `eventos/sugerir-capitulos`, `exportar/[formato]`) + **server actions** (`excluirObra`/`arquivarObra`/`desarquivarObra` em `actions/obras.ts`).
+- Detalhe editor de capítulo: helper só aceita `include`; página checa posse via `obterObraDoUsuario(obraId)` e depois faz `findUnique` com `select` (seguro após a checagem).
+
+### Perrengues resolvidos
+- Build apontou digitação `const [!obra, capitulo]` numa `Promise.all` — corrigido para `[obra, capitulo]`.
+- `findFirst` com `include` genérico não inferia o payload → retorno tipado explicitamente com `Prisma.ObraGetPayload<{ include: T }>`.
+- Erro runtime `prisma.usuario is undefined` (reportado pelo usuário no cadastro) = **PrismaClient antigo em cache no `globalThis`**; resolvido reiniciando o servidor (ação do usuário — regra). Client em disco estava correto.
+
+### Arquivos alterados
+- `prisma/schema.prisma` + `prisma/migrations/20260907205904_vincula_obras_usuario/`
+- `src/lib/auth-obras.ts` (novo)
+- `src/app/api/obras/route.ts`, `src/app/api/obras/[obraId]/route.ts`, `src/app/api/importar/route.ts`
+- 8 rotas de IA/exportação sob `[obraId]/` + 11 rotas aninhadas de recursos
+- `src/app/actions/obras.ts`
+- Páginas: `page.tsx`, `importar/page.tsx`, `ler/[obraId]/page.tsx`, 10 páginas de `obras/[obraId]/**` + editor de capítulo
+
+### Testes
+- `npm run build` passa (compila + TS + prerender). Teste visual/runtime é do usuário (regra).
+
+### Pendências
+- **Hardening futuro** (anotado, fora do escopo do pedido): rotas de recurso direto (`PATCH/DELETE /api/personagens/[id]`, `/api/capitulos/[id]`, `/api/ambientes/[id]`, `/api/artefatos/[id]`, `/api/atos/[id]`, `/api/eventos/[id]`, `/api/cenas/[id]`, `/api/relacoes/[id]`, `/api/regras/[id]`, `/api/achados/[id]`, `mover`, `associacoes`, `relacoes`) ainda não checam dono — permitiriam editar/excluir recursos de outro usuário sabendo o ID.
+- **Commit ainda não autorizado** (todo acúmulo: papel + auth + isolamento).
+- Obras órfãs resolvidas por backfill; novas obras sempre têm dono.
+
+---
+
+## 2026-09-07 - Cadastro e login com Auth.js v5 (Autoria: VIBECODE)
+
+### Contexto
+O usuário pediu página de cadastro (nome, idade, gêneros literários, nome de autor, foto de perfil, username, senha, email, telefone + extras) e escolheu **NextAuth**. Especialistas consultados: analista-requisitos (requisitos + gaps), arquiteto-software (plano v5), db-admin (model `Usuario`). Usuário autorizou alterar `schema.prisma`.
+
+### Decisões
+- **Auth.js v5** (`next-auth@5.0.0-beta.32` — o `@latest` instala a v4, sem API `handlers`; por isso instalei `next-auth@beta`) + `bcryptjs`. **Sem adapter Prisma**: Credentials + JWT não exige `Account`/`Session`/`VerificationToken` (SQLite fica simples).
+- `generosLiterarios` como **`Json`** no Prisma (SQLite não suporta `String[]`); validado por Zod (lista de 20 gêneros).
+- **`Obra.usuarioId` NÃO criado** — escopo mínimo; obras órfãs são tarefa de multiusuário futura.
+- Idade opcional 13–120 (LGPD), telefone opcional, login automático pós-cadastro (bom senso).
+- `session: { strategy: "jwt" }`, `pages.signIn = "/login"`, callbacks injetam `id`/`username` no token/sessão (module augmentation em `src/types/next-auth.d.ts`).
+- Proteção de rotas via **`src/proxy.ts`** (Next 16 substituiu `middleware.ts`; o wrapper `auth((req)=>…)` da v5 não tipava `req` → usei função explícita `async function proxy(req: NextRequest)` chamando `auth()`).
+- Login (`/login`) e cadastro (`/cadastro`) ficam fora do Layout (Sidebar/TopBar) — `AppLayoutWrapper` os ignora.
+- Upload de foto de perfil reutiliza `/api/upload` com novo tipo `"perfil"` (salva em `Usuario.fotoUrl`; `removerArquivoAntigo` usa `fotoUrl` para perfil e `imagemUrl` para os demais).
+- Página `/login` usa `useSearchParams` → envolta em `Suspense` (exigência do prerender do Next).
+- Rotas de auth: `GET/POST /api/auth/[...nextauth]` com `runtime = "nodejs"` e `export const GET = handlers.GET` (destructuring `{ GET, POST } = handlers` no top-level quebra a coleta de config no Next 16).
+
+### Fontes de verdade
+- Model `Usuario` (id, nome, idade Int?, generosLiterarios Json?, nomeAutor?, fotoUrl?, username @unique, senhaHash, email @unique, telefone?, bio?, site?, criadoEm, atualizadoEm). Migração `20260907203506_adiciona_usuario`.
+- `AUTH_SECRET` + `AUTH_TRUST_HOST=true` adicionados ao `.env` (não remover).
+- `loginSchema`: login = email OU username (lowercase). `cadastroSchema`: username regex `^[a-zA-Z0-9_]+$` → lowercase; senha ≥ 8; email → lowercase.
+- Rota `/api/auth/cadastro`: `bcrypt.hash` custo 10; `Prisma.PrismaClientKnownRequestError` código `P2002` → 409 "Email ou nome de usuário já cadastrado".
+- Erro 401 é retornado como URL `?error=CredentialsSignin` pelo provider; o `FormLogin` usa `redirect: false` e lê `resultado?.error`.
+
+### Arquivos criados/alterados
+- `prisma/schema.prisma` + `prisma/migrations/20260907203506_adiciona_usuario/`
+- `package.json` — `next-auth@5.0.0-beta.32`, `bcryptjs`, `@types/bcryptjs`
+- `src/lib/validators/autenticacao.ts` — schemas de cadastro/login
+- `src/auth.ts`, `src/types/next-auth.d.ts`, `src/proxy.ts`
+- `src/app/api/auth/[...nextauth]/route.ts`, `src/app/api/auth/cadastro/route.ts`
+- `src/components/auth/FormLogin.tsx`, `src/components/auth/FormCadastro.tsx`
+- `src/app/login/page.tsx`, `src/app/cadastro/page.tsx`
+- `src/components/layout/AppLayoutWrapper.tsx` — `/login` e `/cadastro` sem Layout
+- `src/app/api/upload/route.ts` + `src/lib/validators/index.ts` — tipo `"perfil"`
+
+### Testes
+- `npm run build` passa (compila + TS + prerender). Teste visual/runtime é do usuário (regra).
+
+### Pendências
+- Teste visual: fluxo completo de cadastro (com foto), login, logout, proteção de rotas.
+- **Commit ainda não autorizado** (todo o trabalho da sessão de papel + auth está sem commit).
+- Decisões em aberto do usuário: obras órfãs (multiusuário), LGPD para menores de 13–15, `skills/token-economy.md` referenciado no config e inexistente no repo.
+
+---
+
+## 2026-09-07 - Fundo de papel: TopBar, NavegaçãoObra, cabeçalho unificado e exportar (Autoria: VIBECODE)
+
+### Contexto
+Finalização do fundo de papel: faltavam TopBar, menu de abas da obra, botão "← Obras", exportar (exportação) e cabeçalho das páginas da obra.
+
+### Decisões
+- **TopBar**: `bg-surface` → `fundo-papel`; breadcrumb "Início" removido (na obra fica "Obras / Título / Seção").
+- **NavegacaoObra**: menu de abas virou **pills em papel** (ativo `bg-accent text-onaccent`; inativo `text-muted hover:bg-hoverbg`); **sem** separadores "|" (pedidos, ficaram estranhos, removidos); **sem** "Início"/"Obras" (duplicavam breadcrumb).
+- **`CabecalhoObra.tsx`** (novo, compartilhado): botão "← Obras" (papel) + header em card papel (título/subtítulo/`acoes?`/menu) + `NavegacaoObra`. Aplicado nas **10 páginas da obra** (Visão geral, Esqueleto, Atos, Personagens, Ambientes, Artefatos, Regras, Linha do Tempo, Capítulos, Análise IA), todas com `max-w-5xl` (menu em 1 linha).
+- **BotaoExportar**: select + botão "📤 Exportar" em papel (removido `btnSecundario`); import de arquivo removido da UI.
+
+### Arquivos alterados
+- `src/components/layout/TopBar.tsx`, `src/components/NavegacaoObra.tsx`, `src/components/CabecalhoObra.tsx` (novo), `src/components/BotaoExportar.tsx`
+- 10 páginas em `src/app/obras/[obraId]/**` — usam `CabecalhoObra` + `max-w-5xl`
+
+### Testes
+- `npm run build` passa. Teste visual do usuário.
+
+---
+
 ## 2026-09-07 - Fundo de papel também no menu e na visão geral (Autoria: VIBECODE)
 
 ### Contexto
