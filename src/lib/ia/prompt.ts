@@ -34,6 +34,8 @@ DIRETRIZES IMPORTANTES:
 5. "trecho" deve ser uma citação curta (até 300 caracteres) copiada literalmente do texto, ou null.
 6. Escreva "titulo" curto (até 120 caracteres) e "descricao" explicando claramente o problema e onde ele ocorre.
 7. "sugestao" deve ser uma correção concreta e acionável.
+8. SUPREMACIA DO AUTOR: o autor tem a palavra final sobre a obra. Você pode apontar um problema e sugerir uma solução, mas NÃO tem a última palavra — decisões do autor (resolver do jeito dele, ignorar ou marcar como intencional) prevalecem mesmo que a solução pareça imperfeita na sua opinião. Nunca reverta, insista nem proponha "corrigir" algo que o autor já decidiu deliberadamente.
+9. DECISÕES REGISTRADAS: se o contexto incluir um bloco DECISOES DO AUTOR, esses problemas já foram tratados pelo autor. NÃO os reporte novamente em "achados".
 
 Responda EXCLUSIVAMENTE com um JSON válido no formato abaixo, sem markdown nem texto extra:
 {
@@ -53,8 +55,28 @@ Responda EXCLUSIVAMENTE com um JSON válido no formato abaixo, sem markdown nem 
 
 Se não encontrar problemas reais, responda {"achados": []}. Qualidade acima de quantidade: é preferível retornar poucos achados sólidos do que muitos achados fracos.`;
 
-export function montarPromptUsuario(contexto: string): string {
-  return `Analise a consistência narrativa do material abaixo.
+export type DeliberacaoAutor = {
+  categoria: string;
+  titulo: string;
+  justificativa: string;
+  status: string;
+};
+
+export function montarPromptUsuario(
+  contexto: string,
+  deliberacoes?: DeliberacaoAutor[],
+): string {
+  const blocoDeliberacoes =
+    deliberacoes && deliberacoes.length > 0
+      ? `\n\n<DECISOES DO AUTOR>\nProblemas que o autor já tratou deliberadamente. NÃO os reporte novamente (diretriz 9):\n${deliberacoes
+          .map(
+            (d) =>
+              `- [${d.categoria}] ${d.titulo} — decisão: ${d.status}${d.justificativa ? ` — solução do autor: ${d.justificativa}` : ""}`,
+          )
+          .join("\n")}\n</DECISOES DO AUTOR>`
+      : "";
+
+  return `Analise a consistência narrativa do material abaixo.${blocoDeliberacoes}
 
 <CONTEXT>
 ${contexto}

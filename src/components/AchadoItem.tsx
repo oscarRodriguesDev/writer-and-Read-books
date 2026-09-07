@@ -106,6 +106,45 @@ export function AchadoItem({
     });
   }
 
+  // ---- Encerrados (RESOLVIDO/IGNORADO/INTENCIONAL) aparecem minimizados ----
+  if (encerrado && !expandido) {
+    return (
+      <li className="rounded-md border border-line bg-surface px-3 py-2 opacity-70">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`rounded border px-1.5 py-0.5 text-xs font-medium ${
+              CORES_GRAVIDADE[achado.severidade] ?? ""
+            }`}
+          >
+            {ROTULO_GRAVIDADE[achado.severidade] ?? achado.severidade}
+          </span>
+          <span className="text-xs font-medium uppercase tracking-wide text-faint">
+            {ROTULO_CATEGORIA_ACHADO[achado.categoria] ?? achado.categoria}
+          </span>
+          <span className="ml-auto rounded bg-hoverbg px-1.5 py-0.5 text-xs text-muted">
+            {ROTULO_STATUS_ACHADO[achado.status] ?? achado.status}
+          </span>
+        </div>
+        <div className="mt-1 flex items-center gap-2">
+          <p
+            className={`text-sm ${
+              achado.status === "RESOLVIDO" ? "line-through text-faint" : "text-muted"
+            }`}
+          >
+            {titulo}
+          </p>
+          <button
+            type="button"
+            onClick={() => setExpandido(true)}
+            className="ml-auto shrink-0 text-xs text-muted hover:text-foreground"
+          >
+            Detalhes ▸
+          </button>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li className="rounded-md border border-line bg-surface p-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -160,9 +199,18 @@ export function AchadoItem({
           </button>
         )}
         {encerrado ? (
-          <button type="button" onClick={() => agir("EM_ANALISE")} className={btnSecundario}>
-            ↩︎ Reabrir
-          </button>
+          <>
+            <button type="button" onClick={() => agir("EM_ANALISE")} className={btnSecundario}>
+              ↩︎ Reabrir
+            </button>
+            <button
+              type="button"
+              onClick={() => setExpandido(false)}
+              className="text-xs text-muted hover:text-foreground"
+            >
+              Ocultar ▾
+            </button>
+          </>
         ) : (
           <>
             <button type="button" onClick={() => agir("RESOLVIDO")} className={btnSecundario}>
@@ -174,15 +222,15 @@ export function AchadoItem({
             <button type="button" onClick={() => agir("INTENCIONAL")} className={btnSecundario}>
               🎯 Intencional
             </button>
+            <button
+              type="button"
+              onClick={() => setExpandido((v) => !v)}
+              className="text-xs text-muted hover:text-foreground"
+            >
+              {expandido ? "sem justificativa" : "+ justificativa (opcional)"}
+            </button>
           </>
         )}
-        <button
-          type="button"
-          onClick={() => setExpandido((v) => !v)}
-          className="text-xs text-muted hover:text-foreground"
-        >
-          {expandido ? "sem justificativa" : "+ justificativa (opcional)"}
-        </button>
       </div>
 
       {painelCorrecao && achado.cenaId && (

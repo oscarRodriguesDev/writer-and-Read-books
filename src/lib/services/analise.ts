@@ -10,6 +10,7 @@ import {
 import {
   PROMPT_SISTEMA_ANALISE,
   montarPromptUsuario,
+  type DeliberacaoAutor,
 } from "@/lib/ia/prompt";
 import { MODELO_PADRAO, criarProviderNvidia } from "@/lib/ia/nvidia";
 
@@ -42,6 +43,7 @@ async function executarAnalise(
   obraId: string,
   escopo: "OBRA" | "CAPITULO" | "CENA",
   contexto: { texto: string; mapaCenas: MapaCenas },
+  deliberacoes?: DeliberacaoAutor[],
 ): Promise<ResultadoAnalise> {
   const analise = await prisma.analiseIA.create({
     data: { obraId, escopo, modeloIA: MODELO_PADRAO, status: "EM_ANDAMENTO" },
@@ -50,7 +52,7 @@ async function executarAnalise(
   try {
     const bruto = await criarProviderNvidia().completarJson(
       PROMPT_SISTEMA_ANALISE,
-      montarPromptUsuario(contexto.texto),
+      montarPromptUsuario(contexto.texto, deliberacoes),
     );
     const { achados } = respostaAnaliseIaSchema.parse(bruto);
 
@@ -99,9 +101,44 @@ async function executarAnalise(
   }
 }
 
-/** Analisa a obra inteira (contexto completo + todas as cenas). */
+/**
+ * Analisa a obra inteira (contexto completo + todas as cenas).
+ * Zera análises e achados anteriores da obra e faz uma análise nova do zero
+ * (a voz final é sempre do autor: decisões registradas não são re-reportadas).
+ */
 export async function analisarObra(obraId: string) {
-  return executarAnalise(obraId, "OBRA", await montarContextoObra(obraId));
+  // 1) Preserva as decisões do autor (achados encerrados com justificativa)
+  //    para o prompt NÃO re-reportar problemas já tratados pelo autor.
+  const encerrados = await prisma.achadoIA.findMany({
+    where: {
+      analise: { obraId },
+      status: { in: ["RESOLVIDO", "IGNORADO", "INTENCIONAL"] },
+    },
+    select: {
+      categoria: true,
+      explicacao: true,
+      justificativaAutor: true,
+      status: true,
+    },
+  });
+  const deliberacoes: DeliberacaoAutor[] = encerrados
+    .filter((a) => a.justificativaAutor && a.justificativaAutor.trim())
+    .map((a) => ({
+      categoria: a.categoria,
+      titulo: a.explicacao.split("\n")[0],
+      justificativa: a.justificativaAutor!,
+      status: a.status,
+    }));
+
+  // 2) Zera a análise antiga (achados caem em cascata)
+  await prisma.analiseIA.deleteMany({ where: { obraId } });
+
+  return executarAnalise(
+    obraId,
+    "OBRA",
+    await montarContextoObra(obraId),
+    deliberacoes,
+  );
 }
 
 /** Analisa um único capítulo (suas cenas completas). */
