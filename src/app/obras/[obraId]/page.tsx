@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { NavegacaoObra } from "@/components/NavegacaoObra";
+import { CabecalhoObra } from "@/components/CabecalhoObra";
 import { FormEditarObra } from "@/components/FormEditarObra";
-import { btnSecundario } from "@/components/ui";
+import { btnSecundario, cardCls } from "@/components/ui";
 import { BotaoExportar } from "@/components/BotaoExportar";
 
 export const dynamic = "force-dynamic";
@@ -39,39 +39,32 @@ export default async function ObraPage({
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-      <div className="mb-4">
-        <Link href="/" className={`inline-block ${btnSecundario}`}>← Obras</Link>
-      </div>
-      <header className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">{obra.titulo}</h1>
-          <p className="text-sm text-muted">
-            {obra.genero ?? "Sem gênero"} · Criada em {formatarData(obra.criadoEm)}
-          </p>
-        </div>
-        <BotaoExportar obraId={obra.id} />
-      </header>
-      <NavegacaoObra obraId={obra.id} />
+      <CabecalhoObra
+        obraId={obra.id}
+        titulo={obra.titulo}
+        subtitulo={`${obra.genero ?? "Sem gênero"} · Criada em ${formatarData(obra.criadoEm)}`}
+        acoes={<BotaoExportar obraId={obra.id} />}
+      />
       <section className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className={btnSecundario} style={{background: 'transparent', border: 'none', boxShadow: 'none', padding: 0}}>
+        <div className={`${cardCls} flex flex-col items-center justify-center`}>
           <p className="text-3xl font-bold">{obra._count.capitulos}</p>
           <p className="text-sm text-muted">Capítulos</p>
         </div>
-        <div className={btnSecundario} style={{background: 'transparent', border: 'none', boxShadow: 'none', padding: 0}}>
+        <div className={`${cardCls} flex flex-col items-center justify-center`}>
           <p className="text-3xl font-bold">{obra._count.personagens}</p>
           <p className="text-sm text-muted">Personagens</p>
         </div>
-        <div className={btnSecundario} style={{background: 'transparent', border: 'none', boxShadow: 'none', padding: 0}}>
+        <div className={`${cardCls} flex flex-col items-center justify-center`}>
           <p className="text-3xl font-bold">{obra._count.ambientes}</p>
           <p className="text-sm text-muted">Ambientes</p>
         </div>
-        <div className={btnSecundario} style={{background: 'transparent', border: 'none', boxShadow: 'none', padding: 0}}>
+        <div className={`${cardCls} flex flex-col items-center justify-center`}>
           <p className="text-3xl font-bold">{totalPalavras.toLocaleString("pt-BR")}</p>
           <p className="text-sm text-muted">Palavras</p>
         </div>
       </section>
 
-      <section className={`mt-6 ${btnSecundario}`} style={{background: 'transparent', border: 'none', boxShadow: 'none', padding: '1.5rem'}}>
+      <section className="mt-6 rounded-xl border border-line fundo-papel p-6 shadow-sm">
         <h2 className="mb-2 font-semibold">Dados da obra</h2>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           {obra.subtitulo && <div><dt className="inline font-medium">Subtítulo: </dt><dd className="inline">{obra.subtitulo}</dd></div>}

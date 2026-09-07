@@ -1,29 +1,22 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { PARTES_TIPOS, CENAS_TIPOS, ROTULO_PARTE, type ParteTipo, type CenaTipo } from "@/lib/constants";
+import { PARTES_TIPOS, CENAS_TIPOS, type ParteTipo, type CenaTipo } from "@/lib/constants";
 import { btnSecundario } from "@/components/ui";
+import LeitorLivro from "@/components/leitor/LeitorLivro";
+import type { CapituloLeitura } from "@/lib/leitor";
 
 export const dynamic = "force-dynamic";
-
-type CapituloLeitura = {
-  id: string;
-  titulo: string;
-  partes: {
-    tipo: string;
-    texto: string;
-  }[];
-};
 
 export default async function LerPage({
   params,
   searchParams,
 }: {
   params: Promise<{ obraId: string }>;
-  searchParams: Promise<{ cap?: string }>;
+  searchParams: Promise<{ cap?: string; pag?: string }>;
 }) {
   const { obraId } = await params;
-  const { cap: capParam } = await searchParams;
+  const { cap: capParam, pag: pagParam } = await searchParams;
 
   const obra = await prisma.obra.findUnique({ where: { id: obraId } });
   if (!obra) notFound();
@@ -51,7 +44,7 @@ export default async function LerPage({
         )
         .map((parte) => ({
           tipo: parte.tipo,
-          texto: parte.cenas
+          paragrafos: parte.cenas
             .sort(
               (a, b) =>
                 CENAS_TIPOS.indexOf(a.tipo as CenaTipo) -
@@ -59,7 +52,8 @@ export default async function LerPage({
             )
             .map((cena) => cena.conteudo.trim())
             .filter(Boolean)
-            .join("\n\n"),
+            .join("\n\n")
+            .split("\n\n"),
         })),
     }));
 
@@ -74,52 +68,20 @@ export default async function LerPage({
     );
   }
 
-  const indice = Math.min(Math.max(0, Number(capParam ?? 0) || 0), capitulos.length - 1);
-  const capitulo = capitulos[indice];
-  const anterior = indice > 0 ? `/ler/${obraId}?cap=${indice - 1}` : null;
-  const proximo =
-    indice < capitulos.length - 1 ? `/ler/${obraId}?cap=${indice + 1}` : null;
+  const capInicial = Math.min(
+    Math.max(0, Number(capParam ?? 0) || 0),
+    capitulos.length - 1,
+  );
+  const pagInicial = Math.max(0, Number(pagParam ?? 0) || 0);
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
-      <header className="mb-8 border-b border-line pb-4">
-        <Link href={`/obras/${obraId}`} className={`inline-block mb-3 ${btnSecundario}`}>
-          ← Obra
-        </Link>
-        <h1 className="text-2xl font-bold">{capitulo.titulo}</h1>
-        <p className="text-sm text-muted">
-          Capítulo {indice + 1} de {capitulos.length}
-        </p>
-      </header>
-
-      <article className="space-y-6 text-base leading-relaxed">
-        {capitulo.partes.map((parte) => {
-          if (!parte.texto) return null;
-          return (
-            <section key={parte.tipo}>
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-faint">
-                {ROTULO_PARTE[parte.tipo as ParteTipo] ?? parte.tipo}
-              </h2>
-              {parte.texto.split("\n\n").map((paragrafo, i) => (
-                <p key={i} className="mb-3 whitespace-pre-wrap">{paragrafo}</p>
-              ))}
-            </section>
-          );
-        })}
-      </article>
-
-      <nav className="mt-10 flex justify-between border-t border-line pt-4">
-        {anterior ? (
-          <Link href={anterior} className={btnSecundario}>← Anterior</Link>
-        ) : (
-          <span />
-        )}
-        {proximo ? (
-          <Link href={proximo} className={btnSecundario}>Próximo →</Link>
-        ) : (
-          <span />
-        )}
-      </nav>
+      <LeitorLivro
+        obraId={obraId}
+        capitulos={capitulos}
+        capInicial={capInicial}
+        pagInicial={pagInicial}
+      />
     </main>
   );
 }

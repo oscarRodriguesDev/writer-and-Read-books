@@ -13,7 +13,7 @@ export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTi
   const basePath = isInObra ? `/obras/${obraId}` : "";
 
   const getBreadcrumbs = () => {
-    const crumbs: Array<{ label: string; href?: string }> = [{ label: "Início", href: "/" }];
+    const crumbs: Array<{ label: string; href?: string }> = [];
 
     if (isInObra) {
       crumbs.push({ label: "Obras", href: "/" });
@@ -52,7 +52,7 @@ export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTi
 
   return (
     <header
-      className={`fixed left-0 right-0 top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-surface transition-all duration-300 ${
+      className={`fixed left-0 right-0 top-0 z-20 flex h-16 items-center gap-3 border-b border-line fundo-papel transition-all duration-300 ${
         isCollapsed ? "lg:pl-16" : "lg:pl-64"
       }`}
       role="banner"

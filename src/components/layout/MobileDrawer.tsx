@@ -21,7 +21,7 @@ export default function MobileDrawer({ children, isOpen, onClose }: MobileDrawer
       />
       <aside
         id="mobile-drawer"
-        className="fixed inset-y-0 left-0 z-50 w-72 bg-surface border-r border-line shadow-xl transform transition-transform duration-300 ease-in-out translate-x-0"
+        className="fixed inset-y-0 left-0 z-50 w-72 fundo-papel border-r border-line shadow-xl transform transition-transform duration-300 ease-in-out translate-x-0"
         role="dialog"
         aria-modal="true"
         aria-label="Menu de navegação"

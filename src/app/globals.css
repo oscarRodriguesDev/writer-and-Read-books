@@ -524,3 +524,131 @@
   animation: slide-up 0.3s ease-out forwards;
 }
 }
+
+/* =====================================================================
+   Leitor — página de livro + animações de troca de capítulo
+   (classes em @layer components para utilities do Tailwind vencerem)
+   ===================================================================== */
+
+@layer components {
+/* =====================================================================
+   Fundo de papel de livro — usado em todo conteúdo escrito da aplicação
+   (leitor, cards de conteúdo, editor). `.livro-pagina` herda o papel e
+   acrescenta as sombras específicas do leitor.
+   ===================================================================== */
+
+/* Página do livro: fundo de papel com lombadas, luz e textura sutil */
+.livro-pagina,
+.fundo-papel {
+  background-color: #faf6ec;
+  background-image:
+    linear-gradient(to right, rgba(112, 84, 42, 0.06), transparent 4rem),
+    linear-gradient(to left, rgba(112, 84, 42, 0.06), transparent 4rem),
+    radial-gradient(120% 55% at 50% 0%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 65%),
+    repeating-linear-gradient(0deg, rgba(112, 84, 42, 0.015) 0 2px, transparent 2px 5px);
+  color: #2c2720;
+}
+
+/* Papel escuro no tema escuro (estilo leitor noturno) */
+.dark .livro-pagina,
+.dark .fundo-papel {
+  background-color: #282521;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.35), transparent 4rem),
+    linear-gradient(to left, rgba(0, 0, 0, 0.35), transparent 4rem),
+    radial-gradient(120% 55% at 50% 0%, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 65%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.012) 0 2px, transparent 2px 5px);
+  color: #d6cfbe;
+}
+
+/* Sombras e cantos específicos da página do leitor */
+.livro-pagina {
+  border-radius: 6px 10px 10px 6px;
+  box-shadow:
+    inset 0 0 2.75rem rgba(112, 84, 42, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.14),
+    0 8px 20px rgba(0, 0, 0, 0.1),
+    0 28px 56px rgba(0, 0, 0, 0.12);
+}
+
+.dark .livro-pagina {
+  box-shadow:
+    inset 0 0 2.75rem rgba(0, 0, 0, 0.55),
+    0 1px 2px rgba(0, 0, 0, 0.45),
+    0 8px 20px rgba(0, 0, 0, 0.35),
+    0 28px 56px rgba(0, 0, 0, 0.3);
+}
+
+  /* Tipografia da página (justificada como livro) */
+  .livro-texto {
+    max-width: 40rem;
+    margin-inline: auto;
+    font-size: 1.0625rem;
+    line-height: 1.9;
+    text-align: justify;
+  }
+
+  /* Vitrine com perspectiva para o efeito 3D do flip */
+  .livro-vitrine {
+    perspective: 2400px;
+  }
+
+  /* Camada que gira (página do topo) */
+  .livro-topo {
+    transform-style: preserve-3d;
+    transform-origin: left center;
+  }
+
+  /* Faces da página (frente = conteúdo, verso = papel) */
+  .livro-face {
+    backface-visibility: hidden;
+  }
+
+  .livro-verso {
+    transform: rotateY(180deg);
+  }
+
+  /* Flip: avançar — a página atual gira em torno da lombada (esquerda) */
+  .livro-virar-frente .livro-topo {
+    animation: livro-virar-frente 780ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  /* Flip: voltar — a página anterior gira de volta */
+  .livro-virar-voltar .livro-topo {
+    animation: livro-virar-voltar 780ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  /* Suave: fade + deslize da página que entra */
+  .livro-suave .livro-topo {
+    animation: livro-entrar-suave 440ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes livro-virar-frente {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(-180deg);
+  }
+}
+
+@keyframes livro-virar-voltar {
+  from {
+    transform: rotateY(-180deg);
+  }
+  to {
+    transform: rotateY(0deg);
+  }
+}
+
+@keyframes livro-entrar-suave {
+  from {
+    opacity: 0;
+    transform: translateX(1.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

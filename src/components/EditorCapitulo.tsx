@@ -741,7 +741,7 @@ export function EditorCapitulo({
       </header>
 
       {/* Geração de capítulo completo */}
-      <section className="mb-6 rounded-lg border border-line bg-surface p-4">
+      <section className="mb-6 rounded-lg border border-line fundo-papel p-4">
         <h3 className="mb-3 text-center font-semibold">✨ Gerar capítulo completo com IA</h3>
         <p className="mb-3 text-sm text-muted text-center">
           Descreva o que deve acontecer no capítulo. A IA preenche as 9 cenas (Início/Meio/Fim de cada parte)
@@ -787,7 +787,7 @@ export function EditorCapitulo({
       {/* Grade 3×3: uma coluna por parte, três cenas por coluna */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {capitulo.partes.map((parte) => (
-          <section key={parte.id} className="rounded-lg border border-line bg-surface p-3">
+          <section key={parte.id} className="rounded-lg border border-line fundo-papel p-3">
             <h2 className="mb-3 text-center font-semibold">
               Parte {ROTULO_PARTE[parte.tipo as ParteTipo] ?? parte.tipo}
             </h2>

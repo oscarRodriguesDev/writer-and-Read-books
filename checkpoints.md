@@ -1,5 +1,26 @@
 # Checkpoints
 
+## 2026-09-07 - Sessão: Leitor de livro + fundo papel global + regra de testes
+
+### Estado final
+- REGRA GRAVADA: VIBECODE nunca sobe servidor nem testa em runtime — só `npm run build`.
+  Registrada em `.opencode/config.md` e `preferencias_do_usuario.md` (novo).
+- **Leitor `/ler/[obraId]`** virou experiência de livro (fundo página, animações suave/flip/nenhuma, configurações, paginação por palavras, navegação plana entre capítulos).
+- **Fundo de papel global** (`.fundo-papel`) em toda a aplicação:
+  - `cardCls`/`cardInterativo` usam papel → todos os cards de conteúdo
+  - EditorCapitulo e AchadoItem também papel
+  - **Menu**: Sidebar (desktop) e MobileDrawer (mobile) em papel
+  - **Visão geral** (`/obras/[obraId]`): estatísticas e "Dados da obra" em cards de papel
+  - Inputs/botões mantêm superfície (UI padrão)
+- `npm run build` passa (compila + TS).
+- Commit ainda NÃO feito (aguarda OK do usuário).
+
+### Próximos passos
+- Teste visual do usuário (fundo global, menu, visão geral, leitor, flip 3D, densidades)
+- Commit + push quando autorizado
+
+---
+
 ## 2026-09-06 - Sessão: Exclusão de capítulos
 
 ### Estado final

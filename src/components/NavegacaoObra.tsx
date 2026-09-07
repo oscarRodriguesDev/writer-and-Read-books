@@ -21,20 +21,24 @@ export function NavegacaoObra({ obraId }: { obraId: string }) {
   const base = `/obras/${obraId}`;
 
   return (
-    <nav className="flex flex-wrap gap-1 border-b border-line">
+    <nav
+      className="flex flex-wrap items-center gap-1 rounded-xl border border-line fundo-papel p-1.5 shadow-sm"
+      aria-label="Navegação da obra"
+    >
       {ABAS.map((aba) => {
         const href = `${base}${aba.href}`;
         const ativa =
           aba.href === "" ? pathname === base : pathname.startsWith(href);
         return (
           <Link
-            key={href}
+            key={aba.rotulo}
             href={href}
-            className={`rounded-t-md px-3 py-2 text-sm ${
+            className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
               ativa
-                ? "border-b-2 border-foreground font-semibold text-foreground"
-                : "text-muted hover:text-foreground"
+                ? "bg-accent font-semibold text-onaccent"
+                : "text-muted hover:bg-hoverbg hover:text-foreground"
             }`}
+            aria-current={ativa ? "page" : undefined}
           >
             {aba.rotulo}
           </Link>

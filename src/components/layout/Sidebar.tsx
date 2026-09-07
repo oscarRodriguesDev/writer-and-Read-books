@@ -55,7 +55,7 @@ export default function Sidebar({ obraId }: { obraId?: string }) {
       </button>
 
       <aside
-        className={`fixed top-0 left-0 z-30 h-full bg-surface border-r border-line transition-all duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-30 h-full fundo-papel border-r border-line transition-all duration-300 ease-in-out lg:translate-x-0 ${
           isCollapsed ? "w-16" : "w-64"
         } ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
         role="navigation"

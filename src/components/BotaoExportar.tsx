@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { btnSecundario } from "@/components/ui";
 import { GRAFIC } from "@/lib/grafic";
 
 type FormatoExportacao = "epub" | "pdf" | "docx" | "kindle";
@@ -64,7 +63,7 @@ export function BotaoExportar({ obraId }: { obraId: string }) {
           value={formatoSelecionado}
           onChange={(e) => setFormatoSelecionado(e.target.value as FormatoExportacao)}
           disabled={exportando !== null}
-          className="rounded-md border border-line bg-surface px-3 py-1.5 text-sm outline-none focus:border-faint"
+          className="rounded-md border border-line fundo-papel px-3 py-1.5 text-sm outline-none focus:border-faint"
           aria-label="Formato de exportação"
         >
           {FORMATOS.map((f) => (
@@ -77,7 +76,7 @@ export function BotaoExportar({ obraId }: { obraId: string }) {
           type="button"
           onClick={() => exportar(formatoSelecionado)}
           disabled={exportando !== null}
-          className={`${btnSecundario} shrink-0`}
+          className="shrink-0 rounded-md border border-line fundo-papel px-3 py-1.5 text-sm text-foreground shadow-sm transition-colors hover:bg-hoverbg"
           aria-label={`Exportar como ${formato.label}`}
         >
           {exportando ? (

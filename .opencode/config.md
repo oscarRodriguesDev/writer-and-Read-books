@@ -31,6 +31,12 @@ description: Regras globais do projeto. Consulte antes de qualquer tarefa.
 ### Escopo
 - Só faça o que foi pedido. Sem iniciativas não solicitadas.
 
+### 🚫 Testes em runtime / servidor
+- NUNCA suba servidor (`next dev`, `next start`, etc.) por conta própria
+- NUNCA rode testes que exijam o app em execução (curl, requisições, navegação)
+- Testes visuais e de runtime são SEMPRE por conta do usuário
+- A verificação automática padrão é `npm run build` (compila + TS). Nada além disso
+
 ## Fluxo de Execução
 1. `git status` + `git diff` — veja mudanças do usuário
 2. Leia arquivos de controle
@@ -55,3 +61,4 @@ description: Regras globais do projeto. Consulte antes de qualquer tarefa.
 ## Testes
 - Verifique cobertura para novas implementações
 - Implemente testes se necessário
+- **NUNCA** suba o servidor nem rode testes em runtime por conta própria — essa parte é sempre do usuário (ver "🚫 Testes em runtime / servidor" acima)

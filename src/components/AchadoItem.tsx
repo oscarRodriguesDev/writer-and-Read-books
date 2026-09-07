@@ -109,7 +109,7 @@ export function AchadoItem({
   // ---- Encerrados (RESOLVIDO/IGNORADO/INTENCIONAL) aparecem minimizados ----
   if (encerrado && !expandido) {
     return (
-      <li className="rounded-md border border-line bg-surface px-3 py-2 opacity-70">
+      <li className="rounded-md border border-line fundo-papel px-3 py-2 opacity-70">
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={`rounded border px-1.5 py-0.5 text-xs font-medium ${
@@ -146,7 +146,7 @@ export function AchadoItem({
   }
 
   return (
-    <li className="rounded-md border border-line bg-surface p-3">
+    <li className="rounded-md border border-line fundo-papel p-3">
       <div className="flex flex-wrap items-center gap-2">
         <span
           className={`rounded border px-1.5 py-0.5 text-xs font-medium ${

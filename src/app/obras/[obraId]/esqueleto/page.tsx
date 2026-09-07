@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { NavegacaoObra } from "@/components/NavegacaoObra";
+import { CabecalhoObra } from "@/components/CabecalhoObra";
 import { FormEsqueleto } from "@/components/FormEsqueleto";
 import { cardCls } from "@/components/ui";
 
@@ -19,12 +19,12 @@ export default async function EsqueletoPage({
   if (!obra) notFound();
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold">{obra.titulo}</h1>
-        <p className="text-sm text-muted">Esqueleto narrativo</p>
-      </header>
-      <NavegacaoObra obraId={obra.id} />
+    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+      <CabecalhoObra
+        obraId={obra.id}
+        titulo={obra.titulo}
+        subtitulo="Esqueleto narrativo"
+      />
 
       <div className={`mt-6 ${cardCls}`}>
         <FormEsqueleto obraId={obra.id} inicial={obra.esqueleto ?? {}} />

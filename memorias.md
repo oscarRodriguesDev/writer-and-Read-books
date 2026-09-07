@@ -1,5 +1,125 @@
 # Memórias do Projeto
 
+## 2026-09-07 - Fundo de papel também no menu e na visão geral (Autoria: VIBECODE)
+
+### Contexto
+Depois do `.fundo-papel` global, o usuário pediu: fundo do **menu** (sidebar) e fundo do **texto da visão geral** também em papel.
+
+### Decisões
+- **Sidebar** (desktop, `Sidebar.tsx`) e **MobileDrawer** (menu mobile): `bg-surface` → `fundo-papel`.
+- **Visão geral** (`/obras/[obraId]/page.tsx`):
+  - Cards de estatísticas (Capítulos/Personagens/Ambientes/Palavras) deixaram o hack `btnSecundario` + `background: transparent` e viraram `cardCls` + `flex flex-col items-center justify-center`.
+  - Seção "Dados da obra" (descrição/metadados) idem: `rounded-xl border border-line fundo-papel p-6 shadow-sm`.
+- Formulário interno (FormEditarObra) mantém inputs surface (campos).
+
+### Arquivos alterados
+- `src/components/layout/Sidebar.tsx` — aside com `fundo-papel`
+- `src/components/layout/MobileDrawer.tsx` — aside com `fundo-papel`
+- `src/app/obras/[obraId]/page.tsx` — estatísticas + dados da obra em cards de papel (import `cardCls`)
+
+### Testes
+- `npm run build` passa. Teste visual é do usuário.
+
+---
+
+## 2026-09-07 - Fundo de papel de livro em toda a aplicação (Autoria: VIBECODE)
+
+### Contexto
+O leitor já tinha `.livro-pagina`; o usuário pediu para que **todo conteúdo escrito em toda a aplicação** recebesse fundo de papel de livro — mantendo o fundo sem emendas do body como camada base.
+
+### Decisões
+- Nova classe `.fundo-papel` (CSS global em `@layer components`) — mesmo papel creme (claro/escuro) do leitor, sem sombra pesada de encadernação.
+- `.livro-pagina` passa a herdar o papel do `.fundo-papel` (seletor agrupado) e acrescenta sombras + cantos específicos do leitor. Zero duplicação de background.
+- **`cardCls` e `cardInterativo`** em `ui.ts`: trocaram `bg-surface` por `fundo-papel`. Efeito: **todos os cards de conteúdo da aplicação** ficam com papel automaticamente (dashboard, gerenciadores de capítulos/personagens/ambientes/artefatos/atos/regras, linha do tempo, análise IA, esqueleto).
+- **AchadoItem**: dois `<li>` de texto (encerrado e aberto) → `fundo-papel`.
+- **EditorCapitulo**: seções de geração de capítulo com IA e grade 3×3 de cenas → `fundo-papel` (campos de textarea com bg-surface mantidos — contraste de formulário sobre papel).
+- **WorkCard**: removido `bg-surface` redundante.
+- Botões, inputs, chips e elementos interativos permanecem com `bg-surface` (superfície de UI).
+
+### Arquivos alterados
+- `src/app/globals.css` — `.fundo-papel` + `.livro-pagina` reorganizados em seletor agrupado
+- `src/components/ui.ts` — `cardCls` e `cardInterativo` usam `fundo-papel`
+- `src/components/AchadoItem.tsx` — dois `<li>` de conteúdo
+- `src/components/EditorCapitulo.tsx` — duas `<section>` de escrita/geração
+- `src/components/Dashboard/WorkCard.tsx` — removido `bg-surface` explícito
+
+### Testes
+- `npm run build` passa (compila + TS sem erros). Única verificação autorizada.
+
+### Pendências
+- Teste visual do usuário: verificar contraste papel × body em light e dark, e se algum card/componente ficou com legibilidade ruim.
+
+---
+
+## 2026-09-07 - REGRA: testes em runtime/servidor são do usuário (Autoria: VIBECODE)
+
+### Decisão
+O usuário vetou o VIBECODE de subir servidor ou rodar qualquer teste que exija o app em execução.
+Testes visuais e de runtime são SEMPRE por conta dele.
+
+### Regra gravada em
+- `.opencode/config.md` — nova seção 🔴 "🚫 Testes em runtime / servidor" + reforço na seção Testes
+- `preferencias_do_usuario.md` — criado (não existia), com a regra destacada no topo
+
+### Efeito no fluxo
+A verificação automática do VIBECODE é apenas `npm run build`. Nada de `next dev/start`, curl, requisições ou navegação.
+
+---
+
+## 2026-09-07 - Leitor de livro: página, animações e paginação (Autoria: VIBECODE)
+
+### Contexto
+O usuário pediu na rota `/ler/[obraId]`: (1) fundo de página de livro para o texto,
+(2) animação na troca de página, (3) botão de configurações no leitor (futuras opções),
+(4) paginação automática de capítulos longos por palavras por página (faixas de livro físico).
+
+### Decisões
+- **Página de livro**: classe `.livro-pagina` (papel creme claro / papel escuro no dark mode,
+  sombra interna de lombada, bordas e luz superior) + `.livro-texto` (justificado, serif-free,
+  max-width 40rem). CSS em `@layer components` para utilities do Tailwind vencerem.
+- **Animações de troca** (pré-configuradas em `ANIMACOES_LEITOR`):
+  - `suave` (padrão): fade + deslize da página que entra (~440ms)
+  - `flip`: virada 3D em torno da lombada (perspective 2400px; frente=conteúdo,
+    verso=papel, `backface-visibility: hidden`) avançando (`virar-frente`) ou voltando (`virar-voltar`)
+  - `nenhuma`: troca instantânea
+  - Durante a animação as duas páginas ficam absolutas e a altura da vitrine é medida
+    (`useLayoutEffect` + refs) para não pular layout nem cortar conteúdo.
+- **Paginação por palavras** (`paginizarCapitulo`): capítulo vira N páginas quebrando entre
+  parágrafos; parágrafo maior que a página inteira ocupa página própria. Faixas de livro físico
+  (`DENSIDADES_PAGINA`): Padrão 300 (250–350), Muito diálogo 230 (180–280), Textos longos 350
+  (300–400), Página grande 400 (350–450). Recálculo client-side (useMemo) ao mudar a densidade.
+- **Navegação por página plana**: índice global = soma das páginas de todos os capítulos;
+  "Anterior/Próximo" vira página (atravessa fronteiras de capítulo); URL sincronizada com
+  `?cap=&pag=` via `router.replace({ scroll: false })`; scroll instantâneo ao topo da leitura
+  após a troca (`scrollIntoView` + `scroll-mt-20` para respeitar a TopBar fixa).
+- **Configurações**: `LeitorConfiguracoes` (engrenagem + painel) com duas seções:
+  animação de página e palavras por página; persistidas em localStorage
+  (`leitor:configuracoes`, helpers em `src/lib/leitor.ts`); carregadas só no cliente
+  (evita mismatch de hidratação). Painel desenhado para crescer ("Mais configurações em breve").
+- Capítulo curto = 1 página (sem quebra); cabeçalho mostra "Capítulo X de Y · Página P de Q"
+  (só quando o capítulo tem mais de 1 página).
+
+### Arquivos alterados/criados
+- `src/lib/leitor.ts` — NOVO: tipos (CapituloLeitura, BlocoPagina, PaginaLeitura), animações,
+  densidades, config localStorage, `paginizarCapitulo`/`contarPalavras`
+- `src/components/leitor/LeitorConfiguracoes.tsx` — NOVO: botão + painel de configurações
+- `src/components/leitor/LeitorLivro.tsx` — NOVO: leitor client-side (troca o page.tsx server)
+- `src/app/ler/[obraId]/page.tsx` — busca de dados + cap/pag iniciais; delega ao client
+- `src/app/globals.css` — `.livro-pagina`, `.livro-texto`, `.livro-vitrine`, `.livro-topo`,
+  `.livro-face`, `.livro-verso`, animações `livro-virar-frente/voltar`, `livro-entrar-suave`
+
+### Testes
+- `npm run build` passa (compila + TS sem erros) — única verificação permitida (regra acima).
+- Smoke inicial (dados reais, capítulo 1 = 3.490 palavras → "Página 1 de 13") foi feito ANTES
+  da regra ser gravada; a partir daqui o teste visual é do usuário.
+
+### Pendências
+- Teste visual do usuário: fundo de página, flip 3D, suave, sem animação, densidades,
+  navegação entre páginas/capítulos, botão de configurações.
+- Commit da entrega ainda não feito (aguardando OK do usuário).
+
+---
+
 ## 2026-09-06 - Exclusão de capítulos (Autoria: VIBECODE)
 
 ### Contexto
