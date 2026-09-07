@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { inputCls, labelCls, btnPrimario, btnSecundario, cardCls } from "@/components/ui";
+import { inputCls, labelCls, btnPrimario, btnSecundario, btnPerigo, cardCls } from "@/components/ui";
 import { BotaoPromptImagem } from "@/components/BotaoPromptImagem";
 import { ImagemEntidade } from "@/components/ImagemEntidade";
 import { EstadoVazio } from "@/components/EstadoVazio";
@@ -111,6 +111,26 @@ export function GerenciadorCapitulos({
       router.refresh();
     } finally {
       setMovendo(null);
+    }
+  }
+
+  async function excluir(c: CapituloDados) {
+    if (
+      !confirm(
+        `Excluir o capítulo "${c.titulo}"? Todas as suas partes e cenas serão apagadas permanentemente.`,
+      )
+    )
+      return;
+    try {
+      const res = await fetch(`/api/capitulos/${c.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const dados = await res.json();
+        setErro(dados.erro ?? "Erro ao excluir o capítulo.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setErro("Falha de conexão.");
     }
   }
 
@@ -232,6 +252,14 @@ export function GerenciadorCapitulos({
                 </button>
               )}
               <BotaoPromptImagem tipo="capitulo" id={c.id} rotulo="🎨" permitirGerar />
+              <button
+                onClick={() => excluir(c)}
+                aria-label={`Excluir ${c.titulo}`}
+                title="Excluir capítulo e suas cenas"
+                className={btnPerigo}
+              >
+                Excluir
+              </button>
               <div className="flex flex-col gap-1">
                 <button
                   onClick={() => mover(c.id, "CIMA")}
