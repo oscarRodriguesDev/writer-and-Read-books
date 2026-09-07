@@ -43,6 +43,7 @@ async function carregarObra(obraId: string) {
       },
       ambientes: true,
       artefatos: true,
+      atos: { orderBy: { ordem: "asc" }, include: { capitulos: { select: { titulo: true, ordemDentroDoAto: true } } } },
       eventos: {
         orderBy: { ordemCronologica: "asc" },
         include: { capitulo: { select: { titulo: true } } },
@@ -145,6 +146,23 @@ function textoCabecalhoObra(obra: ObraCompleta): string {
         }`,
     );
     partes.push(`## ARTEFATOS\n${linhas.join("\n")}`);
+  }
+
+  if (obra.atos.length > 0) {
+    const linhas = obra.atos
+      .sort((a, b) => a.ordem - b.ordem)
+      .map(
+        (ato) =>
+          `- ${ato.titulo}${ato.sinopse ? ` — ${truncar(ato.sinopse, MAX_CAMPO)}` : ""}${
+            ato.capitulos.length > 0
+              ? `\n  Capítulos: ${ato.capitulos
+                  .sort((a, b) => (a.ordemDentroDoAto ?? 0) - (b.ordemDentroDoAto ?? 0))
+                  .map((c) => c.titulo)
+                  .join(", ")}`
+              : ""
+          }`,
+      );
+    partes.push(`## ATOS (estrutura narrativa)\n${linhas.join("\n")}`);
   }
 
   if (obra.eventos.length > 0) {

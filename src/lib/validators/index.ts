@@ -166,8 +166,19 @@ export const atualizarCapituloSchema = z
   .object({
     titulo: z.string().trim().min(1, "Título é obrigatório").max(200),
     objetivo: textoOpcional(500),
+    /** Ato narrativo ao qual o capítulo pertence (null remove do ato). */
+    atoId: z.string().trim().max(50).nullish(),
   })
   .partial();
+
+/** POST /api/obras/[obraId]/atos — ato narrativo da obra. */
+export const atoSchema = z.object({
+  titulo: z.string().trim().min(1, "Título é obrigatório").max(200),
+  sinopse: textoOpcional(3000),
+});
+
+/** PATCH /api/atos/[id] — edita título/sinopse. */
+export const atualizarAtoSchema = atoSchema.partial();
 
 /** Campos aceitos no PATCH da cena. */
 export const cenaPatchSchema = z

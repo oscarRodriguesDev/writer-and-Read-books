@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const ABAS = [
   { href: "", rotulo: "Visão geral" },
   { href: "/esqueleto", rotulo: "Esqueleto" },
+  { href: "/atos", rotulo: "Atos" },
   { href: "/personagens", rotulo: "Personagens" },
   { href: "/ambientes", rotulo: "Ambientes" },
   { href: "/artefatos", rotulo: "Artefatos" },

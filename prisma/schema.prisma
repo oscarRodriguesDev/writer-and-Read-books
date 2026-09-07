@@ -37,6 +37,7 @@ model Obra {
 
   esqueleto       Esqueleto?
   capitulos       Capitulo[]
+  atos            Ato[]
   personagens     Personagem[]
   ambientes       Ambiente[]
   artefatos       Artefato[]
@@ -73,6 +74,10 @@ model Capitulo {
   objetivo       String?
   ordemEscrita   Int
   ordemNarrativa Int?
+  // Ato narrativo ao qual o capítulo pertence (agrupamento visual; a
+  // ordemNarrativa global continua sendo a fonte de ordenação da obra)
+  atoId          String?
+  ordemDentroDoAto Int?
   // PLANEJADO | RASCUNHO | REVISAO | FINAL
   status         String   @default("PLANEJADO")
   // Imagem ilustrativa do capítulo (caminho público, ex.: /uploads/capitulo/x.jpg)
@@ -81,12 +86,30 @@ model Capitulo {
   atualizadoEm   DateTime @updatedAt
 
   obra    Obra      @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  ato     Ato?      @relation(fields: [atoId], references: [id], onDelete: SetNull)
   partes  Parte[]
   achados AchadoIA[] @relation("AchadoCapitulo")
   eventos EventoLinhaDoTempo[]
 
   @@unique([obraId, ordemNarrativa])
   @@index([obraId, ordemNarrativa])
+  @@index([atoId, ordemDentroDoAto])
+}
+
+model Ato {
+  id           String   @id @default(cuid())
+  obraId       String
+  titulo       String
+  sinopse      String?
+  ordem        Int      @default(0)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  obra      Obra       @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  capitulos Capitulo[]
+
+  @@unique([obraId, ordem])
+  @@index([obraId])
 }
 
 model Parte {
