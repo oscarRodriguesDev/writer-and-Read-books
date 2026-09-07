@@ -1,5 +1,19 @@
 # Checkpoints
 
+## 2026-09-07 - Sessão: Exclusão de conta na página de perfil
+
+### Estado final
+- **Pedido**: "na página de perfil deve ter opção de exclusão de conta".
+- `excluirConta` (server action): sessão obrigatória + senha atual confirmada via `bcrypt.compare` + `prisma.usuario.delete` (cascade remove obras e toda a cadeia — schema já tinha `onDelete: Cascade`, sem Restrict).
+- UI: bloco "Zona de perigo" no `/perfil` (borda vermelha, aviso com nº de obras, campo de senha, botão vermelho); sucesso → `signOut` + redirect `/login`.
+- Sem alterações de schema; build passa.
+
+### Próximos passos
+- Teste de runtime do usuário: excluir conta (usar conta de teste — é irreversível), conferir retorno ao login.
+- Opcional futuro: limpar arquivos de upload do usuário excluído (`public/uploads`).
+
+---
+
 ## 2026-09-07 - Sessão: Hardening — dono em rotas de recurso direto e uploads
 
 ### Estado final

@@ -1,5 +1,10 @@
 # Pedidos
 
+## 2026-09-07 - Exclusão de conta na página de perfil
+- **Commit**: *(este commit)*
+- **Descrição**: Opção de excluir a conta definitivamente direto da página de perfil.
+- **Solução**: Server action `excluirConta` (senha atual confirmada por bcrypt; delete em cascade — `Obra.usuario onDelete: Cascade`, sem mudar schema); bloco "Zona de perigo" com confirmação por senha; `signOut` + redirect ao login.
+
 ## 2026-09-07 - Hardening: checagem de dono em rotas diretas e uploads
 - **Commit**: *(este commit)*
 - **Descrição**: Impedir que usuário autenticado acesse/altere/apague entidades de obras alheias e envie imagens para entidades de terceiros.

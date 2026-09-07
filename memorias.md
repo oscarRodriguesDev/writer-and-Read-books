@@ -1,5 +1,22 @@
 # Memórias do Projeto
 
+## 2026-09-07 - Perfil: exclusão de conta (zona de perigo) (Autoria: VIBECODE)
+
+### Decisão
+A página de perfil ganhou a opção de **excluir a conta** de forma definitiva, com confirmação por senha (mesmo padrão de segurança das alterações sensíveis — RN-01).
+
+### Implementação
+- **Sem mudança de schema**: `Obra.usuario` já tem `onDelete: Cascade` (e não há `onDelete: Restrict` na cadeia) — deletar o `Usuario` remove obras, capítulos, cenas, personagens, análises etc.
+- `src/lib/validators/usuario.ts`: `excluirContaSchema` (senhaAtual obrigatória) + tipo `ExcluirContaInput`.
+- `src/app/actions/usuario.ts`: nova server action `excluirConta(dados)` — sessão obrigatória, `bcrypt.compare` da senha, `prisma.usuario.delete` (cascade), `revalidatePath("/")`.
+- `src/components/perfil/PaginaPerfil.tsx`: novo bloco **"Zona de perigo"** (card com borda vermelha) após Segurança — botão "🗑️ Excluir conta" expande painel de confirmação (aviso irreversível citando o nº de obras, campo de senha, botão vermelho "Excluir conta definitivamente"); ao concluir, `signOut({ redirect: false })` + `router.push("/login")`.
+- Uploads (fotos) ficam órfãos em `public/uploads` — limpeza de arquivos não está no escopo.
+
+### Testes
+`npm run build` passa. Teste de runtime do usuário pendente (excluir conta de teste e recadastrar).
+
+---
+
 ## 2026-09-07 - Hardening: checagem de dono em todas as rotas de recurso direto e uploads (Autoria: VIBECODE)
 
 ### Decisão

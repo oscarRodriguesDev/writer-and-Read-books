@@ -52,6 +52,12 @@ export const atualizarContaSchema = z
   });
 export type AtualizarContaInput = z.infer<typeof atualizarContaSchema>;
 
+/** Exclusão de conta — exige a senha atual (confirmação). */
+export const excluirContaSchema = z.object({
+  senhaAtual: z.string().min(1, "Informe a senha atual para confirmar"),
+});
+export type ExcluirContaInput = z.infer<typeof excluirContaSchema>;
+
 /** Troca de senha — exige a senha atual e confirmação da nova. */
 export const atualizarSenhaSchema = z
   .object({

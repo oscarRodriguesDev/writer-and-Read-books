@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { cardCls, inputCls, labelCls, btnPrimario, btnGhost } from "@/components/ui";
 import { GENEROS_LITERARIOS } from "@/lib/constants";
 import type { PerfilDados } from "@/lib/perfil";
@@ -9,6 +10,7 @@ import {
   atualizarDadosPerfil,
   atualizarDadosConta,
   atualizarSenha,
+  excluirConta,
 } from "@/app/actions/usuario";
 import AvatarPerfil from "./AvatarPerfil";
 
@@ -114,6 +116,7 @@ export default function PaginaPerfil({
       <BlocoPerfil usuario={usuario} onNotificar={notificar} />
       <BlocoConta usuario={usuario} onNotificar={notificar} />
       <BlocoSeguranca onNotificar={notificar} />
+      <BlocoZonaDeRisco usuario={usuario} totalObras={totalObras} onNotificar={notificar} />
     </div>
   );
 }
@@ -523,6 +526,103 @@ function BlocoSeguranca({
           Você continua logado após trocar a senha neste dispositivo; outras sessões caem quando o token expirar.
         </p>
       </div>
+    </section>
+  );
+}
+
+/* ================= Zona de Perigo (exclusão de conta) ================= */
+
+function BlocoZonaDeRisco({
+  usuario,
+  totalObras,
+  onNotificar,
+}: {
+  usuario: PerfilDados;
+  totalObras: number;
+  onNotificar: (texto: string, tipo?: "erro" | "sucesso" | "aviso") => void;
+}) {
+  const router = useRouter();
+  const [confirmando, setConfirmando] = useState(false);
+  const [senha, setSenha] = useState("");
+  const [excluindo, setExcluindo] = useState(false);
+
+  async function excluir() {
+    setExcluindo(true);
+    try {
+      const resultado = await excluirConta({ senhaAtual: senha });
+      if (!resultado.success) {
+        onNotificar(resultado.erro, "erro");
+        setExcluindo(false);
+        return;
+      }
+      // Conta apagada: limpa o cookie de sessão e volta ao login.
+      await signOut({ redirect: false });
+      router.push("/login");
+    } catch {
+      onNotificar("Falha de conexão. Tente novamente.", "erro");
+      setExcluindo(false);
+    }
+  }
+
+  return (
+    <section className={`${cardCls} border-red-200`}>
+      <header className="mb-4">
+        <h2 className="text-lg font-semibold text-red-700">Zona de perigo</h2>
+        <p className="text-sm text-muted">
+          Excluir a conta remove permanentemente seu perfil, suas{" "}
+          {totalObras === 1 ? "1 obra" : `${totalObras} obras`} e todos os
+          rascunhos, personagens, cenas e análises.
+        </p>
+      </header>
+
+      {confirmando ? (
+        <div className="space-y-4">
+          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <strong>Ação irreversível.</strong> Digite sua senha para confirmar
+            que deseja excluir a conta <span className="font-medium">@{usuario.username}</span>.
+          </div>
+          <div>
+            <label className={labelCls}>Senha atual *</label>
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              className={inputCls}
+              placeholder="Sua senha para confirmar"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmando(false);
+                setSenha("");
+              }}
+              disabled={excluindo}
+              className={btnGhost}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={excluir}
+              disabled={excluindo || senha.length === 0}
+              className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {excluindo ? "Excluindo…" : "Excluir conta definitivamente"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setConfirmando(true)}
+          className="rounded-md border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100"
+        >
+          🗑️ Excluir conta
+        </button>
+      )}
     </section>
   );
 }

@@ -9,9 +9,11 @@ import {
   atualizarPerfilSchema,
   atualizarContaSchema,
   atualizarSenhaSchema,
+  excluirContaSchema,
   type AtualizarPerfilForm,
   type AtualizarContaInput,
   type AtualizarSenhaInput,
+  type ExcluirContaInput,
 } from "@/lib/validators/usuario";
 
 type Resultado =
@@ -117,5 +119,29 @@ export async function atualizarSenha(dados: AtualizarSenhaInput): Promise<Result
   });
 
   revalidatePath("/perfil");
+  return { success: true };
+}
+
+/**
+ * Exclusão definitiva da conta — confirma a senha atual e apaga o usuário.
+ * As obras (e toda a cadeia: capítulos, cenas, personagens, análises…)
+ * seguem via cascade (Obra.usuario onDelete: Cascade).
+ */
+export async function excluirConta(dados: ExcluirContaInput): Promise<Resultado> {
+  const usuario = await usuarioDaSessao();
+  if (!usuario) return naoAutenticado();
+
+  const validacao = excluirContaSchema.safeParse(dados);
+  if (!validacao.success) {
+    return { success: false, erro: validacao.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+  const d = validacao.data;
+
+  const senhaOk = await bcrypt.compare(d.senhaAtual, usuario.senhaHash);
+  if (!senhaOk) return { success: false, erro: "Senha atual incorreta." };
+
+  await prisma.usuario.delete({ where: { id: usuario.id } });
+
+  revalidatePath("/");
   return { success: true };
 }
