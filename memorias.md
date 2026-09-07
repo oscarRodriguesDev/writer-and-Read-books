@@ -1,5 +1,23 @@
 # Memórias do Projeto
 
+## 2026-09-07 - Capa de livro na tela de criação (default CSS ou do usuário) (Autoria: VIBECODE)
+
+### Decisão
+Na tela de criação de obra deve aparecer a capa do livro: a **capa definida pelo usuário** (URL) ou, na ausência, uma **capa default desenhada em CSS** que pareça uma capa de livro de verdade.
+
+### Implementação
+- `src/components/CapaLivro.tsx` (novo): se `capaUrl` → `<img>`; senão capa CSS realista — proporção 2:3, degradê navy→indigo→slate, lombada (dobra escura + vinco claro), brilho diagonal, textura pontilhada, filetes dourados, gênero + título serif + ornamento, autor no rodapé.
+- `FormObra.tsx`: campo **"Capa (URL)"** + estados `titulo`/`genero`/`capaUrl` para **prévia ao vivo**; layout 2 colunas (capa à esquerda); envia `capaUrl` no POST. Campos controlados (título/gênero/capa) porque alimentam a prévia; tema/descrição continuam não controlados.
+- `criarObraSchema`: campo `capaUrl: textoOpcional(500)` adicionado (o POST já espalhava).
+- `src/lib/usuario-atual.ts`: `UsuarioAtual` ganhou `nomeAutor` (para assinar a capa default).
+- `src/app/obras/nova/page.tsx`: busca `buscarUsuarioAtual()` e passa `autor` (nomeArtistico ?? nome) ao `FormObra`.
+- **Pendências anotadas**: dashboard (`src/app/page.tsx`) devolve `capaUrl: null` hardcoded (não mostra capa nos cards) e `WorkCard` só exibe capa se houver URL. Ideal: dashboard mostrar CapaLivro (default CSS) nos cards.
+
+### Testes
+`npm run build` passa. Teste visual do usuário pendente.
+
+---
+
 ## 2026-09-07 - Header mostra o usuário logado (foto + nome de usuário) (Autoria: VIBECODE)
 
 ### Decisão

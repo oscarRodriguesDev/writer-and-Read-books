@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 
 export interface UsuarioAtual {
   nome: string;
+  nomeAutor: string | null;
   username: string | null;
   fotoUrl: string | null;
 }
@@ -14,7 +15,7 @@ export async function buscarUsuarioAtual(): Promise<UsuarioAtual | null> {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id: sessao.user.id },
-    select: { nome: true, username: true, fotoUrl: true },
+    select: { nome: true, nomeAutor: true, username: true, fotoUrl: true },
   });
   return usuario;
 }

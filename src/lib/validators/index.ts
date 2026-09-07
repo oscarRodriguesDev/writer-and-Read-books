@@ -30,6 +30,7 @@ export const criarObraSchema = z.object({
   genero: textoOpcional(100),
   tema: textoOpcional(200),
   descricao: textoOpcional(2000),
+  capaUrl: textoOpcional(500),
 });
 
 const STATUS_OBRA = ["PLANEJAMENTO", "ESCRITA", "REVISAO", "CONCLUIDA"] as const;

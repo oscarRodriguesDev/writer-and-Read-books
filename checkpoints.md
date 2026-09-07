@@ -1,5 +1,22 @@
 # Checkpoints
 
+## 2026-09-07 - Sessão: Capa de livro na tela de criação
+
+### Estado final
+- **Pedido**: na tela de criação deve aparecer a capa do livro — a definida pelo usuário ou uma **default feita em CSS** que pareça capa de livro.
+- `src/components/CapaLivro.tsx` (novo): `capaUrl` → `<img>`; sem URL → capa CSS (2:3, degradê escuro, lombada com vinco, brilho diagonal, textura pontilhada, filetes dourados, gênero/título serif/ornamento, autor no rodapé).
+- `FormObra.tsx`: campo "Capa (URL)" + **prévia ao vivo** (título/gênero/capa controlados); grid 2 colunas; POST envia `capaUrl`.
+- `criarObraSchema` com `capaUrl: textoOpcional(500)`.
+- `UsuarioAtual` ganhou `nomeAutor`; `/obras/nova` passa `autor` (nomeArtistico ?? nome) para assinar a capa.
+- Build passa.
+
+### Próximos passos
+- Teste visual: criar obra com/sem capa; prévia reage à digitação; capa default realista.
+- **Pendência anotada**: dashboard `src/app/page.tsx` seta `capaUrl: null` hardcoded (não mostra capa nos cards) — ideal: `WorkCard` usar `CapaLivro` (default CSS) — pronta para padronizar também a edição se o usuário quiser.
+- Hardening anotado (rotas de recurso direto + upload de entidades).
+
+---
+
 ## 2026-09-07 - Sessão: Header com usuário logado (foto + nome de usuário)
 
 ### Estado final

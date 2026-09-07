@@ -1,5 +1,11 @@
 # Pedidos
 
+## 2026-09-07 - Capa de livro na tela de criação
+- **Commit**: *(este commit)*
+- **Descrição**: A tela de criação de obra deve mostrar a capa do livro — a definida pelo usuário (URL) ou uma capa default desenhada em CSS com cara de capa de livro.
+- **Solução**: `CapaLivro.tsx` (img ↔ capa CSS realista com lombada/brilho/filetes dourados); `FormObra` com campo de capa + prévia ao vivo; `criarObraSchema` aceita `capaUrl`; autor da capa = nome artístico do usuário.
+- **Testes**: build passa. Pendente teste visual. Pendência anotada: dashboard ainda seta `capaUrl: null` nos cards.
+
 ## 2026-09-07 - Header com usuário logado (foto + nome de usuário)
 - **Commit**: *(este commit)*
 - **Descrição**: O bloco de usuário do header deve mostrar o nome de usuário do escritor e a foto (em vez do ícone 👤).
