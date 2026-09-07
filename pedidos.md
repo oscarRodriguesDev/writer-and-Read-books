@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-06 - Excluir capítulos na lista
+- **Commit**: `544b81d`
+- **Descrição**: Rota `/obras/[obraId]/capitulos` não tinha remoção de capítulos (nenhum botão/rota). 
+- **Solução**: `DELETE /api/capitulos/[id]` em transação (cascade de partes/cenas, renumeração da ordemNarrativa sem buracos) + botão "Excluir" (btnPerigo com confirm) para todos os capítulos.
+- **Arquivos**: `src/app/api/capitulos/[capituloId]/route.ts`, `src/components/GerenciadorCapitulos.tsx`
+- **Testes**: build passa. Pendente teste visual.
+
 ## 2026-09-06 - Ajustes na aba Análise IA (supremacia do autor)
 - **Commit**: `11d4065`
 - **Descrição**: 3 ajustes — (1) achados encerrados minimizados; (2) IA reconhece a solução do autor (sem última palavra); (3) nova análise zera a anterior.

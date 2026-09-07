@@ -1,5 +1,20 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Exclusão de capítulos
+
+### Estado final
+- `DELETE /api/capitulos/[id]` criado (partes/cenas em cascata; renumera ordemNarrativa dos posicionados)
+- Botão "Excluir" para todos os capítulos na lista (`/obras/[obraId]/capitulos`)
+- Commit `544b81d`; push pendente via docs
+- Erro 502 da análise IA foi reportado como resolvido pelo usuário (causa não detalhada)
+- Build passando
+
+### Próximos passos sugeridos
+- Teste visual: excluir capítulo e ver lista/ordenação
+- Item 8 (FASE 6): teste visual dos recursos gráficos
+
+---
+
 ## 2026-09-06 - Sessão: Ajustes na aba Análise IA (supremacia do autor)
 
 ### Estado final

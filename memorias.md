@@ -1,5 +1,24 @@
 # Memórias do Projeto
 
+## 2026-09-06 - Exclusão de capítulos (Autoria: VIBECODE)
+
+### Contexto
+O usuário apontou que a rota `/obras/[obraId]/capitulos` não oferecia remoção de capítulos. De fato, não existia rota DELETE nem botão — todos os outros gerenciadores (personagens, ambientes, regras, artefatos, atos, eventos) já tinham exclusão.
+
+### Decisões
+- Rota `DELETE /api/capitulos/[id]`: exclui o capítulo (partes/cenas caem em cascata; achados e eventos ficam com `capituloId: null`) e **renumera** os capítulos posicionados da obra (mesma estratégia do `moverCapitulo`: zera `ordemNarrativa` de todos e reatribui 1..N aos que estavam posicionados), sem deixar buracos.
+- Botão "Excluir" (btnPerigo) disponível para TODOS os capítulos da lista, com `confirm()` avisando que partes e cenas serão apagadas.
+
+### Arquivos alterados
+- `src/app/api/capitulos/[capituloId]/route.ts` — DELETE em transação
+- `src/components/GerenciadorCapitulos.tsx` — botão Excluir
+
+### Testes
+- `npm run build` passa. Commit `544b81d`.
+- Pendente teste visual do usuário.
+
+---
+
 ## 2026-09-06 - Supremacia do autor e análise zerada — ajustes na aba Análise IA (Autoria: VIBECODE)
 
 ### Contexto
