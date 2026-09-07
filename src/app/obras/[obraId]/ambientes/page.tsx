@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
 import { CabecalhoObra } from "@/components/CabecalhoObra";
 import { GerenciadorAmbientes } from "@/components/GerenciadorAmbientes";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +11,8 @@ export default async function AmbientesPage({
   params: Promise<{ obraId: string }>;
 }) {
   const { obraId } = await params;
-  const obra = await prisma.obra.findUnique({
-    where: { id: obraId },
-    include: { ambientes: { orderBy: { nome: "asc" } } },
+  const obra = await obterObraDoUsuario(obraId, {
+    ambientes: { orderBy: { nome: "asc" } },
   });
   if (!obra) notFound();
 

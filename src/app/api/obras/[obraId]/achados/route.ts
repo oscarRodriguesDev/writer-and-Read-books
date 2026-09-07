@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
 import { filtroAchadosSchema } from "@/lib/validators";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ obraId: string }> };
 
@@ -8,7 +9,7 @@ type Ctx = { params: Promise<{ obraId: string }> };
 export async function GET(req: Request, { params }: Ctx) {
   try {
     const { obraId } = await params;
-    const obra = await prisma.obra.findUnique({ where: { id: obraId } });
+    const obra = await obterObraDoUsuario(obraId);
     if (!obra) return respostaErro("Obra não encontrada", 404);
 
     const url = new URL(req.url);

@@ -1,15 +1,19 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { FormImportar } from "@/components/FormImportar";
+import { obterUsuarioId } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
 export default async function ImportarPage() {
-  const obras = await prisma.obra.findMany({
-    where: { arquivada: false },
-    orderBy: { criadoEm: "desc" },
-    select: { id: true, titulo: true },
-  });
+  const usuarioId = await obterUsuarioId();
+  const obras = usuarioId
+    ? await prisma.obra.findMany({
+        where: { arquivada: false, usuarioId },
+        orderBy: { criadoEm: "desc" },
+        select: { id: true, titulo: true },
+      })
+    : [];
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">

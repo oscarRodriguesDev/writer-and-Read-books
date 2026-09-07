@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { PARTES_TIPOS, CENAS_TIPOS, type ParteTipo, type CenaTipo } from "@/lib/constants";
 import { EditorCapitulo } from "@/components/EditorCapitulo";
 import { btnSecundario } from "@/components/ui";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,18 @@ export default async function EditorCapituloPage({
   params: Promise<{ obraId: string; capituloId: string }>;
 }) {
   const { obraId, capituloId } = await params;
-  const [capitulo, obra] = await Promise.all([
+  const dono = await obterObraDoUsuario(obraId);
+  const [obra, capitulo] = await Promise.all([
+    dono
+      ? prisma.obra.findUnique({
+          where: { id: obraId },
+          select: {
+            idioma: true,
+            personagens: { select: { id: true, nome: true }, orderBy: { nome: "asc" } },
+            ambientes: { select: { id: true, nome: true }, orderBy: { nome: "asc" } },
+          },
+        })
+      : Promise.resolve(null),
     prisma.capitulo.findUnique({
       where: { id: capituloId },
       include: {
@@ -29,16 +41,8 @@ export default async function EditorCapituloPage({
         },
       },
     }),
-    prisma.obra.findUnique({
-      where: { id: obraId },
-      select: {
-        idioma: true,
-        personagens: { select: { id: true, nome: true }, orderBy: { nome: "asc" } },
-        ambientes: { select: { id: true, nome: true }, orderBy: { nome: "asc" } },
-      },
-    }),
   ]);
-  if (!capitulo || capitulo.obraId !== obraId || !obra) notFound();
+  if (!obra || !capitulo || capitulo.obraId !== obraId) notFound();
 
   // Ordena pelos tipos canônicos INICIO → MEIO → FIM
   capitulo.partes.sort(

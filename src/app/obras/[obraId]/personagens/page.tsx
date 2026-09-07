@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
 import { CabecalhoObra } from "@/components/CabecalhoObra";
 import { GerenciadorPersonagens } from "@/components/GerenciadorPersonagens";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +11,8 @@ export default async function PersonagensPage({
   params: Promise<{ obraId: string }>;
 }) {
   const { obraId } = await params;
-  const obra = await prisma.obra.findUnique({
-    where: { id: obraId },
-    include: { personagens: { orderBy: { criadoEm: "asc" } } },
+  const obra = await obterObraDoUsuario(obraId, {
+    personagens: { orderBy: { criadoEm: "asc" } },
   });
   if (!obra) notFound();
 

@@ -1,6 +1,7 @@
 import { buscarPersonagens } from "@/lib/services/buscarPersonagens";
 import { pedidoBuscaPersonagensSchema } from "@/lib/validators";
-import { validarCorpo, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ obraId: string }> };
 
@@ -9,6 +10,9 @@ type Ctx = { params: Promise<{ obraId: string }> };
 export async function POST(req: Request, { params }: Ctx) {
   try {
     const { obraId } = await params;
+    const obra = await obterObraDoUsuario(obraId);
+    if (!obra) return respostaErro("Obra não encontrada", 404);
+
     const validacao = await validarCorpo(pedidoBuscaPersonagensSchema, req);
     if (!validacao.ok) return validacao.resposta;
     const resultados = await buscarPersonagens(

@@ -5,6 +5,7 @@ import { PARTES_TIPOS, CENAS_TIPOS, type ParteTipo, type CenaTipo } from "@/lib/
 import { btnSecundario } from "@/components/ui";
 import LeitorLivro from "@/components/leitor/LeitorLivro";
 import type { CapituloLeitura } from "@/lib/leitor";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function LerPage({
   const { obraId } = await params;
   const { cap: capParam, pag: pagParam } = await searchParams;
 
-  const obra = await prisma.obra.findUnique({ where: { id: obraId } });
+  const obra = await obterObraDoUsuario(obraId);
   if (!obra) notFound();
 
   const capitulosBrutos = await prisma.capitulo.findMany({

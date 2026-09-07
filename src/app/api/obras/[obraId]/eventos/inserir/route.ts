@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { eventoSchema } from "@/lib/validators";
 import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ obraId: string }> };
 
@@ -12,6 +13,9 @@ type Ctx = { params: Promise<{ obraId: string }> };
 export async function POST(req: Request, { params }: Ctx) {
   try {
     const { obraId } = await params;
+    const obra = await obterObraDoUsuario(obraId);
+    if (!obra) return respostaErro("Obra não encontrada", 404);
+
     const validacao = await validarCorpo(eventoSchema, req);
     if (!validacao.ok) return validacao.resposta;
     const dados = validacao.dados;

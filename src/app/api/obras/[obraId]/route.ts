@@ -5,6 +5,7 @@ import {
   respostaErro,
   tratarErroDesconhecido,
 } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ obraId: string }> };
 
@@ -12,7 +13,7 @@ type Ctx = { params: Promise<{ obraId: string }> };
 export async function PATCH(req: Request, { params }: Ctx) {
   try {
     const { obraId } = await params;
-    const atual = await prisma.obra.findUnique({ where: { id: obraId } });
+    const atual = await obterObraDoUsuario(obraId);
     if (!atual) return respostaErro("Obra não encontrada", 404);
 
     const validacao = await validarCorpo(atualizarObraSchema, req);
@@ -33,7 +34,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
 export async function DELETE(_req: Request, { params }: Ctx) {
   try {
     const { obraId } = await params;
-    const obra = await prisma.obra.findUnique({ where: { id: obraId } });
+    const obra = await obterObraDoUsuario(obraId);
     if (!obra) return respostaErro("Obra não encontrada", 404);
 
     await prisma.obra.delete({ where: { id: obraId } });

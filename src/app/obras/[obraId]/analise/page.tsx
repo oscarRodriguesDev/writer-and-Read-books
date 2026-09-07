@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
 import { CabecalhoObra } from "@/components/CabecalhoObra";
 import { PainelAnaliseObra } from "@/components/PainelAnaliseObra";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +11,7 @@ export default async function AnalisePage({
   params: Promise<{ obraId: string }>;
 }) {
   const { obraId } = await params;
-  const obra = await prisma.obra.findUnique({
-    where: { id: obraId },
-    select: { id: true, titulo: true },
-  });
+  const obra = await obterObraDoUsuario(obraId);
   if (!obra) notFound();
 
   return (

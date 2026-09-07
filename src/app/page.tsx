@@ -3,6 +3,7 @@ import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
 import { WorkGrid } from "@/components/Dashboard/WorkGrid";
 import { EmptyState } from "@/components/Dashboard/EmptyState";
 import { Obra } from "@/lib/types";
+import { obterUsuarioId } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -13,22 +14,26 @@ async function fetchObrasComEstatisticas(): Promise<{
   obrasAtivas: number;
   obrasArquivadas: number;
 }> {
-  const obras = await prisma.obra.findMany({
-    orderBy: { atualizadoEm: "desc" },
-    include: {
-      capitulos: {
+  const usuarioId = await obterUsuarioId();
+  const obras = usuarioId
+    ? await prisma.obra.findMany({
+        where: { usuarioId },
+        orderBy: { atualizadoEm: "desc" },
         include: {
-          partes: {
+          capitulos: {
             include: {
-              cenas: {
-                select: { conteudo: true },
+              partes: {
+                include: {
+                  cenas: {
+                    select: { conteudo: true },
+                  },
+                },
               },
             },
           },
         },
-      },
-    },
-  });
+      })
+    : [];
 
   const obrasComPalavras: Obra[] = obras.map((obra) => {
     let totalPalavras = 0;

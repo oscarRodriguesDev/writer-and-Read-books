@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
 import { CabecalhoObra } from "@/components/CabecalhoObra";
 import { GerenciadorAtos } from "@/components/GerenciadorAtos";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -11,22 +11,19 @@ export default async function AtosPage({
   params: Promise<{ obraId: string }>;
 }) {
   const { obraId } = await params;
-  const obra = await prisma.obra.findUnique({
-    where: { id: obraId },
-    include: {
-      atos: {
-        orderBy: { ordem: "asc" },
-        include: {
-          capitulos: {
-            orderBy: { ordemDentroDoAto: "asc" },
-            select: { id: true, titulo: true, ordemDentroDoAto: true },
-          },
+  const obra = await obterObraDoUsuario(obraId, {
+    atos: {
+      orderBy: { ordem: "asc" },
+      include: {
+        capitulos: {
+          orderBy: { ordemDentroDoAto: "asc" },
+          select: { id: true, titulo: true, ordemDentroDoAto: true },
         },
       },
-      capitulos: {
-        orderBy: [{ ordemNarrativa: "asc" }, { ordemEscrita: "asc" }],
-        select: { id: true, titulo: true, atoId: true },
-      },
+    },
+    capitulos: {
+      orderBy: [{ ordemNarrativa: "asc" }, { ordemEscrita: "asc" }],
+      select: { id: true, titulo: true, atoId: true },
     },
   });
   if (!obra) notFound();

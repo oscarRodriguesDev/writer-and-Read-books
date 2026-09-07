@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
 import { CabecalhoObra } from "@/components/CabecalhoObra";
 import { GerenciadorCapitulos } from "@/components/GerenciadorCapitulos";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -11,12 +11,9 @@ export default async function CapitulosPage({
   params: Promise<{ obraId: string }>;
 }) {
   const { obraId } = await params;
-  const obra = await prisma.obra.findUnique({
-    where: { id: obraId },
-    include: {
-      capitulos: {
-        orderBy: [{ ordemNarrativa: "asc" }, { ordemEscrita: "asc" }],
-      },
+  const obra = await obterObraDoUsuario(obraId, {
+    capitulos: {
+      orderBy: [{ ordemNarrativa: "asc" }, { ordemEscrita: "asc" }],
     },
   });
   if (!obra) notFound();

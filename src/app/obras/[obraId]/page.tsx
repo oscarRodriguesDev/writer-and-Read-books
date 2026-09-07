@@ -5,6 +5,7 @@ import { CabecalhoObra } from "@/components/CabecalhoObra";
 import { FormEditarObra } from "@/components/FormEditarObra";
 import { btnSecundario, cardCls } from "@/components/ui";
 import { BotaoExportar } from "@/components/BotaoExportar";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +19,9 @@ export default async function ObraPage({
   params: Promise<{ obraId: string }>;
 }) {
   const { obraId } = await params;
-  const obra = await prisma.obra.findUnique({
-    where: { id: obraId },
-    include: {
-      _count: { select: { capitulos: true, personagens: true, ambientes: true } },
-      capitulos: { select: { id: true }, orderBy: [{ ordemNarrativa: "asc" }] },
-    },
+  const obra = await obterObraDoUsuario(obraId, {
+    _count: { select: { capitulos: true, personagens: true, ambientes: true } },
+    capitulos: { select: { id: true }, orderBy: [{ ordemNarrativa: "asc" }] },
   });
   if (!obra) notFound();
 

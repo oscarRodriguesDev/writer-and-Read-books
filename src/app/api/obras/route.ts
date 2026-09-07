@@ -1,11 +1,15 @@
 import { prisma } from "@/lib/db";
 import { criarObraSchema } from "@/lib/validators";
 import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterUsuarioId } from "@/lib/auth-obras";
 
 export async function GET() {
   try {
+    const usuarioId = await obterUsuarioId();
+    if (!usuarioId) return respostaErro("Não autenticado", 401);
+
     const obras = await prisma.obra.findMany({
-      where: { arquivada: false },
+      where: { arquivada: false, usuarioId },
       orderBy: { criadoEm: "desc" },
     });
     return Response.json(obras);
@@ -16,9 +20,12 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const usuarioId = await obterUsuarioId();
+    if (!usuarioId) return respostaErro("Não autenticado", 401);
+
     const validacao = await validarCorpo(criarObraSchema, req);
     if (!validacao.ok) return validacao.resposta;
-    const obra = await prisma.obra.create({ data: validacao.dados });
+    const obra = await prisma.obra.create({ data: { ...validacao.dados, usuarioId } });
     return Response.json(obra, { status: 201 });
   } catch (e) {
     return tratarErroDesconhecido(e);

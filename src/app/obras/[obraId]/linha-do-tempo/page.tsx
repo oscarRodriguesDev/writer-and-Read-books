@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
 import { CabecalhoObra } from "@/components/CabecalhoObra";
 import {
   GerenciadorLinhaDoTempo,
   type EventoDados,
 } from "@/components/GerenciadorLinhaDoTempo";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -14,15 +14,12 @@ export default async function LinhaDoTempoPage({
   params: Promise<{ obraId: string }>;
 }) {
   const { obraId } = await params;
-  const obra = await prisma.obra.findUnique({
-    where: { id: obraId },
-    include: {
-      eventos: {
-        orderBy: { ordemCronologica: "asc" },
-        include: { capitulo: { select: { titulo: true } } },
-      },
-      capitulos: { select: { id: true, titulo: true }, orderBy: { ordemEscrita: "asc" } },
+  const obra = await obterObraDoUsuario(obraId, {
+    eventos: {
+      orderBy: { ordemCronologica: "asc" },
+      include: { capitulo: { select: { titulo: true } } },
     },
+    capitulos: { select: { id: true, titulo: true }, orderBy: { ordemEscrita: "asc" } },
   });
   if (!obra) notFound();
 

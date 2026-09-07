@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
 import { CabecalhoObra } from "@/components/CabecalhoObra";
 import { FormEsqueleto } from "@/components/FormEsqueleto";
 import { cardCls } from "@/components/ui";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +12,7 @@ export default async function EsqueletoPage({
   params: Promise<{ obraId: string }>;
 }) {
   const { obraId } = await params;
-  const obra = await prisma.obra.findUnique({
-    where: { id: obraId },
-    include: { esqueleto: true },
-  });
+  const obra = await obterObraDoUsuario(obraId, { esqueleto: true });
   if (!obra) notFound();
 
   return (

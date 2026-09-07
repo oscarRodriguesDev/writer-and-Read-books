@@ -1,5 +1,6 @@
 import { exportarObra, type FormatoExportacao } from "@/lib/services/exportarObra";
-import { tratarErroDesconhecido } from "@/lib/api-helpers";
+import { tratarErroDesconhecido, respostaErro } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ obraId: string; formato: string }> };
 
@@ -7,6 +8,9 @@ type Ctx = { params: Promise<{ obraId: string; formato: string }> };
 export async function GET(_req: Request, { params }: Ctx) {
   try {
     const { obraId, formato } = await params;
+    const obra = await obterObraDoUsuario(obraId);
+    if (!obra) return respostaErro("Obra não encontrada", 404);
+
     const formatosValidos: FormatoExportacao[] = ["epub", "pdf", "docx", "kindle"];
     if (!formatosValidos.includes(formato as FormatoExportacao)) {
       return new Response(JSON.stringify({ erro: "Formato inválido" }), { status: 400 });

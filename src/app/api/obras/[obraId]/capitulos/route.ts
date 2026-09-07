@@ -2,12 +2,16 @@ import { prisma } from "@/lib/db";
 import { criarCapituloSchema } from "@/lib/validators";
 import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
 import { criarCapituloComEstrutura } from "@/lib/services/capitulos";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ obraId: string }> };
 
 export async function GET(_req: Request, { params }: Ctx) {
   try {
     const { obraId } = await params;
+    const obra = await obterObraDoUsuario(obraId);
+    if (!obra) return respostaErro("Obra não encontrada", 404);
+
     const capitulos = await prisma.capitulo.findMany({
       where: { obraId },
       orderBy: [{ ordemNarrativa: "asc" }, { ordemEscrita: "asc" }],
@@ -21,7 +25,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 export async function POST(req: Request, { params }: Ctx) {
   try {
     const { obraId } = await params;
-    const obra = await prisma.obra.findUnique({ where: { id: obraId } });
+    const obra = await obterObraDoUsuario(obraId);
     if (!obra) return respostaErro("Obra não encontrada", 404);
 
     const validacao = await validarCorpo(criarCapituloSchema, req);

@@ -9,6 +9,7 @@ import {
   tituloPorNomeArquivo,
 } from "@/lib/services/importar";
 import { PARTES_TIPOS, CENAS_TIPOS, type ParteTipo, type CenaTipo } from "@/lib/constants";
+import { obterUsuarioId } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,11 @@ const TAMANHO_MAX_ARQUIVO = 20 * 1024 * 1024; // 20 MB por arquivo
 
 export async function POST(req: NextRequest) {
   try {
+    const usuarioId = await obterUsuarioId();
+    if (!usuarioId) {
+      return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
+    }
+
     const form = await req.formData();
 
     const obraIdForm = form.get("obraId");
@@ -37,10 +43,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Resolve a obra: existente ou nova
+    // Resolve a obra: existente ou nova (sempre do usuário logado)
     let obraId: string;
     if (typeof obraIdForm === "string" && obraIdForm.length > 0) {
-      const obra = await prisma.obra.findUnique({ where: { id: obraIdForm } });
+      const obra = await prisma.obra.findFirst({
+        where: { id: obraIdForm, usuarioId },
+      });
       if (!obra) {
         return NextResponse.json({ erro: "Obra não encontrada." }, { status: 404 });
       }
@@ -50,6 +58,7 @@ export async function POST(req: NextRequest) {
         data: {
           titulo: tituloNovaObra.slice(0, 200),
           status: "ESCRITA",
+          usuarioId,
           esqueleto: { create: {} },
         },
       });
