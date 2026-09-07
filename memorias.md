@@ -1,5 +1,30 @@
 # Memórias do Projeto
 
+## 2026-09-06 - Categoria IA "Furo de roteiro" — Item 7 do backlog (Autoria: VIBECODE)
+
+### Contexto
+Furos de roteiro eram reportados pela IA espalhados entre ESTRUTURA/CAUSALIDADE, sem categoria própria para filtrar e acompanhar na análise.
+
+### Decisões
+- Nova categoria `FURO_ROTEIRO` (rótulo "Furo de roteiro") em `CATEGORIAS_ACHADO` (constants.ts) — o enum do validator `achadoIASchema` e `filtroAchadosSchema` a adotam automaticamente via `z.enum(CATEGORIAS_ACHADO)`.
+- Definição no prompt: **promessa narrativa não cumprida** (setup plantado e esquecido, problema levantado e abandonado, regra interna ignorada). Diferenciação explícita: contradição pontual → CONTRADICAO; consequência quebrada de uma ação → CAUSALIDADE; FURO_ROTEIRO é o furo de TRAMA (ponta solta).
+- Painel de análise: novo select "Categoria" ao lado do de status; os dois filtros combinam (URL `?status=&categoria=`).
+- Rota GET `/api/obras/[obraId]/achados` aceita `?categoria=` validado com `z.enum`.
+- Sem migração (categoria é String no banco).
+
+### Arquivos alterados
+- `src/lib/constants.ts` — `FURO_ROTEIRO` + rótulo
+- `src/lib/ia/prompt.ts` — definição + enum do JSON
+- `src/lib/validators/index.ts` — `categoria` no `filtroAchadosSchema`
+- `src/app/api/obras/[obraId]/achados/route.ts` — filtro combinado
+- `src/components/PainelAnaliseObra.tsx` — select de categoria, estados combinados
+
+### Testes
+- `npm run build` passa. Commit `47f4372`.
+- Pendente teste visual: rodar análise e filtrar por "Furo de roteiro".
+
+---
+
 ## 2026-09-06 - Atos narrativos — Item 6 do backlog (Autoria: VIBECODE)
 
 ### Contexto

@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-06 - Backlog item 7: Categoria IA "furo de roteiro"
+- **Commit**: `47f4372`
+- **Descrição**: Nova categoria de achado `FURO_ROTEIRO` na análise IA com pronto + filtro por categoria no painel.
+- **Solução**: constante `FURO_ROTEIRO` + rótulo; definição no prompt (promessa narrativa não cumprida); `filtroAchadosSchema.categoria` (z.enum); GET achados com `?categoria=`; `PainelAnaliseObra` com select "Categoria" combinado ao de status.
+- **Arquivos**: `src/lib/constants.ts`, `src/lib/ia/prompt.ts`, `src/lib/validators/index.ts`, `src/app/api/obras/[obraId]/achados/route.ts`, `src/components/PainelAnaliseObra.tsx`
+- **Testes**: build passa. Pendente teste visual; sem migração.
+
 ## 2026-09-06 - Backlog item 6: Atos narrativos
 - **Commit**: `5c6c19d`
 - **Descrição**: Model `Ato` + `atoId`/`ordemDentroDoAto` no `Capitulo` com tela de gerenciamento e movimento de capítulos entre atos.

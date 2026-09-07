@@ -1,5 +1,20 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Categoria IA "furo de roteiro" (item 7)
+
+### Estado final
+- `FURO_ROTEIRO` adicionada em `CATEGORIAS_ACHADO` + rótulo "Furo de roteiro" (sem migração)
+- Prompt da IA com definição própria e diferenciação vs. CONTRADICAO/CAUSALIDADE
+- `PainelAnaliseObra` com filtro por categoria combinado ao de status; rota GET achados aceita `?categoria=`
+- Commit `47f4372`; push pendente dos arquivos de controle
+- Build passando
+
+### Próximos passos sugeridos
+- Teste visual: rodar análise IA e filtrar por "Furo de roteiro"
+- Item 8 (FASE 6): teste visual dos recursos gráficos (mascotes, estados vazios, fundos claro/escuro)
+
+---
+
 ## 2026-09-06 - Sessão: Atos narrativos (item 6)
 
 ### Estado final

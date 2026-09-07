@@ -44,8 +44,11 @@
 
 ## FASE 5 — Inteligência (IA)
 
-- [ ] **7. Categoria IA "furo de roteiro"** — Nova categoria de achado explícita (ex.: `FURO_ROTEIRO`) além de ESTRUTURA/CAUSALIDADE que cobrem parcialmente hoje. Ajustar `CATEGORIAS_ACHADO`, `ROTULO_CATEGORIA_ACHADO`, prompt em `src/lib/ia/prompt.ts` e filtros do `PainelAnaliseObra`.
-  - Requer migração? Campo `categoria` é String — sem migração obrigatória, apenas constante.
+- [x] **7. Categoria IA "furo de roteiro"** — Nova categoria de achado explícita (ex.: `FURO_ROTEIRO`) além de ESTRUTURA/CAUSALIDADE que cobrem parcialmente hoje. Ajustar `CATEGORIAS_ACHADO`, `ROTULO_CATEGORIA_ACHADO`, prompt em `src/lib/ia/prompt.ts` e filtros do `PainelAnaliseObra`.
+  - Implementado: `FURO_ROTEIRO` em `CATEGORIAS_ACHADO` + `ROTULO_CATEGORIA_ACHADO` ("Furo de roteiro").
+  - Prompt: definição específica (promessa narrativa não cumprida / setup esquecido / regra interna ignorada), diferenciando de CONTRADICAO e CAUSALIDADE; categorias no enum do JSON.
+  - Filtros: `PainelAnaliseObra` ganhou filtro por categoria (funciona junto com o de status); rota GET de achados aceita `?categoria=`; `filtroAchadosSchema` validado com `z.enum(CATEGORIAS_ACHADO)`.
+  - Sem migração (campo `categoria` é String). Commit `47f4372`.
 
 ## FASE 6 — Acabamento / pendências anteriores
 
