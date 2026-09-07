@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { cardCls } from "@/components/ui";
+import { CapaLivro } from "@/components/CapaLivro";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { GRAFIC } from "@/lib/grafic";
@@ -51,10 +51,11 @@ function formatDate(date: Date | string): string {
 
 interface WorkCardProps {
   obra: Obra;
+  autor?: string | null;
   onDelete?: () => void;
 }
 
-export function WorkCard({ obra, onDelete }: WorkCardProps) {
+export function WorkCard({ obra, autor, onDelete }: WorkCardProps) {
   const statusLabel = statusLabels[obra.status] || obra.status;
   const statusIcon = statusIcons[obra.status];
 
@@ -79,17 +80,15 @@ export function WorkCard({ obra, onDelete }: WorkCardProps) {
       )}
 
       <Link href={`/obras/${obra.id}`} className="block" aria-label={`Abrir ${obra.titulo}`}>
-        {obra.capaUrl && (
-          <div className="mb-4 aspect-[3/4] w-full rounded-md overflow-hidden bg-chipbg">
-            <Image
-              src={obra.capaUrl}
-              alt={`Capa de ${obra.titulo}`}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            />
-          </div>
-        )}
+        <div className="mb-4 transition-transform duration-300 group-hover:scale-[1.02]">
+          <CapaLivro
+            titulo={obra.titulo}
+            genero={obra.genero ?? undefined}
+            autor={autor}
+            capaUrl={obra.capaUrl}
+            className="w-full"
+          />
+        </div>
 
         <h2 className="mb-1 font-semibold line-clamp-1">{obra.titulo}</h2>
 

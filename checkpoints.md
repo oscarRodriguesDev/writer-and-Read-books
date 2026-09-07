@@ -1,5 +1,21 @@
 # Checkpoints
 
+## 2026-09-07 - Sessão: Dashboard com capas nos cards (default CSS)
+
+### Estado final
+- **Pedido**: usuário aprovou a pendência — padronizar o dashboard para exibir a capa em **todos** os cards.
+- `src/app/page.tsx`: `capaUrl: null` hardcoded removido → repassa `obra.capaUrl` do banco; `autor` (nomeArtistico ?? nome) do `usuario` já buscado na página vai para o `WorkGrid`.
+- `WorkGrid.tsx`: prop `autor?` → `WorkCard`.
+- `WorkCard.tsx`: `CapaLivro` sempre (default CSS sem URL; `<img>` com URL), hover leve scale; `Image` do next substituído (fotos locais/URLs arbitrárias).
+- Build passa.
+
+### Próximos passos
+- Teste visual: cards com capa default (título/gênero/autor) e com capa de URL.
+- Capa na visão geral da obra (`FormEditarObra` já mostra thumbnail; opcional padronizar).
+- Hardening anotado (rotas de recurso direto + upload de entidades).
+
+---
+
 ## 2026-09-07 - Sessão: Capa de livro na tela de criação
 
 ### Estado final

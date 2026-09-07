@@ -1,5 +1,20 @@
 # Memórias do Projeto
 
+## 2026-09-07 - Dashboard com capa nos cards (default CSS ou do usuário) (Autoria: VIBECODE)
+
+### Decisão
+Usuário aprovou padronizar: os cards do dashboard passam a exibir **sempre** a capa — a do usuário (URL) ou a **capa default CSS** (`CapaLivro`), o mesmo componente da tela de criação.
+
+### Implementação
+- `src/app/page.tsx`: parou de setar `capaUrl: null` hardcoded — repassa `obra.capaUrl` do banco; passa `autor` (nomeArtistico ?? nome) ao `WorkGrid`.
+- `WorkGrid.tsx`: prop `autor?` repassada ao `WorkCard`.
+- `WorkCard.tsx`: bloco condicional (`capaUrl && <Image>`) substituído por **sempre** `<CapaLivro>` (default CSS quando sem URL, `<img>` quando com); correção no `page.tsx` (lint de `};}` → `};`).
+
+### Testes
+`npm run build` passa. Teste visual do usuário pendente.
+
+---
+
 ## 2026-09-07 - Capa de livro na tela de criação (default CSS ou do usuário) (Autoria: VIBECODE)
 
 ### Decisão

@@ -1,5 +1,11 @@
 # Pedidos
 
+## 2026-09-07 - Dashboard com capa nos cards (default CSS)
+- **Commit**: *(este commit)*
+- **Descrição**: Padronizar o dashboard: todo card mostra a capa (do usuário ou default CSS via `CapaLivro`).
+- **Solução**: `page.tsx` repassa `capaUrl` real + `autor`; `WorkCard` usa `CapaLivro` sempre (antes: só com URL e `capaUrl: null` hardcoded).
+- **Testes**: build passa. Pendente teste visual.
+
 ## 2026-09-07 - Capa de livro na tela de criação
 - **Commit**: *(este commit)*
 - **Descrição**: A tela de criação de obra deve mostrar a capa do livro — a definida pelo usuário (URL) ou uma capa default desenhada em CSS com cara de capa de livro.

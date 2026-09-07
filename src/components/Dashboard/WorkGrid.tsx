@@ -17,6 +17,7 @@ interface WorkGridProps {
   isLoading?: boolean;
   initialSort?: SortOption;
   initialFilter?: FilterOption;
+  autor?: string | null;
 }
 
 const sortLabels: Record<SortOption, string> = {
@@ -49,6 +50,7 @@ export function WorkGrid({
   isLoading = false,
   initialSort = "recente",
   initialFilter = "todas",
+  autor,
 }: WorkGridProps) {
   const [sort, setSort] = useState<SortOption>(initialSort);
   const [filter, setFilter] = useState<FilterOption>(initialFilter);
@@ -153,6 +155,7 @@ export function WorkGrid({
           <WorkCard 
             key={obra.id} 
             obra={obra} 
+            autor={autor}
             onDelete={() => handleDelete(obra.id, obra.titulo)} 
           />
         ))}

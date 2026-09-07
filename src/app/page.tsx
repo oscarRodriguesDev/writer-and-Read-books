@@ -56,7 +56,7 @@ async function fetchObrasComEstatisticas(): Promise<{
       arquivada: obra.arquivada,
       criadoEm: obra.criadoEm,
       atualizadoEm: obra.atualizadoEm,
-      capaUrl: null,
+capaUrl: obra.capaUrl,
       totalPalavras,
     };
   });
@@ -100,7 +100,7 @@ export default async function Dashboard() {
       {totalObras === 0 ? (
         <EmptyState />
       ) : (
-        <WorkGrid obras={obras} />
+        <WorkGrid obras={obras} autor={usuario?.nomeAutor ?? usuario?.nome} />
       )}
     </main>
   );
