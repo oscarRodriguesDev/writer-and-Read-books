@@ -407,7 +407,7 @@ export const moverEventoSchema = z.object({
 
 /** POST /api/upload/url — define a imagem de um registro por URL externa. */
 export const urlImagemSchema = z.object({
-  tipo: z.enum(["personagem", "ambiente", "capitulo", "artefato"]),
+  tipo: z.enum(["personagem", "ambiente", "capitulo", "artefato", "perfil"]),
   id: z.string().trim().min(1).max(50),
   url: z
     .string()

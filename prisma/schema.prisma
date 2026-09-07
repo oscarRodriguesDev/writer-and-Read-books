@@ -20,6 +20,9 @@ model Obra {
   tema         String?
   publicoAlvo  String?
   descricao    String?
+  // Dono da obra (usuário). Nullable para não quebrar dados órfãos na
+  // migração; o código sempre preenche com o usuário da sessão.
+  usuarioId    String?
   // PLANEJAMENTO | ESCRITA | REVISAO | CONCLUIDA
   status       String   @default("PLANEJAMENTO")
   arquivada    Boolean  @default(false)
@@ -35,6 +38,7 @@ model Obra {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
+  usuario         Usuario?          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   esqueleto       Esqueleto?
   capitulos       Capitulo[]
   atos            Ato[]
@@ -49,6 +53,8 @@ model Obra {
   autores         AutorObra[]
   categorias      CategoriaObra[]
   palavrasChave   PalavraChaveObra[]
+
+  @@index([usuarioId])
 }
 
 model Esqueleto {
@@ -414,4 +420,27 @@ model PalavraChaveObra {
 
   @@unique([obraId, termo])
   @@index([obraId])
+}
+
+// ===== AUTENTICAÇÃO =====
+
+model Usuario {
+  id                String    @id @default(cuid())
+  nome              String
+  idade             Int?
+  // Gêneros literários que o autor escreve (array JSON validado por Zod —
+  // SQLite não suporta String[] no Prisma)
+  generosLiterarios Json?
+  nomeAutor         String? // Pseudônimo para publicações
+  fotoUrl           String?
+  username          String    @unique // normalizado em minúsculas
+  senhaHash         String
+  email             String    @unique // normalizado em minúsculas
+  telefone          String?
+  bio               String?
+  site              String?
+  criadoEm          DateTime  @default(now())
+  atualizadoEm      DateTime  @updatedAt
+
+  obras Obra[] // obras da qual este usuário é dono
 }

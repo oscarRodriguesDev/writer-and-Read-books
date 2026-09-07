@@ -19,5 +19,10 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
     }
   }, [pathname]);
 
+  // Páginas de autenticação não exibem o layout da aplicação (sidebar/topbar)
+  if (pathname === "/login" || pathname === "/cadastro") {
+    return <>{children}</>;
+  }
+
   return <Layout obraId={obraId} obraTitulo={obraTitulo}>{children}</Layout>;
 }

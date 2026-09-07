@@ -145,3 +145,27 @@ export const ROTULO_PAPEL: Record<string, string> = {
   SECUNDARIO: "Secundário",
   COADJUVANTE: "Coadjuvante",
 };
+
+/** Gêneros literários do perfil/autor (chips no cadastro e no perfil). */
+export const GENEROS_LITERARIOS = [
+  "Fantasia",
+  "Ficção Científica",
+  "Romance",
+  "Terror",
+  "Mistério",
+  "Suspense",
+  "Aventura",
+  "Drama",
+  "Ação",
+  "Comédia",
+  "Erótico",
+  "Crônica",
+  "Poesia",
+  "Infantojuvenil",
+  "Conto",
+  "Não-ficção",
+  "Biografia",
+  "Distopia",
+  "Fantasia Urbana",
+  "Épico",
+] as const;

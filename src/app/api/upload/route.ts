@@ -1,6 +1,7 @@
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@/lib/db";
+import { auth } from "@/auth";
 import { ErroAplicacao } from "@/lib/erros";
 import { respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
 
@@ -11,7 +12,7 @@ import { respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
  * basta trocar a escrita de arquivo nesta rota.
  */
 
-const TIPOS = ["personagem", "ambiente", "capitulo", "artefato"] as const;
+const TIPOS = ["personagem", "ambiente", "capitulo", "artefato", "perfil"] as const;
 type Tipo = (typeof TIPOS)[number];
 
 const EXTENSOES: Record<string, string> = {
@@ -25,6 +26,7 @@ async function buscarRegistro(tipo: Tipo, id: string) {
   if (tipo === "personagem") return prisma.personagem.findUnique({ where: { id } });
   if (tipo === "ambiente") return prisma.ambiente.findUnique({ where: { id } });
   if (tipo === "artefato") return prisma.artefato.findUnique({ where: { id } });
+  if (tipo === "perfil") return prisma.usuario.findUnique({ where: { id } });
   return prisma.capitulo.findUnique({ where: { id } });
 }
 
@@ -35,6 +37,8 @@ async function salvarImagemUrl(tipo: Tipo, id: string, url: string | null) {
     await prisma.ambiente.update({ where: { id }, data: { imagemUrl: url } });
   else if (tipo === "artefato")
     await prisma.artefato.update({ where: { id }, data: { imagemUrl: url } });
+  else if (tipo === "perfil")
+    await prisma.usuario.update({ where: { id }, data: { fotoUrl: url } });
   else await prisma.capitulo.update({ where: { id }, data: { imagemUrl: url } });
 }
 
@@ -45,6 +49,20 @@ function caminhoAbsoluto(urlRelativa: string): string {
 async function removerArquivoAntigo(url?: string | null) {
   if (!url || !url.startsWith("/uploads/")) return;
   await unlink(caminhoAbsoluto(url)).catch(() => {});
+}
+
+/** URL de imagem atual do registro (imagemUrl ou fotoUrl no caso de perfil). */
+function urlAtualDoRegistro(tipo: Tipo, registro: Awaited<ReturnType<typeof buscarRegistro>>) {
+  if (!registro) return null;
+  return tipo === "perfil"
+    ? (registro as { fotoUrl: string | null }).fotoUrl
+    : (registro as { imagemUrl: string | null }).imagemUrl;
+}
+
+/** Verifica se o upload de "perfil" é do próprio usuário logado (RN-06/07). */
+async function usuarioPodeEnviarFotoPerfil(id: string) {
+  const sessao = await auth();
+  return sessao?.user?.id !== undefined && sessao.user.id === id;
 }
 
 /** POST /api/upload — multipart/form-data: tipo, id, arquivo. */
@@ -71,6 +89,11 @@ export async function POST(req: Request) {
     const registro = await buscarRegistro(tipo, id);
     if (!registro) return respostaErro("Registro não encontrado", 404);
 
+    // Foto de perfil só pode ser enviada pelo próprio usuário (titularidade)
+    if (tipo === "perfil" && !(await usuarioPodeEnviarFotoPerfil(id))) {
+      return respostaErro("Você não pode alterar a foto de outro usuário.", 403);
+    }
+
     const nomeArquivo = `${id}-${Date.now()}.${extensao}`;
     const urlPublica = `/uploads/${tipo}/${nomeArquivo}`;
     const destino = path.join(
@@ -84,7 +107,7 @@ export async function POST(req: Request) {
     await writeFile(destino, Buffer.from(await arquivo.arrayBuffer()));
 
     // Substitui a referência e limpa o arquivo antigo
-    await removerArquivoAntigo(registro.imagemUrl);
+    await removerArquivoAntigo(urlAtualDoRegistro(tipo, registro));
     await salvarImagemUrl(tipo, id, urlPublica);
 
     return Response.json({ imagemUrl: urlPublica });
@@ -105,7 +128,12 @@ export async function DELETE(req: Request) {
     const registro = await buscarRegistro(tipo, id);
     if (!registro) return respostaErro("Registro não encontrado", 404);
 
-    await removerArquivoAntigo(registro.imagemUrl);
+    // Remoção de foto de perfil só pelo próprio usuário (titularidade)
+    if (tipo === "perfil" && !(await usuarioPodeEnviarFotoPerfil(id))) {
+      return respostaErro("Você não pode alterar a foto de outro usuário.", 403);
+    }
+
+    await removerArquivoAntigo(urlAtualDoRegistro(tipo, registro));
     await salvarImagemUrl(tipo, id, null);
     return Response.json({ ok: true });
   } catch (e) {
