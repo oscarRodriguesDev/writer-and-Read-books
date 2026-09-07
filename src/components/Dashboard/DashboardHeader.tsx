@@ -8,6 +8,7 @@ interface DashboardHeaderProps {
   totalPalavras: number;
   obrasAtivas: number;
   obrasArquivadas: number;
+  nomeUsuario: string;
 }
 
 function formatNumber(num: number): string {
@@ -24,12 +25,13 @@ export function DashboardHeader({
   totalObras,
   totalPalavras,
   obrasAtivas,
+  nomeUsuario,
 }: DashboardHeaderProps) {
   return (
     <header className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-xl">
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Feed de criação</p>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Olá, escritor</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Olá, {nomeUsuario}</h1>
         <p className="mt-2 text-sm leading-6 text-soft">
           {totalObras === 0
             ? "Nenhuma obra cadastrada ainda."

@@ -4,6 +4,7 @@ import { WorkGrid } from "@/components/Dashboard/WorkGrid";
 import { EmptyState } from "@/components/Dashboard/EmptyState";
 import { Obra } from "@/lib/types";
 import { obterUsuarioId } from "@/lib/auth-obras";
+import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -74,8 +75,17 @@ async function fetchObrasComEstatisticas(): Promise<{
 }
 
 export default async function Dashboard() {
-  const { obras, totalObras, totalPalavras, obrasAtivas, obrasArquivadas } =
-    await fetchObrasComEstatisticas();
+  const [sessao, { obras, totalObras, totalPalavras, obrasAtivas, obrasArquivadas }] =
+    await Promise.all([auth(), fetchObrasComEstatisticas()]);
+
+  // Saudação usa o nome artístico (pseudônimo); fallback: nome real / genérico
+  const usuario = sessao?.user?.id
+    ? await prisma.usuario.findUnique({
+        where: { id: sessao.user.id },
+        select: { nomeAutor: true, nome: true },
+      })
+    : null;
+  const nomeSaudacao = usuario?.nomeAutor ?? usuario?.nome ?? sessao?.user?.name ?? "escritor";
 
   return (
     <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-10">
@@ -84,6 +94,7 @@ export default async function Dashboard() {
         totalPalavras={totalPalavras}
         obrasAtivas={obrasAtivas}
         obrasArquivadas={obrasArquivadas}
+        nomeUsuario={nomeSaudacao}
       />
 
       {totalObras === 0 ? (
