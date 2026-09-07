@@ -3,6 +3,7 @@ import path from "node:path";
 import { prisma } from "@/lib/db";
 import { ErroAplicacao } from "@/lib/erros";
 import { respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 /**
  * POST /api/upload/base64 — importa uma imagem codificada em Base64
@@ -67,18 +68,18 @@ export async function POST(req: Request) {
     if (buffer.length > TAMANHO_MAX_BYTES)
       return respostaErro("Imagem muito grande. Máximo: 5 MB.", 400);
 
-    if (tipo === "personagem") {
-      if (!(await prisma.personagem.findUnique({ where: { id } })))
-        return respostaErro("Registro não encontrado", 404);
-    } else if (tipo === "ambiente") {
-      if (!(await prisma.ambiente.findUnique({ where: { id } })))
-        return respostaErro("Registro não encontrado", 404);
-    } else if (tipo === "artefato") {
-      if (!(await prisma.artefato.findUnique({ where: { id } })))
-        return respostaErro("Registro não encontrado", 404);
-    } else {
-      if (!(await prisma.capitulo.findUnique({ where: { id } })))
-        return respostaErro("Registro não encontrado", 404);
+    const registro =
+      tipo === "personagem"
+        ? await prisma.personagem.findUnique({ where: { id } })
+        : tipo === "ambiente"
+          ? await prisma.ambiente.findUnique({ where: { id } })
+          : tipo === "artefato"
+            ? await prisma.artefato.findUnique({ where: { id } })
+            : await prisma.capitulo.findUnique({ where: { id } });
+    if (!registro) return respostaErro("Registro não encontrado", 404);
+    // Apenas o dono da obra pode vincular imagem à entidade
+    if (!(await obterObraDoUsuario(registro.obraId))) {
+      return respostaErro("Registro não encontrado", 404);
     }
 
     const nomeArquivo = `${id}-${Date.now()}.${extensao}`;

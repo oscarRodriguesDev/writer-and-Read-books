@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { associacoesCenaSchema } from "@/lib/validators";
 import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterCenaDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -8,9 +9,8 @@ type Ctx = { params: Promise<{ id: string }> };
 export async function PUT(req: Request, { params }: Ctx) {
   try {
     const { id } = await params;
-    const cena = await prisma.cena.findUnique({
-      where: { id },
-      include: { parte: { include: { capitulo: true } } },
+    const cena = await obterCenaDoUsuario(id, {
+      parte: { include: { capitulo: true } },
     });
     if (!cena) return respostaErro("Cena não encontrada", 404);
     const obraId = cena.parte.capitulo.obraId;

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { cenaPatchSchema } from "@/lib/validators";
 import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterCenaDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -8,12 +9,9 @@ type Ctx = { params: Promise<{ id: string }> };
 export async function GET(_req: Request, { params }: Ctx) {
   try {
     const { id } = await params;
-    const cena = await prisma.cena.findUnique({
-      where: { id },
-      include: {
-        personagens: { include: { personagem: true } },
-        ambientes: { include: { ambiente: true } },
-      },
+    const cena = await obterCenaDoUsuario(id, {
+      personagens: { include: { personagem: true } },
+      ambientes: { include: { ambiente: true } },
     });
     if (!cena) return respostaErro("Cena não encontrada", 404);
     return Response.json(cena);
@@ -25,7 +23,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 export async function PATCH(req: Request, { params }: Ctx) {
   try {
     const { id } = await params;
-    const existente = await prisma.cena.findUnique({ where: { id } });
+    const existente = await obterCenaDoUsuario(id);
     if (!existente) return respostaErro("Cena não encontrada", 404);
 
     const validacao = await validarCorpo(cenaPatchSchema, req);

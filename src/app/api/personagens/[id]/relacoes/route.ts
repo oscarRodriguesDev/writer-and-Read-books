@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -9,6 +10,9 @@ export async function GET(_req: Request, { params }: Ctx) {
     const { id } = await params;
     const personagem = await prisma.personagem.findUnique({ where: { id } });
     if (!personagem) return respostaErro("Personagem não encontrado", 404);
+    if (!(await obterObraDoUsuario(personagem.obraId))) {
+      return respostaErro("Personagem não encontrado", 404);
+    }
 
     const relacoes = await prisma.relacaoPersonagem.findMany({
       where: { OR: [{ origemId: id }, { destinoId: id }] },

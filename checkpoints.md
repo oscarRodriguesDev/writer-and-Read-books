@@ -1,5 +1,19 @@
 # Checkpoints
 
+## 2026-09-07 - Sessão: Hardening — dono em rotas de recurso direto e uploads
+
+### Estado final
+- **Pedido**: “vamos seguir” (aprovação do hardening anotado: rotas de recurso direto por id + upload de entidades sem checagem de dono).
+- Novos helpers em `auth-obras.ts`: `obterCenaDoUsuario` (cena → parte → capítulo → obra) e `obterRelacaoDoUsuario` (relação → origem → obra).
+- Blindadas: `capitulos/[id]` (GET/PATCH/DELETE + mover/gerar/analisar), `cenas/[id]` (GET/PATCH + revisar/gerar/extrair/analisar/associacoes), `personagens/[id]` (PATCH/DELETE + relacoes), `ambientes/[id]`, `artefatos/[id]`, `atos/[id]`, `eventos/[id]` (+mover), `regras/[id]`, `relacoes/[id]`, `achados/[id]` (+corrigir, via `analise.obraId`), `upload` (POST/DELETE), `upload/base64`, `upload/url`.
+- Padrão: 404 sem vazar existência; upload `perfil` mantém 403 (titularidade).
+- Build passa.
+
+### Próximos passos
+- Teste de runtime pelo usuário: tentar GET/PATCH/DELETE de entidade de outra conta (deve dar 404) e upload em obra alheia (deve dar 404).
+
+---
+
 ## 2026-09-07 - Sessão: Dashboard — grade 6 por linha (cards maiores)
 
 ### Estado final

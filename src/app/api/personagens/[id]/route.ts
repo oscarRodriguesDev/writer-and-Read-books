@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { personagemSchema } from "@/lib/validators";
 import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -9,6 +10,9 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const { id } = await params;
     const existente = await prisma.personagem.findUnique({ where: { id } });
     if (!existente) return respostaErro("Personagem não encontrado", 404);
+    if (!(await obterObraDoUsuario(existente.obraId))) {
+      return respostaErro("Personagem não encontrado", 404);
+    }
 
     const validacao = await validarCorpo(personagemSchema.partial(), req);
     if (!validacao.ok) return validacao.resposta;
@@ -32,6 +36,9 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     const { id } = await params;
     const existente = await prisma.personagem.findUnique({ where: { id } });
     if (!existente) return respostaErro("Personagem não encontrado", 404);
+    if (!(await obterObraDoUsuario(existente.obraId))) {
+      return respostaErro("Personagem não encontrado", 404);
+    }
 
     await prisma.personagem.delete({ where: { id } });
     return Response.json({ ok: true });

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { atualizarCapituloSchema } from "@/lib/validators";
 import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ capituloId: string }> };
 
@@ -16,6 +17,9 @@ export async function GET(_req: Request, { params }: Ctx) {
       },
     });
     if (!capitulo) return respostaErro("Capítulo não encontrado", 404);
+    if (!(await obterObraDoUsuario(capitulo.obraId))) {
+      return respostaErro("Capítulo não encontrado", 404);
+    }
     return Response.json(capitulo);
   } catch (e) {
     return tratarErroDesconhecido(e);
@@ -34,6 +38,9 @@ export async function PATCH(req: Request, { params }: Ctx) {
       where: { id: capituloId },
     });
     if (!existente) return respostaErro("Capítulo não encontrado", 404);
+    if (!(await obterObraDoUsuario(existente.obraId))) {
+      return respostaErro("Capítulo não encontrado", 404);
+    }
 
     const validacao = await validarCorpo(atualizarCapituloSchema, req);
     if (!validacao.ok) return validacao.resposta;
@@ -86,6 +93,9 @@ export async function DELETE(_req: Request, { params }: Ctx) {
       where: { id: capituloId },
     });
     if (!existente) return respostaErro("Capítulo não encontrado", 404);
+    if (!(await obterObraDoUsuario(existente.obraId))) {
+      return respostaErro("Capítulo não encontrado", 404);
+    }
 
     await prisma.$transaction(async (tx) => {
       await tx.capitulo.delete({ where: { id: capituloId } });

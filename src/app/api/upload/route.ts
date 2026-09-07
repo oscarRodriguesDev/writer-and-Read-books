@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { ErroAplicacao } from "@/lib/erros";
 import { respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 /**
  * Upload de imagens representativas (personagem/ambiente/capitulo).
@@ -65,6 +66,21 @@ async function usuarioPodeEnviarFotoPerfil(id: string) {
   return sessao?.user?.id !== undefined && sessao.user.id === id;
 }
 
+/**
+ * Verifica se o registro de entidade (não-perfil) pertence a uma obra do
+ * usuário logado. Retorna true se OK; se não for encontrado/do usuário,
+ * retorna false (404 — não vaza existência).
+ */
+async function registroPertenceAoUsuario(
+  _tipo: Exclude<Tipo, "perfil">,
+  registro: Awaited<ReturnType<typeof buscarRegistro>>,
+) {
+  // Todos os tipos de entidade têm obraId direto (personagem, ambiente,
+  // artefato, capitulo) — perfil não passa por aqui.
+  const obraId = (registro as { obraId: string }).obraId;
+  return Boolean(obraId && (await obterObraDoUsuario(obraId)));
+}
+
 /** POST /api/upload — multipart/form-data: tipo, id, arquivo. */
 export async function POST(req: Request) {
   try {
@@ -92,6 +108,14 @@ export async function POST(req: Request) {
     // Foto de perfil só pode ser enviada pelo próprio usuário (titularidade)
     if (tipo === "perfil" && !(await usuarioPodeEnviarFotoPerfil(id))) {
       return respostaErro("Você não pode alterar a foto de outro usuário.", 403);
+    }
+
+    // Entidades só podem ter imagem alterada pelo dono da obra
+    if (
+      tipo !== "perfil" &&
+      !(await registroPertenceAoUsuario(tipo, registro))
+    ) {
+      return respostaErro("Registro não encontrado", 404);
     }
 
     const nomeArquivo = `${id}-${Date.now()}.${extensao}`;
@@ -131,6 +155,14 @@ export async function DELETE(req: Request) {
     // Remoção de foto de perfil só pelo próprio usuário (titularidade)
     if (tipo === "perfil" && !(await usuarioPodeEnviarFotoPerfil(id))) {
       return respostaErro("Você não pode alterar a foto de outro usuário.", 403);
+    }
+
+    // Entidades só podem ter imagem removida pelo dono da obra
+    if (
+      tipo !== "perfil" &&
+      !(await registroPertenceAoUsuario(tipo, registro))
+    ) {
+      return respostaErro("Registro não encontrado", 404);
     }
 
     await removerArquivoAntigo(urlAtualDoRegistro(tipo, registro));

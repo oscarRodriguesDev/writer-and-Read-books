@@ -1,5 +1,25 @@
 # Memórias do Projeto
 
+## 2026-09-07 - Hardening: checagem de dono em todas as rotas de recurso direto e uploads (Autoria: VIBECODE)
+
+### Decisão
+Todas as rotas de recurso por id (`/[id]`) e de upload operavam sem verificação de dono (qualquer usuário autenticado podia ler/alterar/apagar entidades de obras alheias). Aplicado o mesmo padrão do isolamento: **401 sem sessão (via `obterUsuarioId`), 404 quando não é do usuário** (não vaza existência).
+
+### Implementação
+- Novos helpers em `src/lib/auth-obras.ts` (reutilizando o padrão de `obterObraDoUsuario`):
+  - `obterCenaDoUsuario(cenaId, include?)` — cena → `parte.capitulo.obra.usuarioId`.
+  - `obterRelacaoDoUsuario(relacaoId, include?)` — relação → `origem.obra.usuarioId`.
+- **Rotas com `obraId` direto** (personagem, ambiente, artefato, ato, evento, capítulo, regra): após `findUnique`, checagem `obterObraDoUsuario(entidade.obraId)` → 404. Aplicado em GET/PATCH/DELETE de `capitulos/[id]`, PATCH/DELETE de `personagens`, `ambientes`, `artefatos`, `atos`, `eventos`, `regras` e nas sub-rotas `capitulos/[id]/mover|gerar|analisar`, `personagens/[id]/relacoes`, `eventos/[id]/mover`, `achados/[id]` e `achados/[id]/corrigir`.
+- **Cenas** (`cenas/[id]` + `revisar/gerar/extrair/analisar/associacoes`): trocado `findUnique` por `obterCenaDoUsuario` (GET/PATCH incluíam personagens/ambientes no GET e `parte.capitulo` no associacoes).
+- **Relações** (`relacoes/[id]` DELETE): `obterRelacaoDoUsuario`.
+- **Achado** não tem `obraId` direto → caminho `achado.analise.obraId` (include/select `analise: { select: { obraId: true } }`).
+- **Uploads** (`upload`, `upload/base64`, `upload/url`): para tipos `personagem|ambiente|artefato|capitulo`, checagem de dono da obra (404) — POST e DELETE; `perfil` já tinha titularidade (403). Novo helper local `registroPertenceAoUsuario`.
+
+### Testes
+`npm run build` passa. Teste de runtime (tentar acessar entidade de outra conta) fica por conta do usuário.
+
+---
+
 ## 2026-09-07 - Dashboard: grade ajustada para 6 colunas (cards maiores) (Autoria: VIBECODE)
 
 ### Decisão

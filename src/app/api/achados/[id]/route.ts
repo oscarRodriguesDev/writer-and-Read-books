@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
 import { atualizarAchadoSchema } from "@/lib/validators";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -11,8 +12,14 @@ type Ctx = { params: Promise<{ id: string }> };
 export async function PATCH(req: Request, { params }: Ctx) {
   try {
     const { id } = await params;
-    const achado = await prisma.achadoIA.findUnique({ where: { id } });
+    const achado = await prisma.achadoIA.findUnique({
+      where: { id },
+      include: { analise: { select: { obraId: true } } },
+    });
     if (!achado) return respostaErro("Achado não encontrado", 404);
+    if (!(await obterObraDoUsuario(achado.analise.obraId))) {
+      return respostaErro("Achado não encontrado", 404);
+    }
 
     const validacao = await validarCorpo(atualizarAchadoSchema, req);
     if (!validacao.ok) return validacao.resposta;

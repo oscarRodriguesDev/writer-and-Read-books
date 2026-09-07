@@ -40,3 +40,38 @@ export async function whereObrasDoUsuario() {
   if (!usuarioId) return null;
   return { usuarioId };
 }
+
+/**
+ * Busca uma cena garantindo que a obra dela pertence ao usuário logado
+ * (cena → parte → capítulo → obra). Retorna `null` se não existir ou
+ * não for do usuário (não vaza existência).
+ */
+export async function obterCenaDoUsuario<T extends Prisma.CenaInclude>(
+  cenaId: string,
+  include?: T,
+): Promise<Prisma.CenaGetPayload<{ include: T }> | null> {
+  const usuarioId = await obterUsuarioId();
+  if (!usuarioId) return null;
+  return prisma.cena.findFirst({
+    where: { id: cenaId, parte: { capitulo: { obra: { usuarioId } } } },
+    include,
+  }) as Promise<Prisma.CenaGetPayload<{ include: T }> | null>;
+}
+
+/**
+ * Busca uma relação entre personagens garantindo que a obra do personagem
+ * de origem pertence ao usuário logado. Retorna `null` caso contrário.
+ */
+export async function obterRelacaoDoUsuario<
+  T extends Prisma.RelacaoPersonagemInclude,
+>(
+  relacaoId: string,
+  include?: T,
+): Promise<Prisma.RelacaoPersonagemGetPayload<{ include: T }> | null> {
+  const usuarioId = await obterUsuarioId();
+  if (!usuarioId) return null;
+  return prisma.relacaoPersonagem.findFirst({
+    where: { id: relacaoId, origem: { obra: { usuarioId } } },
+    include,
+  }) as Promise<Prisma.RelacaoPersonagemGetPayload<{ include: T }> | null>;
+}

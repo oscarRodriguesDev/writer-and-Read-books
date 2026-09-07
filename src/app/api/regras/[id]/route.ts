@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { atualizarRegraObraSchema } from "@/lib/validators";
 import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -10,6 +11,9 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const { id } = await params;
     const existente = await prisma.regraObra.findUnique({ where: { id } });
     if (!existente) return respostaErro("Regra não encontrada", 404);
+    if (!(await obterObraDoUsuario(existente.obraId))) {
+      return respostaErro("Regra não encontrada", 404);
+    }
 
     const validacao = await validarCorpo(atualizarRegraObraSchema, req);
     if (!validacao.ok) return validacao.resposta;
@@ -34,6 +38,9 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     const { id } = await params;
     const existente = await prisma.regraObra.findUnique({ where: { id } });
     if (!existente) return respostaErro("Regra não encontrada", 404);
+    if (!(await obterObraDoUsuario(existente.obraId))) {
+      return respostaErro("Regra não encontrada", 404);
+    }
 
     await prisma.regraObra.delete({ where: { id } });
     return Response.json({ ok: true });

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { moverEventoSchema } from "@/lib/validators";
 import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -18,6 +19,9 @@ export async function POST(req: Request, { params }: Ctx) {
 
     const evento = await prisma.eventoLinhaDoTempo.findUnique({ where: { id } });
     if (!evento) return respostaErro("Evento não encontrado", 404);
+    if (!(await obterObraDoUsuario(evento.obraId))) {
+      return respostaErro("Evento não encontrado", 404);
+    }
     if (alvo === evento.ordemCronologica) return Response.json({ ok: true });
 
     const maximo = await prisma.eventoLinhaDoTempo.findFirst({

@@ -5,6 +5,8 @@ import {
   respostaErro,
   tratarErroDesconhecido,
 } from "@/lib/api-helpers";
+import { prisma } from "@/lib/db";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ capituloId: string }> };
 
@@ -19,6 +21,16 @@ export async function POST(req: Request, { params }: Ctx) {
     const { capituloId } = await params;
     const validacao = await validarCorpo(gerarCapituloSchema, req);
     if (!validacao.ok) return validacao.resposta;
+
+    const capitulo = await prisma.capitulo.findUnique({
+      where: { id: capituloId },
+      select: { obraId: true },
+    });
+    if (!capitulo) return respostaErro("Capítulo não encontrado", 404);
+    if (!(await obterObraDoUsuario(capitulo.obraId))) {
+      return respostaErro("Capítulo não encontrado", 404);
+    }
+
     const resultado = await gerarTextoCapitulo(capituloId, validacao.dados);
     return Response.json(resultado);
   } catch (e) {

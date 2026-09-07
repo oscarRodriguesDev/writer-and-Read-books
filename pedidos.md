@@ -1,5 +1,10 @@
 # Pedidos
 
+## 2026-09-07 - Hardening: checagem de dono em rotas diretas e uploads
+- **Commit**: *(este commit)*
+- **Descrição**: Impedir que usuário autenticado acesse/altere/apague entidades de obras alheias e envie imagens para entidades de terceiros.
+- **Solução**: 401/404 sem vazar existência; helpers `obterCenaDoUsuario`/`obterRelacaoDoUsuario`; `obterObraDoUsuario` nas rotas com `obraId`; achado via `analise.obraId`; uploads (arquivo/base64/URL) checando dono da obra; perfil mantém 403.
+
 ## 2026-09-07 - Dashboard: cards = capa única com infos inscritas, 8 por linha
 - **Commit**: *(este commit)*
 - **Descrição**: Cards menores ainda; informações do livro (título/autor/gênero/status/palavras) **na capa**; grade até **8 por linha**.

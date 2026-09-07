@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { ambienteSchema } from "@/lib/validators";
 import { validarCorpo, respostaErro, tratarErroDesconhecido } from "@/lib/api-helpers";
+import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -9,6 +10,9 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const { id } = await params;
     const existente = await prisma.ambiente.findUnique({ where: { id } });
     if (!existente) return respostaErro("Ambiente não encontrado", 404);
+    if (!(await obterObraDoUsuario(existente.obraId))) {
+      return respostaErro("Ambiente não encontrado", 404);
+    }
 
     const validacao = await validarCorpo(ambienteSchema.partial(), req);
     if (!validacao.ok) return validacao.resposta;
@@ -28,6 +32,9 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     const { id } = await params;
     const existente = await prisma.ambiente.findUnique({ where: { id } });
     if (!existente) return respostaErro("Ambiente não encontrado", 404);
+    if (!(await obterObraDoUsuario(existente.obraId))) {
+      return respostaErro("Ambiente não encontrado", 404);
+    }
 
     await prisma.ambiente.delete({ where: { id } });
     return Response.json({ ok: true });

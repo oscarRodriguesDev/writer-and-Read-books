@@ -5,6 +5,7 @@ import {
   respostaErro,
   tratarErroDesconhecido,
 } from "@/lib/api-helpers";
+import { obterCenaDoUsuario } from "@/lib/auth-obras";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -19,6 +20,11 @@ export async function POST(req: Request, { params }: Ctx) {
     const { id } = await params;
     const validacao = await validarCorpo(revisarSchema, req);
     if (!validacao.ok) return validacao.resposta;
+
+    if (!(await obterCenaDoUsuario(id))) {
+      return respostaErro("Cena não encontrada", 404);
+    }
+
     const texto = await revisarTextoCena(id, validacao.dados.instrucao);
     return Response.json({ texto });
   } catch (e) {
