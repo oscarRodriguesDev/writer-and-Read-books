@@ -4,7 +4,7 @@ import { filtroAchadosSchema } from "@/lib/validators";
 
 type Ctx = { params: Promise<{ obraId: string }> };
 
-/** Lista os achados de IA da obra, com filtro opcional por status (?status=). */
+/** Lista os achados de IA da obra, com filtro opcional por status e/ou categoria. */
 export async function GET(req: Request, { params }: Ctx) {
   try {
     const { obraId } = await params;
@@ -14,6 +14,7 @@ export async function GET(req: Request, { params }: Ctx) {
     const url = new URL(req.url);
     const filtro = filtroAchadosSchema.safeParse({
       status: url.searchParams.get("status") ?? undefined,
+      categoria: url.searchParams.get("categoria") ?? undefined,
     });
 
     const achados = await prisma.achadoIA.findMany({
@@ -21,6 +22,9 @@ export async function GET(req: Request, { params }: Ctx) {
         analise: { obraId },
         ...(filtro.success && filtro.data.status
           ? { status: filtro.data.status }
+          : {}),
+        ...(filtro.success && filtro.data.categoria
+          ? { categoria: filtro.data.categoria }
           : {}),
       },
       orderBy: [{ criadoEm: "desc" }],

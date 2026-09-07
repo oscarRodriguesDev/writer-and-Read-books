@@ -436,9 +436,10 @@ export const atualizarAchadoSchema = z.object({
   justificativa: textoOpcional(2_000),
 });
 
-/** Filtro opcional ?status= na listagem de achados. */
+/** Filtro opcional ?status= e ?categoria= na listagem de achados. */
 export const filtroAchadosSchema = z.object({
   status: z.enum(STATUS_ACHADO).optional(),
+  categoria: z.enum(CATEGORIAS_ACHADO).optional(),
 });
 
 /** Item de erro gramatical devolvido pela IA (RF-48 corretor gramatical). */

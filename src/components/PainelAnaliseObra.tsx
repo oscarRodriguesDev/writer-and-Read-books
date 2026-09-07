@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { STATUS_ACHADO, ROTULO_STATUS_ACHADO } from "@/lib/constants";
+import {
+  STATUS_ACHADO,
+  CATEGORIAS_ACHADO,
+  ROTULO_STATUS_ACHADO,
+  ROTULO_CATEGORIA_ACHADO,
+} from "@/lib/constants";
 import { btnPrimario, btnSecundario, cardCls } from "@/components/ui";
 import { AchadoItem, type AchadoApi } from "@/components/AchadoItem";
 
@@ -9,22 +14,24 @@ type Estado = "carregando" | "pronto" | "erro";
 
 /**
  * Painel de "Análise IA" da obra: dispara a análise completa e lista os
- * achados com filtros e ações (Resolver/Ignorar/Intencional).
+ * achados com filtros (status + categoria) e ações (Resolver/Ignorar/Intencional).
  */
 export function PainelAnaliseObra({ obraId }: { obraId: string }) {
   const [achados, setAchados] = useState<AchadoApi[]>([]);
   const [estado, setEstado] = useState<Estado>("carregando");
   const [analisando, setAnalisando] = useState(false);
   const [mensagemErro, setMensagemErro] = useState<string | null>(null);
-  const [filtro, setFiltro] = useState<string>("");
+  const [filtroStatus, setFiltroStatus] = useState<string>("");
+  const [filtroCategoria, setFiltroCategoria] = useState<string>("");
 
   const carregar = useCallback(
-    async (status?: string) => {
+    async (status?: string, categoria?: string) => {
       setEstado("carregando");
       try {
-        const res = await fetch(
-          `/api/obras/${obraId}/achados${status ? `?status=${status}` : ""}`,
-        );
+        const parametros = new URLSearchParams();
+        if (status) parametros.set("status", status);
+        if (categoria) parametros.set("categoria", categoria);
+        const res = await fetch(`/api/obras/${obraId}/achados?${parametros}`);
         if (!res.ok) throw new Error();
         setAchados(await res.json());
         setEstado("pronto");
@@ -49,7 +56,7 @@ export function PainelAnaliseObra({ obraId }: { obraId: string }) {
         const dados = (await res.json().catch(() => null)) as { erro?: string } | null;
         throw new Error(dados?.erro ?? "Falha na análise.");
       }
-      await carregar(filtro || undefined);
+      await carregar(filtroStatus || undefined, filtroCategoria || undefined);
     } catch (e) {
       setMensagemErro(e instanceof Error ? e.message : "Falha na análise.");
     } finally {
@@ -70,13 +77,20 @@ export function PainelAnaliseObra({ obraId }: { obraId: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(dados),
     });
-    if (!res.ok) void carregar(filtro || undefined);
+    if (!res.ok) void carregar(filtroStatus || undefined, filtroCategoria || undefined);
   }
 
-  function mudarFiltro(novo: string) {
-    setFiltro(novo);
-    void carregar(novo || undefined);
+  function mudarFiltroStatus(novo: string) {
+    setFiltroStatus(novo);
+    void carregar(novo || undefined, filtroCategoria || undefined);
   }
+
+  function mudarFiltroCategoria(novo: string) {
+    setFiltroCategoria(novo);
+    void carregar(filtroStatus || undefined, novo || undefined);
+  }
+
+  const temFiltro = filtroStatus || filtroCategoria;
 
   return (
     <section className="mt-6">
@@ -90,10 +104,26 @@ export function PainelAnaliseObra({ obraId }: { obraId: string }) {
           {analisando ? "⏳ Analisando… pode levar até 2 min" : "🔍 Analisar obra inteira"}
         </button>
         <label className="ml-auto flex items-center gap-2 text-sm text-muted">
+          Categoria:
+          <select
+            value={filtroCategoria}
+            onChange={(e) => mudarFiltroCategoria(e.target.value)}
+            className={`${btnSecundario} cursor-pointer`}
+            aria-label="Filtrar achados por categoria"
+          >
+            <option value="">Todas</option>
+            {CATEGORIAS_ACHADO.map((c) => (
+              <option key={c} value={c}>
+                {ROTULO_CATEGORIA_ACHADO[c]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-sm text-muted">
           Status:
           <select
-            value={filtro}
-            onChange={(e) => mudarFiltro(e.target.value)}
+            value={filtroStatus}
+            onChange={(e) => mudarFiltroStatus(e.target.value)}
             className={`${btnSecundario} cursor-pointer`}
             aria-label="Filtrar achados por status"
           >
@@ -121,8 +151,10 @@ export function PainelAnaliseObra({ obraId }: { obraId: string }) {
         <>
           {achados.length === 0 ? (
             <p className={`mt-4 ${cardCls} text-sm text-muted`}>
-              Nenhum achado{filtro ? ` com status “${ROTULO_STATUS_ACHADO[filtro]}”` : ""}.
-              {" "}Execute uma análise para verificar inconsistências na obra.
+              {temFiltro
+                ? "Nenhum achado com os filtros selecionados."
+                : "Nenhum achado ainda."}{" "}
+              Execute uma análise para verificar inconsistências na obra.
             </p>
           ) : (
             <ul className="mt-4 space-y-3">

@@ -15,6 +15,7 @@ CATEGORIAS possíveis:
 - CONHECIMENTO: personagem usa informação que não poderia ter (ou esque algo que sabe).
 - CANON: contradição com informações canônicas ou regras da obra.
 - CONTRADICAO: contradição lógica direta entre dois trechos.
+- FURO_ROTEIRO: promessa narrativa não cumprida — um setup plantado e nunca usado (ex.: objeto/arma apresentado com destaque, mistério criado, prazo marcado, personagem que promete algo), um problema levantado e esquecido, ou uma regra interna da própria história que o texto depois ignora sem explicação. Não use para contradições pontuais (use CONTRADICAO) nem para consequência quebrada de uma ação (use CAUSALIDADE). Use quando a TRAMA (não o detalhe) tem uma ponta solta.
 
 GRAVIDADE:
 - CRITICA: quebra a credibilidade da história de forma evidente.
@@ -38,7 +39,7 @@ Responda EXCLUSIVAMENTE com um JSON válido no formato abaixo, sem markdown nem 
 {
   "achados": [
     {
-      "categoria": "CONTINUIDADE|CRONOLOGIA|PERSONAGEM|AMBIENTE|CAUSALIDADE|ESTRUTURA|CONHECIMENTO|CANON|CONTRADICAO",
+      "categoria": "CONTINUIDADE|CRONOLOGIA|PERSONAGEM|AMBIENTE|CAUSALIDADE|ESTRUTURA|CONHECIMENTO|CANON|CONTRADICAO|FURO_ROTEIRO",
       "gravidade": "BAIXA|MEDIA|ALTA|CRITICA",
       "titulo": "...",
       "descricao": "...",

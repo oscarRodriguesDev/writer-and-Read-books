@@ -95,6 +95,7 @@ export const CATEGORIAS_ACHADO = [
   "CONHECIMENTO",
   "CANON",
   "CONTRADICAO",
+  "FURO_ROTEIRO",
 ] as const;
 export type CategoriaAchado = (typeof CATEGORIAS_ACHADO)[number];
 
@@ -120,6 +121,7 @@ export const ROTULO_CATEGORIA_ACHADO: Record<string, string> = {
   CONHECIMENTO: "Conhecimento",
   CANON: "Canon",
   CONTRADICAO: "Contradição",
+  FURO_ROTEIRO: "Furo de roteiro",
 };
 
 export const ROTULO_GRAVIDADE: Record<string, string> = {
