@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-06 - Backlog item 6: Atos narrativos
+- **Commit**: `5c6c19d`
+- **Descrição**: Model `Ato` + `atoId`/`ordemDentroDoAto` no `Capitulo` com tela de gerenciamento e movimento de capítulos entre atos.
+- **Solução (opção B aprovada)**: `ordemNarrativa` global intacta; atos = agrupamento visual. Migração `20260907002103_atos`; POST atos (ordem max+1), PATCH/DELETE atos (DELETE reordena), PATCH capítulo com `atoId` (ordemDentroDoAto automático); `GerenciadorAtos` + página + aba; contexto IA `## ATOS`.
+- **Arquivos**: `prisma/schema.prisma`, `prisma/migrations/20260907002103_atos/`, `src/lib/validators/index.ts`, `src/app/api/obras/[obraId]/atos/route.ts`, `src/app/api/atos/[id]/route.ts`, `src/app/api/capitulos/[capituloId]/route.ts`, `src/components/GerenciadorAtos.tsx`, `src/app/obras/[obraId]/atos/page.tsx`, `src/components/NavegacaoObra.tsx`, `src/lib/ia/contexto.ts`
+- **Testes**: build passa. Pendente teste visual do usuário.
+
 ## 2026-09-06 - Backlog item 5: Artefatos do universo
 - **Commit**: `97366dd`
 - **Descrição**: Model novo para objetos/relíquias/itens do universo (nome aprovado: `Artefato`; `Objeto` descartado por conflito de padrões).

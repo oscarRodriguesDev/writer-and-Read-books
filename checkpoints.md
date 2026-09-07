@@ -1,5 +1,23 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Atos narrativos (item 6)
+
+### Estado final
+- Migração `20260907002103_atos` aplicada: model `Ato` + `Capitulo.atoId` + `Capitulo.ordemDentroDoAto` (SetNull ao excluir ato)
+- **Opção B**: `ordemNarrativa` global intacta; atos são agrupamento visual
+- Rotas: `POST /api/obras/[obraId]/atos`, `PATCH/DELETE /api/atos/[id]` (DELETE reordena atos restantes), `PATCH /api/capitulos/[id]` com `atoId` (ordemDentroDoAto automático)
+- Tela: `GerenciadorAtos` + página + aba "Atos"; criar/editar/excluir atos, adicionar/remover capítulos, badge "Ato N"
+- Contexto IA: bloco `## ATOS` (com capítulos por ato)
+- Commit `5c6c19d`; push pendente dos arquivos de controle
+- Build passando
+
+### Próximos passos sugeridos
+- **Teste visual do usuário** (criar ato, atribuir/remover capítulos)
+- Futuro (anotado): reordenar capítulos dentro do ato via UI
+- Item 7 do backlog: Categoria IA "furo de roteiro" (`FURO_ROTEIRO` — sem migração, só constantes + prompt + filtros)
+
+---
+
 ## 2026-09-06 - Sessão: Artefatos do universo (item 5)
 
 ### Estado final

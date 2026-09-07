@@ -1,5 +1,39 @@
 # Memórias do Projeto
 
+## 2026-09-06 - Atos narrativos — Item 6 do backlog (Autoria: VIBECODE)
+
+### Contexto
+Faltava estrutura narrativa: o app só tinha capítulos numa lista, sem agrupamento em atos (3 atos clássicos etc.). O item é o mais estrutural do backlog.
+
+### Decisões
+- **Opção B (aprovada pelo usuário)**: `ordemNarrativa` global continua como fonte de ordenação da obra; `atoId`/`ordemDentroDoAto` são apenas **agrupamento visual**. A constraint `@@unique([obraId, ordemNarrativa])` NÃO foi alterada.
+- Model `Ato` (obraId, titulo, sinopse, ordem) + `Capitulo.atoId String?` + `Capitulo.ordemDentroDoAto Int?`, com `onDelete: SetNull` (excluir ato não apaga capítulos). Migração `20260907002103_atos`.
+- Rotas: `POST /api/obras/[obraId]/atos` (ordem = max+1); `PATCH/DELETE /api/atos/[id]` (DELETE reordena atos restantes em transação para não deixar "buracos").
+- `PATCH /api/capitulos/[id]` ganhou suporte a `atoId` (validator) com cálculo automático: atribuir → `ordemDentroDoAto` vira fim do ato (max+1); `atoId: null` → zera a ordem interna e remove do ato.
+- Tela: `GerenciadorAtos` + página `/obras/[obraId]/atos` + aba "Atos" (entre Esqueleto e Personagens). Criar/editar/excluir atos; adicionar capítulo (select dos capítulos sem ato); remover capítulo do ato; badge "Ato N".
+- Contexto IA: `carregarObra` inclui `atos` (com capítulos) e o contexto ganha bloco `## ATOS (estrutura narrativa)`.
+
+### Arquivos alterados
+- `prisma/schema.prisma` + `prisma/migrations/20260907002103_atos/`
+- `src/lib/validators/index.ts` — `atoSchema`, `atualizarAtoSchema`, `atoId` no `atualizarCapituloSchema`
+- `src/app/api/obras/[obraId]/atos/route.ts` — POST
+- `src/app/api/atos/[id]/route.ts` — PATCH/DELETE (reordenação em transação)
+- `src/app/api/capitulos/[capituloId]/route.ts` — cálculo de `ordemDentroDoAto`
+- `src/components/GerenciadorAtos.tsx` — novo gerenciador
+- `src/app/obras/[obraId]/atos/page.tsx` — página nova
+- `src/components/NavegacaoObra.tsx` — aba "Atos"
+- `src/lib/ia/contexto.ts` — bloco `## ATOS`
+
+### Testes
+- Migração aplicada; `npm run build` passa (Turbopack + TS).
+- Commit `5c6c19d` (pending push).
+
+### Pendências
+- Teste visual do usuário (criar ato, mover capítulos).
+- Futuro: reordenar capítulos DENTRO do ato via UI (hoje vão sempre para o fim).
+
+---
+
 ## 2026-09-06 - Artefatos do universo — Item 5 do backlog (Autoria: VIBECODE)
 
 ### Contexto

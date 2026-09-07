@@ -34,9 +34,13 @@
 
 ## FASE 4 — Estrutura (novos models)
 
-- [ ] **6. Atos** — Model novo `Ato` (obraId, titulo, sinopse, ordem) + campo `atoId` no `Capitulo` e `ordemDentroDoAto`. Tela de gerenciamento (criar atos, mover capítulos entre atos, reordenar).
-  - Requer migração Prisma (novo model + coluna em Capitulo).
-  - Cuidado com a constraint `@@unique([obraId, ordemNarrativa])` do Capitulo.
+- [x] **6. Atos** — Model novo `Ato` (obraId, titulo, sinopse, ordem) + campo `atoId` no `Capitulo` e `ordemDentroDoAto`. Tela de gerenciamento (criar atos, mover capítulos entre atos, reordenar).
+  - Implementado: migração `20260907002103_atos` (`Ato` + `Capitulo.atoId` + `Capitulo.ordemDentroDoAto`, `onDelete: SetNull`).
+  - **Decisão do usuário (opção B)**: `ordemNarrativa` global continua como fonte de ordenação; ato é **agrupamento visual apenas** — `@@unique([obraId, ordemNarrativa])` intocada.
+  - Rotas: `POST /api/obras/[obraId]/atos` (ordem = max+1), `PATCH/DELETE /api/atos/[id]` (DELETE reordena os atos restantes); `PATCH /api/capitulos/[id]` agora aceita `atoId` (calcula `ordemDentroDoAto` = fim do ato; `atoId: null` remove).
+  - Tela: `GerenciadorAtos` + página `/obras/[obraId]/atos` + aba "Atos" (entre Esqueleto e Personagens); criar/editar/excluir atos, adicionar/remover capítulos por ato, badge "Ato N".
+  - Contexto IA: bloco `## ATOS` com capítulos por ato.
+  - Testes: build passa. Commit `5c6c19d`.
 
 ## FASE 5 — Inteligência (IA)
 
