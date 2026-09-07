@@ -1,13 +1,36 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { useSidebar } from "./SidebarContext";
 import AlternadorTema from "@/components/AlternadorTema";
 
 export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTitulo?: string }) {
   const { isCollapsed, isMobileOpen, setMobileOpen } = useSidebar();
   const pathname = usePathname();
+  const [menuUsuarioAberto, setMenuUsuarioAberto] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Fecha o menu do usuário ao clicar fora ou pressionar Escape
+  useEffect(() => {
+    if (!menuUsuarioAberto) return;
+    function aoClicarFora(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuUsuarioAberto(false);
+      }
+    }
+    function aoPressionarEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuUsuarioAberto(false);
+    }
+    document.addEventListener("mousedown", aoClicarFora);
+    document.addEventListener("keydown", aoPressionarEscape);
+    return () => {
+      document.removeEventListener("mousedown", aoClicarFora);
+      document.removeEventListener("keydown", aoPressionarEscape);
+    };
+  }, [menuUsuarioAberto]);
 
   const isInObra = !!obraId;
   const basePath = isInObra ? `/obras/${obraId}` : "";
@@ -41,6 +64,7 @@ export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTi
       const pathMap: Record<string, string> = {
         "obras/nova": "Nova Obra",
         importar: "Importar",
+        perfil: "Perfil",
       };
       crumbs.push({ label: pathMap[pathname] || pathname, href: pathname });
     }
@@ -107,19 +131,49 @@ export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTi
           <AlternadorTema />
         </div>
 
-        <div className="relative" role="region" aria-label="Menu do usuário">
+        <div className="relative" role="region" aria-label="Menu do usuário" ref={menuRef}>
           <button
             type="button"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-chipbg text-foreground hover:bg-hoverbg transition-colors"
             aria-label="Menu do usuário"
-            aria-expanded="false"
+            aria-expanded={menuUsuarioAberto}
             aria-haspopup="true"
+            onClick={() => setMenuUsuarioAberto((a) => !a)}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
           </button>
+
+          {menuUsuarioAberto && (
+            <div
+              role="menu"
+              aria-label="Opções do usuário"
+              className="absolute right-0 top-11 z-50 w-52 overflow-hidden rounded-xl border border-line fundo-papel shadow-lg"
+            >
+              <Link
+                href="/perfil"
+                role="menuitem"
+                onClick={() => setMenuUsuarioAberto(false)}
+                className="flex items-center gap-2 px-4 py-3 text-sm text-foreground transition-colors hover:bg-hoverbg"
+              >
+                👤 Meu perfil
+              </Link>
+              <div role="separator" className="border-t border-line" />
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setMenuUsuarioAberto(false);
+                  signOut({ callbackUrl: "/login" });
+                }}
+                className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-danger transition-colors hover:bg-hoverbg"
+              >
+                🚪 Sair
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

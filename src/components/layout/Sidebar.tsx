@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Obras", icon: GRAFIC.iconeLivros },
   { href: "/obras/nova", label: "Nova Obra", icon: "➕" },
   { href: "/importar", label: "Importar", icon: "📥" },
+  { href: "/perfil", label: "Perfil", icon: "👤" },
 ];
 
 const OBRA_NAV_ITEMS = [
