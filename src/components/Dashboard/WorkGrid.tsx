@@ -101,8 +101,8 @@ export function WorkGrid({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {[...Array(10)].map((_, i) => (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8">
+        {[...Array(16)].map((_, i) => (
           <SkeletonCard key={i} />
         ))}
       </div>
@@ -196,7 +196,7 @@ export function WorkGrid({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8">
         {filteredObras.map((obra) => (
           <WorkCard 
             key={obra.id} 

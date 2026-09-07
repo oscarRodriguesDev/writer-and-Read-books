@@ -3,9 +3,6 @@
 import Link from "next/link";
 import { cardCls } from "@/components/ui";
 import { CapaLivro } from "@/components/CapaLivro";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { GRAFIC } from "@/lib/grafic";
 
 interface Obra {
   id: string;
@@ -27,28 +24,6 @@ const statusLabels: Record<string, string> = {
   CONCLUIDA: "Concluída",
 };
 
-const statusIcons: Record<string, string> = {
-  PLANEJAMENTO: GRAFIC.seloPlanejamento,
-  ESCRITA: GRAFIC.seloEscrita,
-  REVISAO: GRAFIC.seloRevisao,
-  CONCLUIDA: GRAFIC.seloConcluida,
-};
-
-function formatNumber(num: number): string {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + "M";
-  }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + "k";
-  }
-  return num.toString();
-}
-
-function formatDate(date: Date | string): string {
-  const d = typeof date === "string" ? new Date(date) : date;
-  return format(d, "dd/MM/yyyy", { locale: ptBR });
-}
-
 interface WorkCardProps {
   obra: Obra;
   autor?: string | null;
@@ -57,10 +32,9 @@ interface WorkCardProps {
 
 export function WorkCard({ obra, autor, onDelete }: WorkCardProps) {
   const statusLabel = statusLabels[obra.status] || obra.status;
-  const statusIcon = statusIcons[obra.status];
 
   return (
-    <div className={`${cardCls} relative group overflow-hidden rounded-xl fundo-papel p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-accent/40`}>
+    <div className={`${cardCls} relative group overflow-hidden rounded-lg fundo-papel shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-accent/40`}>
       {onDelete && (
         <div className="absolute right-2 top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
@@ -72,62 +46,24 @@ export function WorkCard({ obra, autor, onDelete }: WorkCardProps) {
             className="rounded-full bg-surface/90 backdrop-blur-sm p-1.5 text-muted hover:text-foreground hover:bg-hoverbg transition-colors"
             aria-label="Excluir obra"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
         </div>
       )}
 
-      <Link href={`/obras/${obra.id}`} className="block" aria-label={`Abrir ${obra.titulo}`}>
-        <div className="mb-2.5 transition-transform duration-300 group-hover:scale-[1.02]">
-          <CapaLivro
-            titulo={obra.titulo}
-            genero={obra.genero ?? undefined}
-            autor={autor}
-            capaUrl={obra.capaUrl}
-            className="w-full"
-            compacto
-          />
-        </div>
-
-        <h2 className="mb-0.5 font-semibold leading-snug line-clamp-1">{obra.titulo}</h2>
-
-        {(obra.genero || obra.subgenero) && (
-          <p className="mb-1.5 text-xs text-muted line-clamp-1">
-            {obra.genero}
-            {obra.subgenero && ` · ${obra.subgenero}`}
-          </p>
-        )}
-
-        <div className="flex flex-wrap items-center gap-1.5 mb-2">
-          {statusIcon ? (
-            <span
-              className="inline-flex items-center gap-1 rounded-full px-1 py-0.5 text-[11px] font-medium"
-              title={statusLabel}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={statusIcon} alt={statusLabel} className="h-5 w-5 object-contain" />
-              <span>{statusLabel}</span>
-            </span>
-          ) : (
-            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium`}>
-              {statusLabel}
-            </span>
-          )}
-          {obra.totalPalavras !== undefined && obra.totalPalavras > 0 && (
-            <span className="inline-flex items-center gap-1 text-[11px] text-muted">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              {formatNumber(obra.totalPalavras)}
-            </span>
-          )}
-        </div>
-
-        <time className="text-[11px] text-faint" dateTime={typeof obra.atualizadoEm === "string" ? obra.atualizadoEm : obra.atualizadoEm.toISOString()}>
-          Atualizado em {formatDate(obra.atualizadoEm)}
-        </time>
+      <Link href={`/obras/${obra.id}`} className="block transition-transform duration-300 group-hover:scale-[1.02]" aria-label={`Abrir ${obra.titulo}`}>
+        <CapaLivro
+          titulo={obra.titulo}
+          genero={obra.genero ?? undefined}
+          autor={autor}
+          capaUrl={obra.capaUrl}
+          className="w-full"
+          compacto
+          statusLabel={statusLabel}
+          totalPalavras={obra.totalPalavras}
+        />
       </Link>
     </div>
   );

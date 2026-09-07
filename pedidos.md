@@ -1,5 +1,11 @@
 # Pedidos
 
+## 2026-09-07 - Dashboard: cards = capa única com infos inscritas, 8 por linha
+- **Commit**: *(este commit)*
+- **Descrição**: Cards menores ainda; informações do livro (título/autor/gênero/status/palavras) **na capa**; grade até **8 por linha**.
+- **Solução**: `CapaLivro` com `statusLabel` + `totalPalavras` inscritos na capa; `WorkCard` vira só a capa; grid `2/3/4/6/8`; `main` em `max-w-screen-2xl`.
+- **Testes**: build passa. Pendente teste visual.
+
 ## 2026-09-07 - Dashboard: cards menores (5/linha) + busca por obras
 - **Commit**: *(este commit)*
 - **Descrição**: Cards bem menores (até 5 por linha) e busca por obras para bibliotecas grandes.

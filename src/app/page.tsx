@@ -88,7 +88,7 @@ export default async function Dashboard() {
   const nomeSaudacao = usuario?.nomeAutor ?? usuario?.nome ?? sessao?.user?.name ?? "escritor";
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-10">
+    <main className="mx-auto w-full max-w-screen-2xl flex-1 px-4 py-8 sm:px-6 lg:px-10">
       <DashboardHeader
         totalObras={totalObras}
         totalPalavras={totalPalavras}

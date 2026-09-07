@@ -1,5 +1,20 @@
 # Checkpoints
 
+## 2026-09-07 - Sessão: Dashboard — cards = capa única (infos inscritas), 8/linha
+
+### Estado final
+- **Pedido**: cards um pouco menores; **informações do livro na capa**; até **8 por linha**.
+- `CapaLivro` com `statusLabel` (badge versalete dourado entre título e ornamento) e `totalPalavras` (`X palavras` no rodapé sob o autor) — ambas inscritas na capa CSS.
+- `WorkCard` = **só a capa** (Link): removidos textos inferiores, data, subgênero e selos de status (vira texto na capa); botão excluir flutuante mantido.
+- Grade `2/3/4/6/8` (xe: `xl:grid-cols-6 2xl:grid-cols-8`); `main` do dashboard em `max-w-screen-2xl`; skeleton 16 slots.
+- Build passa.
+
+### Próximos passos
+- Teste visual: grade 8 colunas em telas largas, capas compactas legíveis (status/palavras), hover e excluir.
+- Hardening anotado (rotas de recurso direto + upload de entidades).
+
+---
+
 ## 2026-09-07 - Sessão: Dashboard — cards menores (5/linha) + busca
 
 ### Estado final

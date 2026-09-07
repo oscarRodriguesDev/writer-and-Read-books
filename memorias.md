@@ -1,5 +1,21 @@
 # Memórias do Projeto
 
+## 2026-09-07 - Dashboard: cards = capa única (infos inscritas) + grade 8/linha (Autoria: VIBECODE)
+
+### Decisão
+Cards ainda menores: o card passa a ser **apenas a capa**, com **as informações do livro inscritas nela** (título, autor, gênero, status, palavras). Grade de até **8 por linha**.
+
+### Implementação
+- `CapaLivro` novas props opcionais: `statusLabel` (versalete dourada entre título e ornamento) e `totalPalavras` (linha `X palavras` no rodapé, sob o autor, com `formatNumber` local). Ambas inscritas na capa CSS.
+- `WorkCard` reescrito: **só a capa** (sem textos/data abaixo); removidos `date-fns`, `GRAFIC`/statusIcons e metadados inferiores; mantém hover, botão excluir flutuante e aria-label.
+- Grid: `2/3/4/6/8` colunas (`sm:3 md:4 xl:6 2xl:8`), skeleton 16 slots; `main` do dashboard ampliado para `max-w-screen-2xl`.
+- Informações fora da capa (data, subgênero) removidas do card — capa é a identidade visual.
+
+### Testes
+`npm run build` passa. Teste visual do usuário pendente.
+
+---
+
 ## 2026-09-07 - Dashboard: cards menores (até 5/linha) + busca por obras (Autoria: VIBECODE)
 
 ### Decisão

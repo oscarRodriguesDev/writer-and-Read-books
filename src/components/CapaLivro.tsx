@@ -5,16 +5,41 @@ interface CapaLivroProps {
   /** URL definida pelo usuário; quando ausente, renderiza a capa default em CSS. */
   capaUrl?: string | null;
   className?: string;
-  /** Versão condensada para cards pequenos (grids com 4–5 colunas). */
+  /** Versão condensada para cards pequenos (grids com 4–8 colunas). */
   compacto?: boolean;
+  /** Rótulo de status inscrito na capa (ex.: "Escrita", "Revisão"). */
+  statusLabel?: string | null;
+  /** Contagem de palavras inscrita no rodapé da capa. */
+  totalPalavras?: number;
+}
+
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + "M";
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + "k";
+  }
+  return num.toString();
 }
 
 /**
  * Capa de livro: se o usuário definiu uma imagem, mostra a foto;
  * caso contrário, desenha uma capa default só com CSS (proporção 2:3,
  * lombada, brilho diagonal, textura e filetes dourados).
+ * As informações do livro (título, autor, gênero, status, palavras)
+ * são inscritas na própria capa.
  */
-export function CapaLivro({ titulo, autor, genero, capaUrl, className = "w-44", compacto = false }: CapaLivroProps) {
+export function CapaLivro({
+  titulo,
+  autor,
+  genero,
+  capaUrl,
+  className = "w-44",
+  compacto = false,
+  statusLabel,
+  totalPalavras,
+}: CapaLivroProps) {
   if (capaUrl) {
     return (
       <div className={`${className} overflow-hidden rounded-r-lg border border-line bg-surface shadow-lg`}>
@@ -64,6 +89,15 @@ export function CapaLivro({ titulo, autor, genero, capaUrl, className = "w-44", 
           >
             {titulo || "Sem título"}
           </h2>
+          {statusLabel && (
+            <p
+              className={`font-semibold uppercase tracking-[0.25em] text-amber-100 ${
+                compacto ? "text-[7px]" : "text-[9px]"
+              }`}
+            >
+              {statusLabel}
+            </p>
+          )}
           <span className="inline-block h-1.5 w-1.5 rotate-45 bg-amber-200/80" />
         </div>
 
@@ -73,6 +107,11 @@ export function CapaLivro({ titulo, autor, genero, capaUrl, className = "w-44", 
             <p className={`line-clamp-1 font-serif italic text-amber-50/90 ${compacto ? "text-[10px]" : "text-xs"}`}>
               {autor || "Autor desconhecido"}
             </p>
+            {totalPalavras !== undefined && totalPalavras > 0 && (
+              <p className={`mt-1 text-white/75 ${compacto ? "text-[8px]" : "text-[10px]"}`}>
+                {formatNumber(totalPalavras)} palavras
+              </p>
+            )}
           </div>
         </div>
       </div>
