@@ -6,8 +6,17 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useSidebar } from "./SidebarContext";
 import AlternadorTema from "@/components/AlternadorTema";
+import type { UsuarioAtual } from "@/lib/usuario-atual";
 
-export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTitulo?: string }) {
+export default function TopBar({
+  obraId,
+  obraTitulo,
+  usuarioAtual,
+}: {
+  obraId?: string;
+  obraTitulo?: string;
+  usuarioAtual?: UsuarioAtual | null;
+}) {
   const { isCollapsed, isMobileOpen, setMobileOpen } = useSidebar();
   const pathname = usePathname();
   const [menuUsuarioAberto, setMenuUsuarioAberto] = useState(false);
@@ -73,6 +82,8 @@ export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTi
   };
 
   const breadcrumbs = getBreadcrumbs();
+  const inicial = (usuarioAtual?.nome || "?").trim().charAt(0).toUpperCase() || "?";
+  const rotuloUsuario = usuarioAtual?.username ? `@${usuarioAtual.username}` : usuarioAtual?.nome;
 
   return (
     <header
@@ -134,15 +145,30 @@ export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTi
         <div className="relative" role="region" aria-label="Menu do usuário" ref={menuRef}>
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-chipbg text-foreground hover:bg-hoverbg transition-colors"
+            className="flex h-10 items-center gap-2 rounded-full border border-line bg-surface pr-3 text-foreground transition-colors hover:border-accent hover:bg-hoverbg"
             aria-label="Menu do usuário"
             aria-expanded={menuUsuarioAberto}
             aria-haspopup="true"
             onClick={() => setMenuUsuarioAberto((a) => !a)}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
+            <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-chipbg text-sm font-bold text-accent">
+              {usuarioAtual?.fotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={usuarioAtual.fotoUrl} alt="Foto do usuário" className="h-full w-full object-cover" />
+              ) : usuarioAtual ? (
+                inicial
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              )}
+            </span>
+            {rotuloUsuario && (
+              <span className="hidden max-w-32 truncate text-sm font-medium lg:block">{rotuloUsuario}</span>
+            )}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="hidden text-faint lg:block" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
             </svg>
           </button>
 
@@ -150,8 +176,26 @@ export default function TopBar({ obraId, obraTitulo }: { obraId?: string; obraTi
             <div
               role="menu"
               aria-label="Opções do usuário"
-              className="absolute right-0 top-11 z-50 w-52 overflow-hidden rounded-xl border border-line fundo-papel shadow-lg"
+              className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-line fundo-papel shadow-lg"
             >
+              {usuarioAtual && (
+                <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-chipbg text-sm font-bold text-accent">
+                    {usuarioAtual.fotoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={usuarioAtual.fotoUrl} alt="Foto do usuário" className="h-full w-full object-cover" />
+                    ) : (
+                      inicial
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-foreground">{usuarioAtual.nome}</span>
+                    <span className="block truncate text-xs text-muted">
+                      {usuarioAtual.username ? `@${usuarioAtual.username}` : ""}
+                    </span>
+                  </span>
+                </div>
+              )}
               <Link
                 href="/perfil"
                 role="menuitem"

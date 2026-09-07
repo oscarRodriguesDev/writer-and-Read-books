@@ -1,5 +1,11 @@
 # Pedidos
 
+## 2026-09-07 - Header com usuário logado (foto + nome de usuário)
+- **Commit**: *(este commit)*
+- **Descrição**: O bloco de usuário do header deve mostrar o nome de usuário do escritor e a foto (em vez do ícone 👤).
+- **Solução**: `buscarUsuarioAtual()` (server) com dados frescos do banco descendo por props até o `TopBar` (avatar foto/inicial + `@username` + chevron; dropdown com identidade). Sem SessionProvider.
+- **Testes**: build passa. Pendente teste visual.
+
 ## 2026-09-07 - Saudação do dashboard com nome artístico
 - **Commit**: *(este commit)*
 - **Descrição**: "Olá, escritor" deveria usar o nome do escritor; usuário esclareceu: **nome artístico** (`Usuario.nomeAutor`).

@@ -5,15 +5,16 @@ import { SidebarProvider, useSidebar } from "./SidebarContext";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
+import type { UsuarioAtual } from "@/lib/usuario-atual";
 
-function LayoutContent({ children, obraId, obraTitulo }: { children: ReactNode; obraId?: string; obraTitulo?: string }) {
+function LayoutContent({ children, obraId, obraTitulo, usuarioAtual }: { children: ReactNode; obraId?: string; obraTitulo?: string; usuarioAtual?: UsuarioAtual | null; }) {
   const { isCollapsed, isMobileOpen, setMobileOpen } = useSidebar();
   useKeyboardShortcuts();
 
   return (
     <div className="min-h-screen flex">
       <Sidebar obraId={obraId} />
-      <TopBar obraId={obraId} obraTitulo={obraTitulo} />
+      <TopBar obraId={obraId} obraTitulo={obraTitulo} usuarioAtual={usuarioAtual} />
       <main
         id="main-content"
         className={`flex-1 min-w-0 transition-all duration-300 ${
@@ -40,12 +41,13 @@ interface LayoutProps {
   children: ReactNode;
   obraId?: string;
   obraTitulo?: string;
+  usuarioAtual?: UsuarioAtual | null;
 }
 
-export default function Layout({ children, obraId, obraTitulo }: LayoutProps) {
+export default function Layout({ children, obraId, obraTitulo, usuarioAtual }: LayoutProps) {
   return (
     <SidebarProvider>
-      <LayoutContent children={children} obraId={obraId} obraTitulo={obraTitulo} />
+      <LayoutContent children={children} obraId={obraId} obraTitulo={obraTitulo} usuarioAtual={usuarioAtual} />
     </SidebarProvider>
   );
 }

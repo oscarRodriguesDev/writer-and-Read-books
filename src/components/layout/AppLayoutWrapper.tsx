@@ -3,8 +3,15 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
+import type { UsuarioAtual } from "@/lib/usuario-atual";
 
-export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
+export default function AppLayoutWrapper({
+  children,
+  usuarioAtual,
+}: {
+  children: React.ReactNode;
+  usuarioAtual?: UsuarioAtual | null;
+}) {
   const pathname = usePathname();
   const [obraId, setObraId] = useState<string | undefined>();
   const [obraTitulo, setObraTitulo] = useState<string | undefined>();
@@ -24,5 +31,5 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
     return <>{children}</>;
   }
 
-  return <Layout obraId={obraId} obraTitulo={obraTitulo}>{children}</Layout>;
+  return <Layout obraId={obraId} obraTitulo={obraTitulo} usuarioAtual={usuarioAtual}>{children}</Layout>;
 }

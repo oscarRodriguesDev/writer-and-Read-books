@@ -1,5 +1,20 @@
 # Checkpoints
 
+## 2026-09-07 - Sessão: Header com usuário logado (foto + nome de usuário)
+
+### Estado final
+- **Pedido**: o bloco de usuário do header deve mostrar o nome de usuário do escritor e sua foto (não mais o ícone 👤 genérico).
+- **Sem SessionProvider** (o app não tem): dados descem do server por props. Novo `src/lib/usuario-atual.ts` (`buscarUsuarioAtual()` com `auth()` + select sem senha) → `src/app/layout.tsx` (server) → `AppLayoutWrapper` → `Layout` → `TopBar`.
+- **TopBar**: botão com avatar circular (foto ou inicial) + `@username` (oculto em <lg) + chevron; dropdown com cabeçalho de identidade (avatar, nome, @username) sobre os itens Meu perfil/Sair.
+- **Dados frescos**: leitura no banco a cada render; `router.refresh()` no perfil já atualiza o header em SPA (foto/username não vivem no JWT).
+- Build passa (compila + TS). Commits da leva anterior já enviados (`e84b902`, `7c7d97e`, `a214d49`, `4f9573d`, `75c326a`).
+
+### Próximos passos
+- Teste visual do usuário: foto + username no header, dropdown com identidade, troca de foto no perfil refletindo no header.
+- Hardening pendente (anotado): rotas de recurso direto por id + upload de personagem/ambiente/capitulo/artefato sem checagem de dono.
+
+---
+
 ## 2026-09-07 - Sessão: Commits liberados + saudação pelo nome artístico
 
 ### Estado final

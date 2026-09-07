@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AppLayoutWrapper from "@/components/layout/AppLayoutWrapper";
+import { buscarUsuarioAtual } from "@/lib/usuario-atual";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +21,9 @@ export const metadata: Metadata = {
 
 const scriptTema = `(function(){try{var t=localStorage.getItem("tema");if(!t){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"escuro":"claro";}document.documentElement.classList.toggle("dark",t==="escuro");}catch(e){}})();`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const usuarioAtual = await buscarUsuarioAtual();
+
   return (
     <html
       lang="pt-BR"
@@ -32,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: scriptTema }} />
       </head>
       <body className="min-h-full">
-        <AppLayoutWrapper>{children}</AppLayoutWrapper>
+        <AppLayoutWrapper usuarioAtual={usuarioAtual}>{children}</AppLayoutWrapper>
       </body>
     </html>
   );

@@ -1,5 +1,22 @@
 # Memórias do Projeto
 
+## 2026-09-07 - Header mostra o usuário logado (foto + nome de usuário) (Autoria: VIBECODE)
+
+### Decisão
+O usuário pediu que o bloco de usuário do header (TopBar) mostre o **nome de usuário do escritor e sua foto** em vez do ícone genérico 👤.
+
+### Implementação
+- **Sem SessionProvider**: o app não usa `SessionProvider`; o TopBar é client. Em vez de adicionar o provider, os dados são buscados no server e descem por props.
+- `src/lib/usuario-atual.ts` (novo): tipo `UsuarioAtual` + helper server `buscarUsuarioAtual()` (`auth()` + `findUnique` em `Usuario`, sem senha).
+- Cadeia de props: `src/app/layout.tsx` (server, busca) → `AppLayoutWrapper` (client) → `Layout` (client) → `TopBar` (client).
+- **TopBar**: botão do usuário agora mostra avatar (foto via `src` ou inicial do nome) + `@username` (fallback nome) + chevron; dropdown ganhou cabeçalho com identidade (foto/nome/@username).
+- **Dados sempre frescos**: como o JWT é stateless, a leitura é no banco a cada render do root layout; `router.refresh()` do perfil (foto/username trocados) atualiza o header em SPA.
+
+### Testes
+`npm run build` passa. Teste visual do usuário pendente.
+
+---
+
 ## 2026-09-07 - Saudação do dashboard usa o nome artístico (Autoria: VIBECODE)
 
 ### Decisão
