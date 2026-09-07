@@ -1,5 +1,18 @@
 # Memórias do Projeto
 
+## 2026-09-07 - Dashboard: grade ajustada para 6 colunas (cards maiores) (Autoria: VIBECODE)
+
+### Decisão
+Após testar 8 colunas, o usuário pediu cards um pouco maiores: **6 obras por linha** (mantendo o `max-w-screen-2xl` do main, os cards ficam maiores que na grade de 8).
+
+### Implementação
+- Grid: `grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6` (skeleton com 12 slots); gap `4`; removido o breakpoint `2xl:grid-cols-8`.
+
+### Testes
+`npm run build` passa. Teste visual do usuário pendente.
+
+---
+
 ## 2026-09-07 - Dashboard: cards = capa única (infos inscritas) + grade 8/linha (Autoria: VIBECODE)
 
 ### Decisão

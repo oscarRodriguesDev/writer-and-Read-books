@@ -1,5 +1,18 @@
 # Checkpoints
 
+## 2026-09-07 - Sessão: Dashboard — grade 6 por linha (cards maiores)
+
+### Estado final
+- **Pedido**: cards "um pouco maiores", **6 por linha**.
+- `WorkGrid`: `2/3/4/6` colunas, gap `4`, skeleton 12 slots; removido `2xl:grid-cols-8`; `main` continua `max-w-screen-2xl` (cards maiores que na grade de 8).
+- Build passa.
+
+### Próximos passos
+- Teste visual: 6 colunas em telas largas.
+- Hardening anotado (rotas de recurso direto + upload de entidades).
+
+---
+
 ## 2026-09-07 - Sessão: Dashboard — cards = capa única (infos inscritas), 8/linha
 
 ### Estado final
