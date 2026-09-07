@@ -1,5 +1,30 @@
 # Memórias do Projeto
 
+## 2026-09-06 - Supremacia do autor e análise zerada — ajustes na aba Análise IA (Autoria: VIBECODE)
+
+### Contexto
+O usuário pediu 3 ajustes na aba de Análise IA:
+1. Achados resolvidos não podem mais "chamar atenção".
+2. A IA deve reconhecer a solução do autor mesmo que imperfeita — o usuário tem a última palavra.
+3. Cada nova análise deve zerar a análise antiga.
+
+### Decisões
+- **Minimizar encerrados**: `AchadoItem` agora renderiza versão compacta (gravidade + categoria + status + título; título riscado `line-through` se RESOLVIDO, apagado `text-faint` se IGNORADO/INTENCIONAL; card com `opacity-70`) quando status é RESOLVIDO/IGNORADO/INTENCIONAL. Clique em "Detalhes ▸" expande (mostra tudo + "↩︎ Reabrir" + "Ocultar ▾"). Vale para o painel da obra e da cena (componente compartilhado).
+- **Supremacia do autor no prompt**: diretrizes 8 e 9 no `PROMPT_SISTEMA_ANALISE` — a IA aponta o problema e sugere, mas NÃO insiste/reverte decisões do autor; não re-reportar problemas já tratados. Novo tipo `DeliberacaoAutor` + bloco `<DECISOES DO AUTOR>` no prompt usuário.
+- **Zerar análise**: `analisarObra` agora (1) preserva as decisões do autor (achados encerrados COM justificativa) como `DeliberacaoAutor[]`, (2) faz `analiseIA.deleteMany({ where: { obraId } })` (achados caem em cascata — onDelete: Cascade), (3) roda a análise nova com as deliberações. Análises de CAPITULO/CENA individuais NÃO zeroam (só o fluxo da obra).
+- `PainelAnaliseObra` continua com atualização otimista → ao clicar "Resolver", o item minimiza na hora.
+
+### Arquivos alterados
+- `src/lib/ia/prompt.ts` — diretrizes 8/9 + `DeliberacaoAutor` + bloco DECISOES DO AUTOR
+- `src/lib/services/analise.ts` — coleta deliberações, `deleteMany` de análises da obra, passa deliberações ao prompt
+- `src/components/AchadoItem.tsx` — versão minimizada para encerrados + botões Detalhes/Ocultar
+
+### Testes
+- `npm run build` passa. Commit `11d4065` (push pendente via docs).
+- Pendente teste visual do usuário.
+
+---
+
 ## 2026-09-06 - Categoria IA "Furo de roteiro" — Item 7 do backlog (Autoria: VIBECODE)
 
 ### Contexto

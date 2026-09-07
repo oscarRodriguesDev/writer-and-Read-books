@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-06 - Ajustes na aba Análise IA (supremacia do autor)
+- **Commit**: `11d4065`
+- **Descrição**: 3 ajustes — (1) achados encerrados minimizados; (2) IA reconhece a solução do autor (sem última palavra); (3) nova análise zera a anterior.
+- **Solução**: `AchadoItem` com versão compacta para encerrados (Detalhes ▸ / Ocultar ▾); prompt com diretrizes 8/9 + bloco `<DECISOES DO AUTOR>`; `analisarObra` preserva deliberações, dá `deleteMany` das análises da obra e roda análise nova.
+- **Arquivos**: `src/components/AchadoItem.tsx`, `src/lib/ia/prompt.ts`, `src/lib/services/analise.ts`
+- **Testes**: build passa. Pendente teste visual do usuário.
+
 ## 2026-09-06 - Backlog item 7: Categoria IA "furo de roteiro"
 - **Commit**: `47f4372`
 - **Descrição**: Nova categoria de achado `FURO_ROTEIRO` na análise IA com pronto + filtro por categoria no painel.

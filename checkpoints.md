@@ -1,5 +1,21 @@
 # Checkpoints
 
+## 2026-09-06 - Sessão: Ajustes na aba Análise IA (supremacia do autor)
+
+### Estado final
+- Achados encerrados (RESOLVIDO/IGNORADO/INTENCIONAL) aparecem **minimizados** no painel (compacto, título riscado/cinza); expandem via "Detalhes ▸"
+- Prompt da IA com **supremacia do autor**: aponta o erro, mas não tem a última palavra; não re-reporta problemas já decididos
+- Análise da obra **zera** a análise antiga a cada pedido (deleteMany em cascata); decisões do autor (encerrados com justificativa) são preservadas e enviadas como `<DECISOES DO AUTOR>` no prompt
+- Análises individuais de capítulo/cena não são afetadas
+- Commit `11d4065`; push pendente via docs
+- Build passando
+
+### Próximos passos sugeridos
+- Teste visual: resolver um achado (deve minimizar), rodar análise nova (lista limpa)
+- Item 8 (FASE 6): teste visual dos recursos gráficos
+
+---
+
 ## 2026-09-06 - Sessão: Categoria IA "furo de roteiro" (item 7)
 
 ### Estado final
