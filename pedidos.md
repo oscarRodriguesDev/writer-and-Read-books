@@ -1,5 +1,11 @@
 # Pedidos
 
+## 2026-09-07 - Dashboard: cards menores (5/linha) + busca por obras
+- **Commit**: *(este commit)*
+- **Descrição**: Cards bem menores (até 5 por linha) e busca por obras para bibliotecas grandes.
+- **Solução**: grade `2/3/4/5` colunas; `WorkCard` condensado; `CapaLivro` com modo `compacto`; input de busca (título/gênero/subgênero, client-side) com limpar.
+- **Testes**: build passa. Pendente teste visual.
+
 ## 2026-09-07 - Dashboard com capa nos cards (default CSS)
 - **Commit**: *(este commit)*
 - **Descrição**: Padronizar o dashboard: todo card mostra a capa (do usuário ou default CSS via `CapaLivro`).

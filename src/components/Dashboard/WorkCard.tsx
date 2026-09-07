@@ -60,7 +60,7 @@ export function WorkCard({ obra, autor, onDelete }: WorkCardProps) {
   const statusIcon = statusIcons[obra.status];
 
   return (
-    <div className={`${cardCls} relative group overflow-hidden rounded-xl fundo-papel p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-accent/40`}>
+    <div className={`${cardCls} relative group overflow-hidden rounded-xl fundo-papel p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-accent/40`}>
       {onDelete && (
         <div className="absolute right-2 top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
@@ -80,42 +80,43 @@ export function WorkCard({ obra, autor, onDelete }: WorkCardProps) {
       )}
 
       <Link href={`/obras/${obra.id}`} className="block" aria-label={`Abrir ${obra.titulo}`}>
-        <div className="mb-4 transition-transform duration-300 group-hover:scale-[1.02]">
+        <div className="mb-2.5 transition-transform duration-300 group-hover:scale-[1.02]">
           <CapaLivro
             titulo={obra.titulo}
             genero={obra.genero ?? undefined}
             autor={autor}
             capaUrl={obra.capaUrl}
             className="w-full"
+            compacto
           />
         </div>
 
-        <h2 className="mb-1 font-semibold line-clamp-1">{obra.titulo}</h2>
+        <h2 className="mb-0.5 font-semibold leading-snug line-clamp-1">{obra.titulo}</h2>
 
         {(obra.genero || obra.subgenero) && (
-          <p className="mb-2 text-sm text-muted line-clamp-1">
+          <p className="mb-1.5 text-xs text-muted line-clamp-1">
             {obra.genero}
             {obra.subgenero && ` · ${obra.subgenero}`}
           </p>
         )}
 
-        <div className="flex flex-wrap items-center gap-2 mb-3">
+        <div className="flex flex-wrap items-center gap-1.5 mb-2">
           {statusIcon ? (
             <span
-              className="inline-flex items-center gap-1.5 rounded-full px-1.5 py-0.5 text-xs font-medium"
+              className="inline-flex items-center gap-1 rounded-full px-1 py-0.5 text-[11px] font-medium"
               title={statusLabel}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={statusIcon} alt={statusLabel} className="h-6 w-6 object-contain" />
+              <img src={statusIcon} alt={statusLabel} className="h-5 w-5 object-contain" />
               <span>{statusLabel}</span>
             </span>
           ) : (
-            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium`}>
+            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium`}>
               {statusLabel}
             </span>
           )}
           {obra.totalPalavras !== undefined && obra.totalPalavras > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs text-muted">
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
@@ -124,7 +125,7 @@ export function WorkCard({ obra, autor, onDelete }: WorkCardProps) {
           )}
         </div>
 
-        <time className="text-xs text-faint" dateTime={typeof obra.atualizadoEm === "string" ? obra.atualizadoEm : obra.atualizadoEm.toISOString()}>
+        <time className="text-[11px] text-faint" dateTime={typeof obra.atualizadoEm === "string" ? obra.atualizadoEm : obra.atualizadoEm.toISOString()}>
           Atualizado em {formatDate(obra.atualizadoEm)}
         </time>
       </Link>

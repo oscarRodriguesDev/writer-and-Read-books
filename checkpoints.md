@@ -1,5 +1,20 @@
 # Checkpoints
 
+## 2026-09-07 - Sessão: Dashboard — cards menores (5/linha) + busca
+
+### Estado final
+- **Pedidos**: (1) cards bem menores, até **5 obras por linha**; (2) **busca por obras** para bibliotecas grandes.
+- `WorkGrid`: grade `2/3/4/5` colunas; **input de busca** (lupa + X para limpar) na barra de filtros; filtro client-side por **título/gênero/subgênero** (case-insensitive); empty state dinâmico com o termo buscado.
+- `WorkCard`: condensado (`p-3.5`, textos `text-xs`/`text-[11px]`, badge/ícones menores).
+- `CapaLivro`: novo modo **`compacto`** (filetes/paddings/fontes reduzidos) para os cards pequenos.
+- Build passa.
+
+### Próximos passos
+- Teste visual: grid com 5 colunas em telas largas, busca filtrando, capas compactas legíveis.
+- Hardening anotado (rotas de recurso direto + upload de entidades).
+
+---
+
 ## 2026-09-07 - Sessão: Dashboard com capas nos cards (default CSS)
 
 ### Estado final

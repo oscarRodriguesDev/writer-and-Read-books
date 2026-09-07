@@ -54,9 +54,18 @@ export function WorkGrid({
 }: WorkGridProps) {
   const [sort, setSort] = useState<SortOption>(initialSort);
   const [filter, setFilter] = useState<FilterOption>(initialFilter);
+  const [busca, setBusca] = useState("");
 
   const filteredObras = useMemo(() => {
-    let result = obras;
+    const buscaNormalizada = busca.trim().toLowerCase();
+    let result = buscaNormalizada
+      ? obras.filter(
+          (o) =>
+            o.titulo.toLowerCase().includes(buscaNormalizada) ||
+            (o.genero ?? "").toLowerCase().includes(buscaNormalizada) ||
+            (o.subgenero ?? "").toLowerCase().includes(buscaNormalizada),
+        )
+      : obras;
 
     if (filter === "ativas") {
       result = result.filter((o) => !o.arquivada);
@@ -88,12 +97,12 @@ export function WorkGrid({
     }
 
     return result;
-  }, [obras, sort, filter]);
+  }, [obras, sort, filter, busca]);
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[...Array(6)].map((_, i) => (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {[...Array(10)].map((_, i) => (
           <SkeletonCard key={i} />
         ))}
       </div>
@@ -105,7 +114,11 @@ export function WorkGrid({
       <EstadoVazio
         src={GRAFIC.vazioDashboard}
         alt="Nenhuma obra encontrada"
-        mensagem="Nenhuma obra encontrada com os filtros atuais."
+        mensagem={
+          busca.trim()
+            ? `Nenhuma obra encontrada para "${busca.trim()}".`
+            : "Nenhuma obra encontrada com os filtros atuais."
+        }
       />
     );
   }
@@ -113,6 +126,39 @@ export function WorkGrid({
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3 shadow-sm">
+        {/* Busca por obras */}
+        <div className="relative min-w-44 flex-1 sm:max-w-64">
+          <svg
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m20 20-4-4" />
+          </svg>
+          <input
+            type="search"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar obra…"
+            aria-label="Buscar obra"
+            className="w-full rounded-md border border-inputline bg-surface py-1.5 pl-9 pr-8 text-sm text-foreground placeholder:text-faint focus:border-foreground focus:outline-none"
+          />
+          {busca && (
+            <button
+              type="button"
+              onClick={() => setBusca("")}
+              aria-label="Limpar busca"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-faint transition-colors hover:text-foreground hover:bg-hoverbg"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <label htmlFor="filter-obras" className="text-sm text-muted">
             Filtrar:
@@ -150,7 +196,7 @@ export function WorkGrid({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {filteredObras.map((obra) => (
           <WorkCard 
             key={obra.id} 

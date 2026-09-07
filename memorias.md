@@ -1,5 +1,21 @@
 # Memórias do Projeto
 
+## 2026-09-07 - Dashboard: cards menores (até 5/linha) + busca por obras (Autoria: VIBECODE)
+
+### Decisão
+Cards do dashboard devem ser **bem menores** (até 5 obras por linha) e deve haver um **botão de busca por obras** para quem tem muitas.
+
+### Implementação
+- **Grade**: `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5` (skeleton com 10 slots).
+- **Cards menores**: `WorkCard` com `p-3.5`, textos/badges/data reduzidos (`text-xs`/`text-[11px]`), capa `mb-2.5`.
+- **`CapaLivro` modo `compacto`**: prop boolean que reduz filetes, paddings, gênero (`text-[8px]`), título (`text-base`) e autor (`text-[10px]`) — para adaptar ao card pequeno.
+- **Busca por obras**: input com lupa + botão limpar na barra de filtros; filtra por **título, gênero e subgênero** (case-insensitive, client-side no `WorkGrid`); empty state com mensagem dinâmica quando há busca ativa.
+
+### Testes
+`npm run build` passa. Teste visual do usuário pendente.
+
+---
+
 ## 2026-09-07 - Dashboard com capa nos cards (default CSS ou do usuário) (Autoria: VIBECODE)
 
 ### Decisão

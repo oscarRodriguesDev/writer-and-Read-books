@@ -5,6 +5,8 @@ interface CapaLivroProps {
   /** URL definida pelo usuário; quando ausente, renderiza a capa default em CSS. */
   capaUrl?: string | null;
   className?: string;
+  /** Versão condensada para cards pequenos (grids com 4–5 colunas). */
+  compacto?: boolean;
 }
 
 /**
@@ -12,7 +14,7 @@ interface CapaLivroProps {
  * caso contrário, desenha uma capa default só com CSS (proporção 2:3,
  * lombada, brilho diagonal, textura e filetes dourados).
  */
-export function CapaLivro({ titulo, autor, genero, capaUrl, className = "w-44" }: CapaLivroProps) {
+export function CapaLivro({ titulo, autor, genero, capaUrl, className = "w-44", compacto = false }: CapaLivroProps) {
   if (capaUrl) {
     return (
       <div className={`${className} overflow-hidden rounded-r-lg border border-line bg-surface shadow-lg`}>
@@ -36,25 +38,41 @@ export function CapaLivro({ titulo, autor, genero, capaUrl, className = "w-44" }
         <div className="pointer-events-none absolute inset-y-0 left-[10px] w-px bg-white/15" />
 
         {/* filetes dourados superior e inferior */}
-        <div className="absolute inset-x-0 top-2 mx-5 border-t border-amber-200/50" />
-        <div className="absolute inset-x-0 bottom-2 mx-5 border-t border-amber-200/50" />
+        <div
+          className={`absolute inset-x-0 border-t border-amber-200/50 ${
+            compacto ? "top-1.5 mx-3" : "top-2 mx-5"
+          }`}
+        />
+        <div
+          className={`absolute inset-x-0 border-t border-amber-200/50 ${
+            compacto ? "bottom-1.5 mx-3" : "bottom-2 mx-5"
+          }`}
+        />
 
         {/* miolo: gênero, título, ornamento */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-2.5 px-6 text-center">
+        <div className={`flex flex-1 flex-col items-center justify-center gap-2.5 text-center ${compacto ? "px-4" : "px-6"}`}>
           {genero && (
-            <p className="text-[9px] font-semibold uppercase tracking-[0.3em] text-amber-100/80">{genero}</p>
+            <p className={`font-semibold uppercase tracking-[0.3em] text-amber-100/80 ${compacto ? "text-[8px]" : "text-[9px]"}`}>
+              {genero}
+            </p>
           )}
           {genero && <div className="h-px w-8 bg-amber-200/60" />}
-          <h2 className="line-clamp-5 font-serif text-lg font-bold leading-snug drop-shadow-md">
+          <h2
+            className={`line-clamp-5 font-serif font-bold leading-snug drop-shadow-md ${
+              compacto ? "text-base" : "text-lg"
+            }`}
+          >
             {titulo || "Sem título"}
           </h2>
           <span className="inline-block h-1.5 w-1.5 rotate-45 bg-amber-200/80" />
         </div>
 
         {/* rodapé com o autor */}
-        <div className="px-7 pb-5">
-          <div className="border-t border-amber-200/30 pt-2.5 text-center">
-            <p className="line-clamp-1 font-serif text-xs italic text-amber-50/90">{autor || "Autor desconhecido"}</p>
+        <div className={compacto ? "px-5 pb-3" : "px-7 pb-5"}>
+          <div className="border-t border-amber-200/30 pt-2 text-center">
+            <p className={`line-clamp-1 font-serif italic text-amber-50/90 ${compacto ? "text-[10px]" : "text-xs"}`}>
+              {autor || "Autor desconhecido"}
+            </p>
           </div>
         </div>
       </div>
