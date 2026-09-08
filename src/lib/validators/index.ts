@@ -198,6 +198,24 @@ export const cenaCriarSchema = z.object({
   parteId: z.string().trim().min(1).max(100),
 });
 
+/**
+ * Sincronização das cenas de uma parte (editor de documento corrido).
+ * A lista deve conter as cenas NA ORDEM em que aparecem no texto; a parte
+ * passa a ter exatamente essas cenas (as que sumirem são removidas).
+ */
+export const sincronizarParteSchema = z.object({
+  cenas: z
+    .array(
+      z.object({
+        cenaId: z.string().trim().min(1).max(100).nullable().optional(),
+        tipo: z.string().trim().min(1).max(50).default("CENA"),
+        titulo: textoOpcional(200),
+        conteudo: z.string().max(100_000).default(""),
+      }),
+    )
+    .max(300),
+});
+
 /** Data livre da linha do tempo: {ano?, mes?, dia?, hora?} — campos ausentes são omitidos. */
 export const dataTemporalSchema = z
   .object({

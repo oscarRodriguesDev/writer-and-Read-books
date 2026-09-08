@@ -6,8 +6,8 @@ import { EditorDocumento } from "@/components/EditorDocumento";
 
 /**
  * Alterna entre a visão em grade (3×3 cenas) e a visão em documento
- * contínuo (uma cena após a outra, com editor rico). A visão padrão —
- * a grade — não muda: o documento é uma opção adicional.
+ * contínuo (texto corrido com marcas {parte}, [bloco] e (cena)). A visão
+ * padrão — a grade — não muda: o documento é uma opção adicional.
  */
 export function VisorCapitulo({
   obraId,

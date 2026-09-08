@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-08 - Documento contínuo 3ª versão: texto corrido puro com marcas {parte} [bloco] (cena)
+- **Commit**: *(este commit)*
+- **Descrição**: 2ª versão do editor de documento (TipTap com anotações fixas) reprovada: "não gostei, vamos mudar abordagem". Novo formato: **texto corrido 100% do escritor** marcando `{inicio}/{meio}/{fim}` (partes), `[inicio]/[meio]/[fim]` (organização da escrita) e `(cena <id>)` (cenas; id = número/letra/palavra). Sem delimitadores visuais.
+- **Solução**: interpretação adotada (pergunta respondida "4" + "nome = palavra cena + identificador") → `{}` persiste na Parte atual; `[]` no campo já existente `Cena.tipo`; `(cena X)` em `Cena.titulo` e o texto seguinte em `Cena.conteudo`. Parser/montador em `src/lib/documentoCapitulo.ts`; nova rota atômica `PUT /api/partes/[parteId]` (cria/atualiza/deleta/reordena em transação, dono checado); `EditorDocumento` reescrito como textarea + autosave 1,3s + botões de inserção no cursor; TipTap e `textoParaHtml` removidos. Grade 3×3 permanece default.
+- **Arquivos**: `src/lib/documentoCapitulo.ts` (novo), `src/app/api/partes/[parteId]/route.ts` (novo), `src/lib/validators/index.ts` (`sincronizarParteSchema`), `src/components/EditorDocumento.tsx`, `src/components/VisorCapitulo.tsx` (comentário), `src/lib/html.ts`, `src/app/globals.css`, `package.json`/`package-lock.json` (sem @tiptap)
+- **Testes**: build passa (migrate deploy + compila + TS); rota nova aparece no roteador. Teste visual/runtime é do usuário.
+
 ## 2026-09-08 - Editar documento no capítulo (editor contínuo TipTap)
 - **Commit**: `1fd6a9b` (+ revisão no commit seguinte, push ok)
 - **Descrição**: Botão/aba para editar o capítulo como **documento contínuo** (cenas em sequência com formatação rica e delimitadores); grade 3×3 permanece como opção. Parte fixa (INICIO/MEIO/FIM) × **N cenas por parte** (default 3).

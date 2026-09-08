@@ -1,10 +1,10 @@
 /**
- * Conversões entre texto puro e HTML do editor rico.
+ * Conversões de prosa.
  *
- * O `conteudo` da Cena passou a aceitar HTML (saída do TipTap). Pontos que
- * consomem o conteúdo como PROSA (leitor, prompts de IA, exportação,
- * contagem de palavras) devem usar `htmlParaTexto`; o editor de documento usa
- * `textoParaHtml` para normalizar conteúdo antigo (texto puro) no load.
+ * O `conteudo` da Cena chegou a aceitar HTML (saída do antigo editor TipTap).
+ * Pontos que consomem o conteúdo como PROSA (leitor, prompts de IA,
+ * exportação, contagem de palavras e o editor de documento) devem usar
+ * `htmlParaTexto` para normalizar antes de usar/exibir.
  */
 
 const ENTIDADES: Record<string, string> = {
@@ -26,17 +26,4 @@ export function htmlParaTexto(html: string): string {
     .replace(/<[^>]+>/g, "")
     .replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (m) => ENTIDADES[m] ?? m);
   return texto.replace(/\n{3,}/g, "\n\n").trim();
-}
-
-/** Converte texto puro com quebras de linha em parágrafos HTML simples.
- *  Se o texto já parece HTML (contém tag), devolve como está. */
-export function textoParaHtml(texto: string): string {
-  const limpo = texto?.trim() ?? "";
-  if (!limpo) return "";
-  if (limpo.includes("<")) return limpo;
-  return limpo
-    .split(/\n\s*\n/)
-    .map((bloco) => bloco.replace(/\r?\n/g, "<br>"))
-    .map((bloco) => `<p>${bloco}</p>`)
-    .join("\n");
 }

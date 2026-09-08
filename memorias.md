@@ -1,6 +1,35 @@
 # Memórias do Projeto
 
+## 2026-09-08 (Revisão 3) - Documento corrido em texto puro com marcas {parte} [bloco] (cena) (Autoria: VIBECODE)
+
+### Contexto
+O usuário reprovou a 2ª versão do editor de documento (TipTap com anotações fixas INÍCIO/MEIO/FIM e CENA N): **"não gostei, vamos mudar abordagem"**. Quer um documento **contínuo, 100% escrito pelo escritor, sem delimitadores visuais**, onde ele mesmo marca no texto: `{inicio}/{meio}/{fim}` (partes), `[inicio]/[meio]/[fim]` (organização interna da escrita) e `(cena <identificador>)` (cenas). Pergunta de clarificação: resposta "4" (fora das opções) + "o nome deve ser a palavra **cena** seguida de um identificador (número, letra ou palavra)".
+
+### Decisão (interpretação adotada)
+- `{}` = **Parte** do capítulo (INICIO/MEIO/FIM, como já existe — sem migração).
+- `[colchetes]` = **organização da escrita dentro da parte**; persistidos no campo já existente `Cena.tipo` (INICIO/MEIO/FIM). Sem entidade nova, sem schema.
+- `(cena 1)` = **cena** → vira `Cena.titulo = "cena <id>"`; o texto até o próximo marcador = `Cena.conteudo` (texto puro). Texto fora de marcador é ignorado (rascunho/comentário).
+- **Somente os ids** (`Cena.ordem` reescrita 1..N na ordem do documento) e título/tipo/conteúdo são sincronizados; `objetivo`, personagens, ambientes e achados das cenas preservados (a rota nova não os toca).
+
+### Implementação
+- **`src/lib/documentoCapitulo.ts`** (novo): `parsearDocumento(texto)` (scanner de marcadores → partes/cenas com nome, tipo de bloco e conteúdo) e `montarDocumento(partes)` (gera o texto a partir do banco; normaliza conteúdo antigo HTML via `htmlParaTexto`). Round-trip estável (marcas regeneradas de título/tipo).
+- **`PUT /api/partes/[parteId]`** (novo, aditivo): valida `sincronizarParteSchema` (novo); transação Prisma que **cria/atualiza/deleta/reordena** as cenas da parte na ordem enviada (dono via `obterParteDoUsuario`, já existente). Segurança: `cenaId` só é usado p/ update se pertence à parte; ids desconhecidos viram create.
+- **`EditorDocumento.tsx` reescrito**: um único `<textarea>` (folha papel) + autosave debounce 1,3s + botões "Inserir: {inicio} [inicio] (cena 1)…" que inserem no cursor + status salvar/salvo/erro. Salva **só as partes que têm marcador `{...}`** no texto (parte ausente não é tocada — não apaga por engano) e deu **hash** para só reenviar o que mudou.
+- **TipTap removido**: dependências `@tiptap/*` desinstaladas (53 pacotes), `textoParaHtml` removido de `html.ts` (morto), CSS do TipTap/marcas trocado por `.documento-texto` (papel com linhas a 2,25rem, `line-height:2.25rem`).
+- Grade 3×3 (`EditorCapitulo`) continua default; `VisorCapitulo` mantém as abas.
+
+### Testes
+`npm run build` passa (generate + migrate deploy + compila + TS) e a rota `/api/partes/[parteId]` aparece no roteador. Teste visual/runtime é do usuário (regra): abrir o documento, escrever com as marcas, salvar, recarregar e ver o round-trip.
+
+### Pendências anotadas
+- `Cena.conteudo` antigo em HTML é normalizado no load (`htmlParaTexto`); ao salvar vira texto puro.
+- Rótulo legado do editor antigo (objetivo da cena em tooltip) não existe mais no documento — o objetivo continua editável na grade.
+
+---
+
 ## 2026-09-08 (Revisão) - Documento contínuo "de verdade": anotações fixas escritas dentro do documento (Autoria: VIBECODE)
+
+> ⚠️ Agora superseded pela entrada acima: `EditorDocumento` passou a ser texto corrido puro com marcas `{parte}`, `[bloco]` e `(cena)`; TipTap e as anotações fixas foram removidos.
 
 ### Contexto
 O usuário testou a 1ª versão (blocos/cards por cena, toolbar por bloco) e reprovou: **"a forma como fez não está boa; não preciso como se fosse um documento Word"**. Pedido: as anotações **INÍCIO/MEIO/FIM** e **CENA N** devem estar **escritas dentro do documento**, **fixas e não apagáveis**, com o autor escrevendo **entre elas**; adicionar cena é clicar num **botãozinho "+"**.

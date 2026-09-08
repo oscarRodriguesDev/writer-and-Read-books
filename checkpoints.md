@@ -1,5 +1,22 @@
 # Checkpoints
 
+## 2026-09-08 (Revisão 3) - Sessão: Documento corrido em texto puro com marcas {parte} [bloco] (cena)
+
+### Estado final
+- Usuário reprovou a 2ª versão (TipTap com anotações fixas): **"não gostei, vamos mudar abordagem"**. Quer **documento contínuo 100% escrito pelo escritor** com marcas de texto: `{inicio}/{meio}/{fim}` (partes), `[inicio]/[meio]/[fim]` (organização da escrita) e `(cena <id>)` (cenas; id = número, letra ou palavra — resposta 2; resposta 1 foi "4", fora do previsto).
+- Interpretação adotada: `{}` → Parte (banco atual); `[colchetes]` → `Cena.tipo` (INICIO/MEIO/FIM, campo já existente — **sem migração**); `(cena X)` → `Cena.titulo = "cena X"` + `Cena.conteudo` = texto até o próximo marcador. Texto fora de marcador é ignorado.
+- `src/lib/documentoCapitulo.ts` (novo): `parsearDocumento` (scanner de marcadores) + `montarDocumento` (gera o texto do banco, round-trip estável, normaliza HTML antigo via `htmlParaTexto`).
+- `PUT /api/partes/[parteId]` (novo): transação cria/atualiza/deleta/reordena cenas da parte na ordem enviada (dono via `obterParteDoUsuario`; `cenaId` só usado p/ update se pertence à parte). Validator `sincronizarParteSchema`.
+- `EditorDocumento.tsx` reescrito: **textarea único** (papel) + autosave 1,3s + botões "Inserir: {...} [...] (cena 1)" no cursor + status salvar/salvo/erro. Salva **só partes com marcador `{...}`** (segurança anti-apagão) + hash por parte.
+- TipTap removido (deps desinstaladas, 53 pacotes), `textoParaHtml` removido (morto), CSS do editor Troca por `.documento-texto`.
+- Grade 3×3 segue default (`VisorCapitulo` intacto). Build **passa**; rota `/api/partes/[parteId]` no roteador.
+
+### Próximos passos
+- Teste visual/runtime do usuário: abrir Documento, escrever com as marcas, autosave, recarregar (round-trip), alternar Grade ↔ Documento, conferir que objetivo/personagens/ambientes das cenas sobrevivem ao PUT.
+- Validar com o usuário se a interpretação dos colchetes (`Cena.tipo`) e o nome livre de cena estão como ele quer.
+
+---
+
 ## 2026-09-08 (Revisão) - Sessão: EditorDocumento como documento único com anotações fixas no texto
 
 ### Estado final
