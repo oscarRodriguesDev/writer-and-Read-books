@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-08 - Leitor público do feed: página isolada, sem sidebar e sem header
+- **Commit**: *(este commit)*
+- **Descrição**: o leitor de obras do feed deve ser **diferente do leitor do escritor** — não pode exibir a **sidebar** do app nem o **header** (TopBar). Experiência de leitura isolada.
+- **Solução**: `AppLayoutWrapper` (mesmo mecanismo de /login e /cadastro) — `pathname.startsWith("/feed/")` renderiza `{children}` **sem** `<Layout>` (sem Sidebar/TopBar). O leitor mantém apenas os controles internos: botão "← Feed", capítulo/página, configurações e navegação de páginas.
+- **Arquivos**: `src/components/layout/AppLayoutWrapper.tsx`
+- **Testes**: build passa. Teste visual/runtime é do usuário.
+
 ## 2026-09-08 - Visitante pode LER obras; interagir exige login + sugestão a cada página
 - **Commit**: *(este commit)*
 - **Descrição**: novo comportamento do leitor público: **deslogado pode ler as obras** (sem interagir) e, **a cada avanço de página**, aparece uma **sugestão de login/cadastro**.

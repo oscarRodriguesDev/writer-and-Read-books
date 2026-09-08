@@ -1,5 +1,16 @@
 # Memórias do Projeto
 
+## 2026-09-08 - Leitor público do feed isolado (sem sidebar e sem header) (Autoria: VIBECODE)
+
+### Pedido
+"esse leitor de livros deve ser diferente, não deve ser o mesmo usado pelo escritor, porque não deve ter opção no sidebar e nem no header"
+
+### Decisão
+- `AppLayoutWrapper` agora trata `/feed/[obraId]` como página isolada (igual a /login e /cadastro): renderiza `{children}` **sem** `<Layout>` — **sem Sidebar e sem TopBar**. O leitor público é uma experiência de leitura limpa, mantendo apenas os controles internos do leitor (← Feed, capítulo/página, configurações, navegação).
+- `/feed` (listagem) continua com o layout normal.
+
+---
+
 ## 2026-09-08 - Feed: visitantes podem LER; interações exigem login + sugestão a cada página (Autoria: VIBECODE)
 
 ### Pedido

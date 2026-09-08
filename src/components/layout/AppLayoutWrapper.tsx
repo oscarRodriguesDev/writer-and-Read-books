@@ -26,8 +26,14 @@ export default function AppLayoutWrapper({
     }
   }, [pathname]);
 
-  // Páginas de autenticação não exibem o layout da aplicação (sidebar/topbar)
-  if (pathname === "/login" || pathname === "/cadastro") {
+  // Páginas de autenticação não exibem o layout da aplicação (sidebar/topbar).
+  // O leitor público do feed (/feed/[obraId]) também é uma experiência
+  // isolada: diferente do leitor do escritor, SEM sidebar e SEM header.
+  if (
+    pathname === "/login" ||
+    pathname === "/cadastro" ||
+    pathname.startsWith("/feed/")
+  ) {
     return <>{children}</>;
   }
 

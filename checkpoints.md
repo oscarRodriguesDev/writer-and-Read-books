@@ -1,5 +1,20 @@
 # Checkpoints
 
+## 2026-09-08 - Sessão: Leitor público do feed isolado (sem sidebar/topbar)
+
+### Estado final
+- **Pedido**: leitor de obras do feed **diferente do leitor do escritor** — sem **sidebar** e sem **header** do app.
+- **Solução**: `AppLayoutWrapper` renderiza `/feed/[obraId]` sem `<Layout>` (mecanismo de /login e /cadastro). Leitor público fica em página isolada: fundo limpo, controles internos apenas (← Feed, cap/página, config, navegação).
+- O contexto anterior (feed público, leitura pública p/ visitantes, sugestão de login a cada página, interações exigindo login, fix do feed p/ logados) permanece.
+- Build **passa**.
+- **Commit feito** (branch `vibecode`) — verificar push remoto.
+
+### Próximos passos
+- Teste visual/runtime do usuário: abrir obra no feed → página SEM sidebar/header, leitura limpa → avançar páginas com modal de login (deslogado) → interações logado.
+- Sugestões sem notificação ao autor (futuro: badge na visão geral).
+
+---
+
 ## 2026-09-08 - Sessão: Leitura pública p/ visitantes + sugestão de login a cada página
 
 ### Estado final
