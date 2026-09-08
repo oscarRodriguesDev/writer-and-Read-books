@@ -1,5 +1,20 @@
 # Checkpoints
 
+## 2026-09-08 - Sessão: Leitura pública p/ visitantes + sugestão de login a cada página
+
+### Estado final
+- **Novo comportamento**: visitante (deslogado) pode **navegar o feed E ler as obras**; **interagir continua exigindo login** (401 nas APIs). A cada avanço de página no leitor público aparece modal de **sugestão de login/cadastro** ("Gostando da leitura?" → Entrar / Criar conta grátis / Continuar lendo).
+- **Fix anterior incluído**: logado acessa `/feed` (proxy separa `ROTAS_PUBLICAS` de `ROTAS_SO_ANONIMAS`).
+- **Arquivos**: `src/proxy.ts` (ePublica), `src/components/leitor/LeitorLivro.tsx` (prop `sugerirLogin` + modal), `src/app/feed/[obraId]/page.tsx`.
+- Build **passa**.
+- **Commit feito** (branch `vibecode`) — verificar push remoto.
+
+### Próximos passos
+- Teste visual/runtime do usuário: deslogado abrir obra no feed e ler → a cada página avançada o modal sugere login/cadastro → voltar pra mesma página após entrar → curtir/comentar/sugerir funcionando.
+- Sugestões sem notificação ao autor (futuro: badge na visão geral).
+
+---
+
 ## 2026-09-08 - Sessão: Feed de obras compartilhadas + interações + leitor protegido
 
 ### Estado final

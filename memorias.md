@@ -1,5 +1,17 @@
 # Memórias do Projeto
 
+## 2026-09-08 - Feed: visitantes podem LER; interações exigem login + sugestão a cada página (Autoria: VIBECODE)
+
+### Pedido
+"usuario deslogado podera ler as obras, só não pode interagir, e toda vez que passar para proxima pagina vai aparecer sugestão para ele logar ou se cadastrar"
+
+### Decisões
+- **Leitura pública**: `proxy.ts` libera `/feed/[obraId]` para todos (`ePublica()` = `/feed` + qualquer `/feed/*`). Interações continuam com 401 deslogado.
+- **Sugestão de login a cada avanço de página** (não só uma vez): nova prop `sugerirLogin` no `LeitorLivro` — em `navegar`, quando `sugerirLogin && alvo > flatAtual`, abre o modal "Gostando da leitura?" com **Entrar / Criar conta grátis / Continuar lendo**. Os botões levam a `/login|/cadastro?callbackUrl=<URL atual do leitor>` (volta pra mesma página após logar). Reabre a cada avanço enquanto deslogado.
+- `protegido` (DRM) permanece para quem não é dono — inclusive visitantes.
+
+---
+
 ## 2026-09-08 - Feed de obras compartilhadas + interações + leitor protegido + fix script tema (Autoria: VIBECODE)
 
 ### Pedido

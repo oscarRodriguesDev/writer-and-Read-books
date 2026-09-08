@@ -137,6 +137,7 @@ export default async function FeedObraPage({
           capInicial={0}
           pagInicial={0}
           protegido={!dono}
+          sugerirLogin={!usuarioId}
           voltarHref="/feed"
           voltarLabel="Feed"
           rotaBase={`/feed/${obra.id}`}

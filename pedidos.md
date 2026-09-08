@@ -1,5 +1,20 @@
 # Pedidos
 
+## 2026-09-08 - Visitante pode LER obras; interagir exige login + sugestão a cada página
+- **Commit**: *(este commit)*
+- **Descrição**: novo comportamento do leitor público: **deslogado pode ler as obras** (sem interagir) e, **a cada avanço de página**, aparece uma **sugestão de login/cadastro**.
+- **Solução**: `proxy.ts` — `/feed/[obraId]` liberado para todos via `ePublica()` (feed + leitura pública; interações seguem exigindo login, 401 na API). `LeitorLivro` ganhou prop `sugerirLogin`: ao avançar página (`alvo > flatAtual` em `navegar`) abre modal "Gostando da leitura?" com **Entrar** / **Criar conta grátis** (com `callbackUrl` de volta pro leitor) / **Continuar lendo**; reabre a cada avanço enquanto deslogado. Página `/feed/[obraId]` passa `sugerirLogin={!usuarioId}`.
+- **Arquivos**: `src/proxy.ts`, `src/components/leitor/LeitorLivro.tsx`, `src/app/feed/[obraId]/page.tsx`
+- **Testes**: build passa. Teste visual/runtime é do usuário.
+
+## 2026-09-08 - Fix: usuário logado consegue acessar o feed
+- **Commit**: *(este commit)*
+- **Descrição**: Logado, clicar em "Feed" na sidebar **redirecionava para `/`** — o feed ficava inacessível para quem tem conta.
+- **Causa**: a regra "logado não vê páginas públicas" usava `ROTAS_PUBLICAS`, que agora inclui `/feed`.
+- **Solução**: separar as listas no `proxy.ts` — `ROTAS_PUBLICAS` (acessíveis por todos: `/login`, `/cadastro`, `/feed`) e `ROTAS_SO_ANONIMAS` (só deslogado: `/login`, `/cadastro`). O redirect de logado agora só usa `ROTAS_SO_ANONIMAS`.
+- **Arquivos**: `src/proxy.ts`
+- **Testes**: build passa. Teste visual/runtime é do usuário.
+
 ## 2026-09-08 - Feed público (navegação) + ler/interagir exige cadastro
 - **Commit**: *(este commit)*
 - **Descrição**: Navegar o feed **sem login**; **para ler** obra e **comentar/curtir/etc** é preciso **cadastrar/entrar**.

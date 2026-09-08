@@ -12,7 +12,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { btnSecundario } from "@/components/ui";
+import { btnPrimario, btnSecundario } from "@/components/ui";
 import {
   CONFIG_LEITOR_PADRAO,
   lerConfigLeitor,
@@ -42,6 +42,8 @@ type Props = {
   voltarLabel?: string;
   /** Base das URLs de navegação (padrão: /ler/[obraId]). */
   rotaBase?: string;
+  /** Visitante (deslogado): ao avançar páginas, sugere login/cadastro. */
+  sugerirLogin?: boolean;
 };
 
 type FaseAnimacao = "frente" | "voltar";
@@ -89,6 +91,7 @@ export default function LeitorLivro({
   voltarHref,
   voltarLabel = "Obra",
   rotaBase,
+  sugerirLogin = false,
 }: Props) {
   const router = useRouter();
 
@@ -100,6 +103,7 @@ export default function LeitorLivro({
   const [animacao, setAnimacao] = useState<AnimacaoPagina>(CONFIG_LEITOR_PADRAO.animacao);
   const [densidade, setDensidade] = useState<DensidadePagina>(CONFIG_LEITOR_PADRAO.densidade);
   const [alturaVitrine, setAlturaVitrine] = useState<number>();
+  const [sugestaoLoginAberta, setSugestaoLoginAberta] = useState(false);
 
   const baseRef = useRef<HTMLDivElement>(null);
   const topoRef = useRef<HTMLDivElement>(null);
@@ -179,6 +183,9 @@ export default function LeitorLivro({
       if (animando) return;
       if (alvo < 0 || alvo >= totalPaginas || alvo === flatAtual) return;
 
+      // Visitante deslogado: a cada avanço de página, sugere login/cadastro
+      if (sugerirLogin && alvo > flatAtual) setSugestaoLoginAberta(true);
+
       const faseDir: FaseAnimacao = alvo > flatAtual ? "frente" : "voltar";
       const { c, p } = decomporFlat(alvo);
       router.replace(`${rotaBase ?? `/ler/${obraId}`}?cap=${c}&pag=${p}`, { scroll: false });
@@ -194,8 +201,19 @@ export default function LeitorLivro({
       setFase(faseDir);
       setAnimando(true);
     },
-    [animacao, animando, decomporFlat, flatAtual, obraId, rolarParaTopo, router, totalPaginas],
+    [animacao, animando, decomporFlat, flatAtual, obraId, rolarParaTopo, router, sugerirLogin, totalPaginas],
   );
+
+  // Redirect de visitante deslogado para login/cadastro, voltando ao leitor
+  const irParaLogin = useCallback(() => {
+    const cb = encodeURIComponent(window.location.pathname + window.location.search);
+    router.push(`/login?callbackUrl=${cb}`);
+  }, [router]);
+
+  const irParaCadastro = useCallback(() => {
+    const cb = encodeURIComponent(window.location.pathname + window.location.search);
+    router.push(`/cadastro?callbackUrl=${cb}`);
+  }, [router]);
 
   const finalizarAnimacao = useCallback(
     (e: AnimationEvent<HTMLDivElement>) => {
@@ -504,6 +522,55 @@ export default function LeitorLivro({
           </button>
         </div>
       </nav>
+
+      {/* Sugestão de login/cadastro para visitantes (aparece a cada avanço de página) */}
+      {sugerirLogin && sugestaoLoginAberta && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sugestao-login-titulo"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setSugestaoLoginAberta(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl border border-line fundo-papel p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="sugestao-login-titulo" className="text-lg font-bold text-foreground">
+              Gostando da leitura? 📖
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-soft">
+              Entre ou crie sua conta para <strong className="text-foreground">curtir</strong>,{" "}
+              <strong className="text-foreground">comentar</strong> e enviar{" "}
+              <strong className="text-foreground">sugestões</strong> aos autores desta
+              comunidade.
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={irParaLogin}
+                className={cn(btnPrimario, "w-full justify-center")}
+              >
+                Entrar
+              </button>
+              <button
+                type="button"
+                onClick={irParaCadastro}
+                className={cn(btnSecundario, "w-full justify-center")}
+              >
+                Criar conta grátis
+              </button>
+              <button
+                type="button"
+                onClick={() => setSugestaoLoginAberta(false)}
+                className="mt-1 text-sm text-muted transition-colors hover:text-foreground"
+              >
+                Continuar lendo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
