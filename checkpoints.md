@@ -1,5 +1,22 @@
 # Checkpoints
 
+## 2026-09-08 (Revisão) - Sessão: EditorDocumento como documento único com anotações fixas no texto
+
+### Estado final
+- Usuário reprovou a 1ª versão (cards/blocos por cena): queria **"documento de verdade"** — as anotações INÍCIO/MEIO/FIM e CENA N **escritas dentro do documento**, não-editáveis, não-apagáveis, e o texto sendo escrito **entre elas**; adicionar cena = **botãozinho "+"**.
+- `EditorDocumento` **reescrito**: única instância TipTap + nós custom `marcaParte`/`marcaCena` (atom, `selectable:false`, `draggable:false`, nodeView `contenteditable=false`, `stopEvent:true`) — anotações visíveis no fluxo do papel e imutáveis.
+- Nós com attrs (`parteId`/`tipo`) e (`cenaId`/`parteId`/`numero`); parse/render via `data-marca-part`/`data-marca-cena`/`data-parte-id`/`data-numero`.
+- "**+**" no delimitador adiciona cena no **fim da parte** (marca `tmp-*` + parágrafo vazio, `insertContentAt` no `posFimDaParte`); "**−**" exclui marca + conteúdo (`deleteRange` de `pos→fimConteudoCena`); `renumerarMarcas` mantém CENA N 1..N por parte.
+- Save (debounce 1,2s): `coletarCenas` agrupa parágrafos por cena → HTML por `DOMSerializer.serializeFragment` → **PATCH só quando `hashTexto` muda**; cenas `tmp-*` criadas via `POST /api/cenas` e marca re-identificada (`trocarIdDaMarca`).
+- Grade 3×3 segue default (`VisorCapitulo` intacto); CSS de papel/linhas + marcas em `globals.css`.
+- Build **passa**.
+
+### Próximos passos
+- Teste visual/runtime do usuário: escrever entre anotações, usar "+"/"−", conferir autosave e cenas após recarregar; alternar Grade ↔ Documento.
+- Se exclusão por teclado (seleção múltipla + delete) remover marca, implementar `filterTransaction` para travar o range das marcas.
+
+---
+
 ## 2026-09-08 - Sessão: Editor de documento contínuo (TipTap) + cenas livres por parte
 
 ### Estado final

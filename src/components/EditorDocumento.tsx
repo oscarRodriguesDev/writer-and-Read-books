@@ -1,19 +1,22 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+import { Node } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import TipTapLink from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
-import { ROTULO_PARTE } from "@/lib/constants";
-import type { ParteTipo } from "@/lib/constants";
-import { btnSecundario } from "@/components/ui";
-import type { CapituloEditorDados } from "@/components/EditorCapitulo";
+import { DOMSerializer, Fragment, type Node as PMNode } from "@tiptap/pm/model";
+import { ROTULO_PARTE, type ParteTipo } from "@/lib/constants";
 import { textoParaHtml } from "@/lib/html";
+import type { CapituloEditorDados } from "@/components/EditorCapitulo";
 
 type EstadoSave = "ocioso" | "salvando" | "salvo" | "erro";
+
+/** Cenas ainda não persistidas no banco fogem com este prefixo em `cenaId`. */
+const PREFIXO_TMP = "tmp-";
 
 const clsFerramenta = (ativo: boolean) =>
   `rounded-md px-2 py-1.5 text-sm leading-none transition-colors ${
@@ -74,9 +77,7 @@ function BarraFerramentas({ editor }: { editor: Editor }) {
         title="Link"
         className={clsFerramenta(editor.isActive("link"))}
         onClick={() => {
-          const atual =
-            editor.getAttributes("link").href ??
-            "";
+          const atual = editor.getAttributes("link").href ?? "";
           const href = window.prompt("Endereço do link:", atual);
           if (href === null) return;
           if (href.trim() === "")
@@ -192,236 +193,502 @@ function BarraFerramentas({ editor }: { editor: Editor }) {
   );
 }
 
-function EditorDeCena({
-  cenaId,
-  conteudoInicial,
-  onMudar,
-}: {
-  cenaId: string;
-  conteudoInicial: string;
-  onMudar: (cenaId: string, html: string) => void;
-}) {
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      TipTapLink.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
-      Placeholder.configure({ placeholder: "Escreva esta cena…" }),
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-    ],
-    content: textoParaHtml(conteudoInicial),
-    editorProps: {
-      attributes: { class: "tiptap min-h-28 px-4 py-3" },
-    },
-    onUpdate: ({ editor: atual }) => onMudar(cenaId, atual.getHTML()),
-  });
+/* ---------------------------------------------------------------------------
+   Hash leve para saber quais cenas mudaram (evita reenvio de tudo a cada pausa)
+   --------------------------------------------------------------------------- */
 
-  if (!editor) return null;
-  return (
-    <div className="editor-documento">
-      <BarraFerramentas editor={editor} />
-      <EditorContent editor={editor} />
-    </div>
-  );
+function hashTexto(texto: string): string {
+  let h = 7;
+  for (let i = 0; i < texto.length; i++) h = (h * 31 + texto.charCodeAt(i)) | 0;
+  return String(h);
 }
 
-type CenaDoc = {
-  id: string;
-  tipo: string;
-  ordem: number;
-  titulo: string | null;
-  objetivo: string | null;
-};
+/* ---------------------------------------------------------------------------
+   Nós custom: anotações travadas dentro do documento
+   --------------------------------------------------------------------------- */
 
-type ParteDoc = { id: string; tipo: string; cenas: CenaDoc[] };
+/** Anotação de parte (escrita no documento, não-editável): INÍCIO / MEIO / FIM. */
+function marcaParteNode() {
+  return Node.create({
+    name: "marcaParte",
+    group: "block",
+    atom: true,
+    selectable: false,
+    draggable: false,
+    addAttributes: () => ({
+      parteId: { default: "" },
+      tipo: { default: "INICIO" },
+    }),
+    parseHTML: () => [
+      {
+        tag: "div[data-marca-part]",
+        getAttrs: (el) => ({
+          parteId: (el as HTMLElement).getAttribute("data-parte-id") ?? "",
+          tipo: (el as HTMLElement).getAttribute("data-marca-part") ?? "INICIO",
+        }),
+      },
+    ],
+    renderHTML: ({ node, HTMLAttributes }) => [
+      "div",
+      {
+        ...HTMLAttributes,
+        "data-marca-part": node.attrs.tipo,
+        "data-parte-id": node.attrs.parteId,
+        class: "marca-parte",
+      },
+      "·",
+    ],
+    addNodeView() {
+      return ({ node }: { node: PMNode }) => {
+        const dom = document.createElement("div");
+        dom.className = "marca-parte";
+        dom.contentEditable = "false";
+        const rotulo = document.createElement("span");
+        rotulo.className = "marca-rotulo";
+        const attrs = {
+          parteId: node.attrs.parteId ?? "",
+          tipo: node.attrs.tipo ?? "INICIO",
+        };
+        const atualizar = () => {
+          rotulo.textContent = (
+            ROTULO_PARTE[attrs.tipo as ParteTipo] ?? attrs.tipo
+          ).toUpperCase();
+        };
+        atualizar();
+        dom.setAttribute("data-marca-part", attrs.tipo);
+        dom.setAttribute("data-parte-id", attrs.parteId);
+        dom.appendChild(rotulo);
+        return {
+          dom,
+          ignoreMutation: () => true,
+          stopEvent: () => true,
+          update: (novo: PMNode) => {
+            if (
+              novo.attrs.tipo !== attrs.tipo ||
+              novo.attrs.parteId !== attrs.parteId
+            ) {
+              attrs.tipo = novo.attrs.tipo;
+              attrs.parteId = novo.attrs.parteId;
+              atualizar();
+            }
+            return true;
+          },
+        };
+      };
+    },
+  });
+}
 
-/**
- * Modo "documento contínuo": lista as partes por ordem, cada cena como um
- * bloco com delimitador e editor rico (TipTap), com autosave por cena e
- * criação/remoção de cenas direto no texto.
- */
+/** Anotação de cena (não-editável) + botões "+" (adicionar) e "−" (excluir). */
+function marcaCenaNode(deps: {
+  onAdicionar: (parteId: string) => void;
+  onRemover: (cenaId: string, parteId: string) => void;
+}) {
+  return Node.create({
+    name: "marcaCena",
+    group: "block",
+    atom: true,
+    selectable: false,
+    draggable: false,
+    addAttributes: () => ({
+      cenaId: { default: "" },
+      parteId: { default: "" },
+      numero: { default: 1 },
+    }),
+    parseHTML: () => [
+      {
+        tag: "div[data-marca-cena]",
+        getAttrs: (el) => ({
+          cenaId: (el as HTMLElement).getAttribute("data-marca-cena") ?? "",
+          parteId: (el as HTMLElement).getAttribute("data-parte-id") ?? "",
+          numero:
+            parseInt(
+              (el as HTMLElement).getAttribute("data-numero") ?? "1",
+              10,
+            ) || 1,
+        }),
+      },
+    ],
+    renderHTML: ({ node, HTMLAttributes }) => [
+      "div",
+      {
+        ...HTMLAttributes,
+        "data-marca-cena": node.attrs.cenaId,
+        "data-parte-id": node.attrs.parteId,
+        "data-numero": node.attrs.numero,
+        class: "marca-cena",
+      },
+      "CENA",
+    ],
+    addNodeView() {
+      return ({ node }: { node: PMNode }) => {
+        const dom = document.createElement("div");
+        dom.className = "marca-cena";
+        dom.contentEditable = "false";
+        const rotulo = document.createElement("span");
+        rotulo.className = "marca-rotulo";
+        const botaoMais = document.createElement("button");
+        botaoMais.type = "button";
+        botaoMais.className = "marca-btn marca-btn-add";
+        botaoMais.title = "Adicionar cena no fim desta parte";
+        botaoMais.textContent = "+";
+        const botaoMenos = document.createElement("button");
+        botaoMenos.type = "button";
+        botaoMenos.className = "marca-btn marca-btn-del";
+        botaoMenos.title = "Excluir esta cena";
+        botaoMenos.textContent = "−";
+        const attrs = {
+          cenaId: node.attrs.cenaId ?? "",
+          parteId: node.attrs.parteId ?? "",
+          numero: node.attrs.numero ?? 1,
+        };
+        const atualizar = () => {
+          rotulo.textContent = `CENA ${attrs.numero}`;
+        };
+        atualizar();
+        botaoMais.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          deps.onAdicionar(attrs.parteId);
+        });
+        botaoMenos.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          deps.onRemover(attrs.cenaId, attrs.parteId);
+        });
+        dom.appendChild(botaoMais);
+        dom.appendChild(rotulo);
+        dom.appendChild(botaoMenos);
+        return {
+          dom,
+          ignoreMutation: () => true,
+          stopEvent: () => true,
+          update: (novo: PMNode) => {
+            if (novo.attrs.numero !== attrs.numero) {
+              attrs.numero = novo.attrs.numero;
+              atualizar();
+            }
+            return true;
+          },
+        };
+      };
+    },
+  });
+}
+
+/* ---------------------------------------------------------------------------
+   Montagem, leitura e manipulação da estrutura do documento
+   --------------------------------------------------------------------------- */
+
+function montarHtmlDocumento(
+  capitulo: CapituloEditorDados,
+  conteudos: Map<string, string>,
+): string {
+  return capitulo.partes
+    .map((parte) => {
+      const blocos = parte.cenas.map((cena, i) => {
+        const corpo = conteudos.get(cena.id) ?? "";
+        const marca = `<div data-marca-cena="${cena.id}" data-parte-id="${parte.id}" data-numero="${i + 1}"></div>`;
+        return `${marca}\n${corpo || "<p></p>"}`;
+      });
+      return `<div data-marca-part="${parte.tipo}" data-parte-id="${parte.id}"></div>\n${blocos.join("\n")}`;
+    })
+    .join("\n");
+}
+
+type CenaColetada = { cenaId: string; parteId: string; html: string };
+
+/** Lê o documento atual e devolve, para cada cena, seu HTML (sem as marcas). */
+function coletarCenas(editor: Editor): CenaColetada[] {
+  const cenas: CenaColetada[] = [];
+  let cenaAtual: string | null = null;
+  let parteIdAtual = "";
+  let nodesCena: PMNode[] = [];
+  let refugo: PMNode[] = [];
+
+  const fecharCena = () => {
+    if (cenaAtual == null) return;
+    const todos = refugo.length ? [...refugo, ...nodesCena] : nodesCena;
+    refugo = [];
+    nodesCena = [];
+    let html = "";
+    if (todos.length) {
+      const fragmento = DOMSerializer.fromSchema(editor.schema).serializeFragment(
+        Fragment.fromArray(todos),
+      );
+      const caixa = document.createElement("div");
+      caixa.appendChild(fragmento);
+      html = caixa.innerHTML.trim();
+    }
+    if (html.replace(/<[^>]+>/g, "").trim() === "") html = "";
+    cenas.push({ cenaId: cenaAtual, parteId: parteIdAtual, html });
+    cenaAtual = null;
+  };
+
+  editor.state.doc.forEach((node) => {
+    if (node.type.name === "marcaParte") {
+      if (cenaAtual) fecharCena();
+      parteIdAtual = node.attrs.parteId ?? "";
+      refugo = [];
+      return;
+    }
+    if (node.type.name === "marcaCena") {
+      if (cenaAtual) fecharCena();
+      cenaAtual = node.attrs.cenaId ?? "";
+      nodesCena = [];
+      return;
+    }
+    if (cenaAtual) nodesCena.push(node);
+    else if (parteIdAtual) refugo.push(node);
+  });
+  if (cenaAtual) fecharCena();
+  return cenas;
+}
+
+function posDaMarcaCena(editor: Editor, cenaId: string): number | null {
+  let pos: number | null = null;
+  editor.state.doc.descendants((node, p) => {
+    if (node.type.name === "marcaCena" && node.attrs.cenaId === cenaId) {
+      pos = p;
+      return false;
+    }
+    return true;
+  });
+  return pos;
+}
+
+/** Renumera as anotações CENA N dentro de cada parte, na ordem do documento. */
+function renumerarMarcas(editor: Editor) {
+  const tr = editor.state.tr;
+  let contagem: number | null = null;
+  editor.state.doc.forEach((node, offset) => {
+    if (node.type.name === "marcaParte") {
+      contagem = 0;
+      return;
+    }
+    if (node.type.name === "marcaCena" && contagem != null) {
+      contagem++;
+      if (node.attrs.numero !== contagem) {
+        tr.setNodeMarkup(offset, undefined, { ...node.attrs, numero: contagem });
+      }
+    }
+  });
+  if (tr.docChanged) editor.view.dispatch(tr);
+}
+
+/** Posição logo após a última marca/parágrafo de uma parte (para inserir ao fim). */
+function posFimDaParte(editor: Editor, parteId: string): number | null {
+  let fim: number | null = null;
+  editor.state.doc.forEach((node, offset) => {
+    if (node.type.name === "marcaParte") {
+      fim = node.attrs.parteId === parteId ? offset + node.nodeSize : null;
+      return;
+    }
+    if (fim != null) fim = offset + node.nodeSize;
+  });
+  return fim;
+}
+
+/** Posição após o conteúdo da cena que começa em `posMarca` (até a próxima marca). */
+function fimConteudoCena(editor: Editor, posMarca: number): number {
+  const doc = editor.state.doc;
+  const nodeNaMarca = doc.nodeAt(posMarca);
+  const inicio = posMarca + (nodeNaMarca ? nodeNaMarca.nodeSize : 1);
+  let fim = inicio;
+  let p = inicio;
+  while (p < doc.content.size) {
+    const node = doc.nodeAt(p);
+    if (!node) break;
+    if (node.type.name.startsWith("marca")) break;
+    fim = p + node.nodeSize;
+    p = fim;
+  }
+  return fim;
+}
+
+/* ---------------------------------------------------------------------------
+   API
+   --------------------------------------------------------------------------- */
+
+async function criarCenaApi(parteId: string): Promise<{ id: string }> {
+  const res = await fetch("/api/cenas", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ parteId }),
+  });
+  if (!res.ok) {
+    const corpo = (await res.json().catch(() => null)) as
+      | { erro?: string }
+      | null;
+    throw new Error(corpo?.erro ?? "Falha ao criar cena.");
+  }
+  return (await res.json()) as { id: string };
+}
+
+async function salvarCenaApi(cenaId: string, conteudo: string): Promise<void> {
+  const res = await fetch(`/api/cenas/${cenaId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ conteudo }),
+  });
+  if (!res.ok) throw new Error("Falha ao salvar a cena.");
+}
+
+function trocarIdDaMarca(editor: Editor, de: string, para: string) {
+  const pos = posDaMarcaCena(editor, de);
+  if (pos == null) return;
+  const node = editor.state.doc.nodeAt(pos);
+  if (!node || node.type.name !== "marcaCena") return;
+  const tr = editor.state.tr.setNodeMarkup(pos, undefined, {
+    ...node.attrs,
+    cenaId: para,
+  });
+  editor.view.dispatch(tr);
+}
+
+/* ---------------------------------------------------------------------------
+   Componente
+   --------------------------------------------------------------------------- */
+
 export function EditorDocumento({
   capitulo,
 }: {
   capitulo: CapituloEditorDados;
 }) {
-  const [partes, setPartes] = useState<ParteDoc[]>(() =>
-    capitulo.partes.map((p) => ({
-      id: p.id,
-      tipo: p.tipo,
-      cenas: p.cenas.map((c) => ({
-        id: c.id,
-        tipo: c.tipo,
-        ordem: c.ordem,
-        titulo: c.titulo,
-        objetivo: c.objetivo,
-      })),
-    })),
+  const editorRef = useRef<Editor | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hashes = useRef(new Map<string, string>());
+  const [estado, setEstado] = useState<EstadoSave>("ocioso");
+
+  const conteudoInicial = useMemo(() => {
+    const conteudos = new Map<string, string>();
+    for (const parte of capitulo.partes)
+      for (const cena of parte.cenas)
+        conteudos.set(cena.id, textoParaHtml(cena.conteudo));
+    for (const [id, html] of conteudos) hashes.current.set(id, hashTexto(html));
+    return montarHtmlDocumento(capitulo, conteudos);
+  }, [capitulo]);
+
+  const executarSalvar = useCallback(async () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    setEstado("salvando");
+    try {
+      for (const cena of coletarCenas(editor)) {
+        let id = cena.cenaId;
+        if (id.startsWith(PREFIXO_TMP)) {
+          const nova = await criarCenaApi(cena.parteId);
+          id = nova.id;
+          trocarIdDaMarca(editor, cena.cenaId, id);
+        }
+        const hash = hashTexto(cena.html);
+        if (hashes.current.get(id) === hash) continue;
+        await salvarCenaApi(id, cena.html);
+        hashes.current.set(id, hash);
+      }
+      setEstado("salvo");
+    } catch {
+      setEstado("erro");
+    }
+  }, []);
+
+  const agendarSalvar = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      void executarSalvar();
+    }, 1200);
+  }, [executarSalvar]);
+
+  const adicionarCena = useCallback(
+    (parteId: string) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const fim = posFimDaParte(editor, parteId);
+      if (fim == null) return;
+      const tmpId = `${PREFIXO_TMP}${Date.now().toString(36)}-${Math.random()
+        .toString(36)
+        .slice(2, 7)}`;
+      const marca = editor.schema.nodes.marcaCena.create({
+        cenaId: tmpId,
+        parteId,
+        numero: 0,
+      });
+      const paragrafo = editor.schema.nodes.paragraph.create();
+      editor.chain().focus().insertContentAt(fim, [marca, paragrafo]).run();
+      renumerarMarcas(editor);
+      agendarSalvar();
+    },
+    [agendarSalvar],
   );
 
-  const conteudos = useRef<Map<string, string>>(new Map());
-  if (conteudos.current.size === 0) {
-    for (const p of capitulo.partes)
-      for (const c of p.cenas) conteudos.current.set(c.id, c.conteudo);
-  }
+  const removerCena = useCallback(
+    async (cenaId: string, parteId: string) => {
+      if (!window.confirm("Excluir esta cena e todo o texto dela?")) return;
+      const editor = editorRef.current;
+      if (!editor) return;
+      const pos = posDaMarcaCena(editor, cenaId);
+      if (pos == null) return;
+      const fim = fimConteudoCena(editor, pos);
+      editor.chain().focus().deleteRange({ from: pos, to: fim }).run();
+      renumerarMarcas(editor);
+      hashes.current.delete(cenaId);
+      try {
+        await fetch(`/api/cenas/${cenaId}`, { method: "DELETE" });
+      } catch {
+        /* o próximo ciclo de salvamento reenviará o estado do documento */
+      }
+      agendarSalvar();
+    },
+    [agendarSalvar],
+  );
 
-  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
-  const pendentes = useRef(0);
-  const [salvo, setSalvo] = useState<EstadoSave>("ocioso");
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      TipTapLink.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
+      Placeholder.configure({ placeholder: "Escreva a cena…" }),
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      marcaParteNode(),
+      marcaCenaNode({
+        onAdicionar: (parteId) => adicionarCena(parteId),
+        onRemover: (cenaId, parteId) => void removerCena(cenaId, parteId),
+      }),
+    ],
+    content: conteudoInicial,
+    editorProps: {
+      attributes: { class: "documento-area" },
+    },
+    onUpdate: () => agendarSalvar(),
+  });
 
-  function agendarSalvar(cenaId: string, html: string) {
-    conteudos.current.set(cenaId, html);
-    clearTimeout(timers.current.get(cenaId));
-    timers.current.set(
-      cenaId,
-      setTimeout(async () => {
-        pendentes.current++;
-        setSalvo("salvando");
-        try {
-          const res = await fetch(`/api/cenas/${cenaId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ conteudo: html }),
-          });
-          if (!res.ok) throw new Error("Falha ao salvar a cena.");
-        } catch {
-          setSalvo("erro");
-          pendentes.current--;
-          return;
-        }
-        pendentes.current--;
-        setSalvo(pendentes.current === 0 ? "salvo" : "salvando");
-      }, 1200),
-    );
-  }
-
-  async function criarCena(parteId: string) {
-    const res = await fetch("/api/cenas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ parteId }),
-    });
-    if (!res.ok) {
-      const corpo = (await res.json().catch(() => null)) as
-        | { erro?: string }
-        | null;
-      throw new Error(corpo?.erro ?? "Falha ao criar cena.");
-    }
-    const nova = (await res.json()) as { id: string; tipo: string; ordem: number };
-    setPartes((prev) =>
-      prev.map((p) =>
-        p.id === parteId
-          ? { ...p, cenas: [...p.cenas, { id: nova.id, tipo: nova.tipo, ordem: nova.ordem, titulo: null, objetivo: null }] }
-          : p,
-      ),
-    );
-  }
-
-  async function removerCena(parteId: string, cenaId: string) {
-    if (!window.confirm("Excluir esta cena?")) return;
-    const res = await fetch(`/api/cenas/${cenaId}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Falha ao excluir a cena.");
-    conteudos.current.delete(cenaId);
-    setPartes((prev) =>
-      prev.map((p) =>
-        p.id === parteId
-          ? { ...p, cenas: p.cenas.filter((c) => c.id !== cenaId).map((c, i) => ({ ...c, ordem: i + 1 })) }
-          : p,
-      ),
-    );
-  }
+  useEffect(() => {
+    editorRef.current = editor;
+  }, [editor]);
 
   const estadoSalvo =
-    salvo === "salvando"
+    estado === "salvando"
       ? { texto: "Salvando…", cls: "text-soft" }
-      : salvo === "erro"
+      : estado === "erro"
         ? { texto: "Erro ao salvar", cls: "text-danger" }
-        : salvo === "salvo"
+        : estado === "salvo"
           ? { texto: "Salvo ✓", cls: "text-success" }
           : { texto: "", cls: "" };
 
+  if (!editor) return null;
+
   return (
     <div className="editor-documento">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted">
-            Cada bloco é uma cena — adicione ou remova com os controles.
-          </span>
-          <span className={`text-sm ${estadoSalvo.cls}`}>{estadoSalvo.texto}</span>
-        </div>
+      <BarraFerramentas editor={editor} />
+      <div className="documento-folha">
+        <EditorContent editor={editor} />
       </div>
-
-      <div className="space-y-6">
-        {partes.map((parte, idxParte) => {
-          const rotuloParte =
-            ROTULO_PARTE[parte.tipo as ParteTipo] ?? parte.tipo;
-          return (
-            <section key={parte.id} className="space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="rounded-full bg-chipbg px-3 py-1 text-sm font-semibold text-soft">
-                  PARTE {idxParte + 1} · {rotuloParte}
-                </span>
-                <span className="h-px flex-1 bg-line" />
-              </div>
-
-              <div className="space-y-5">
-                {parte.cenas.map((cena, idxCena) => {
-                  const rotuloLegado =
-                    cena.tipo === "INICIO"
-                      ? "· Início"
-                      : cena.tipo === "MEIO"
-                        ? "· Meio"
-                        : cena.tipo === "FIM"
-                          ? "· Fim"
-                          : "";
-                  return (
-                    <div
-                      key={cena.id}
-                      className="overflow-hidden rounded-xl border border-line bg-surface shadow-sm"
-                    >
-                      <div className="flex items-center justify-between gap-2 border-b border-line bg-hoverbg px-4 py-2">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-muted">
-                          Cena {idxCena + 1} {rotuloLegado}
-                        </span>
-                        <div className="flex items-center gap-3">
-                          {cena.objetivo?.trim() ? (
-                            <span
-                              className="max-w-sm truncate text-xs italic text-soft"
-                              title={`Objetivo: ${cena.objetivo}`}
-                            >
-                              {cena.objetivo}
-                            </span>
-                          ) : null}
-                          <button
-                            type="button"
-                            title="Excluir cena"
-                            className="rounded-md px-2 py-1 text-xs text-danger hover:bg-danger-light"
-                            onClick={() => removerCena(parte.id, cena.id)}
-                          >
-                            Excluir
-                          </button>
-                        </div>
-                      </div>
-                      <EditorDeCena
-                        cenaId={cena.id}
-                        conteudoInicial={conteudos.current.get(cena.id) ?? ""}
-                        onMudar={agendarSalvar}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-
-              <button
-                type="button"
-                className={`${btnSecundario} text-sm`}
-                onClick={() => criarCena(parte.id)}
-              >
-                + Adicionar cena
-              </button>
-            </section>
-          );
-        })}
+      <div className="documento-rodape">
+        <span className={`text-sm ${estadoSalvo.cls}`}>{estadoSalvo.texto}</span>
+        <span className="documento-dica">
+          As anotações de parte e de cena são fixas — escreva entre elas. Use
+          o “+” para acrescentar cenas.
+        </span>
       </div>
     </div>
   );

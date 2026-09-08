@@ -1,6 +1,32 @@
 # Memórias do Projeto
 
+## 2026-09-08 (Revisão) - Documento contínuo "de verdade": anotações fixas escritas dentro do documento (Autoria: VIBECODE)
+
+### Contexto
+O usuário testou a 1ª versão (blocos/cards por cena, toolbar por bloco) e reprovou: **"a forma como fez não está boa; não preciso como se fosse um documento Word"**. Pedido: as anotações **INÍCIO/MEIO/FIM** e **CENA N** devem estar **escritas dentro do documento**, **fixas e não apagáveis**, com o autor escrevendo **entre elas**; adicionar cena é clicar num **botãozinho "+"**.
+
+### Decisão
+`EditorDocumento` reescrito como **um único editor TipTap** (toolbar única no topo) com nós ProseMirror custom **`marcaParte`**/**`marcaCena`** (`atom`, `selectable:false`, `draggable:false`, `contenteditable=false` via nodeView) — as anotações **aparecem escritas na folha** e **não podem ser editadas/apagadas pelo teclado**. Cada cena é apenas o texto que flui entre as anotações.
+
+### Implementação
+- Nó `marcaParte` (attrs `parteId`, `tipo`): anotação **INÍCIO/MEIO/FIM** com filetes laterais no meio do fluxo.
+- Nó `marcaCena` (attrs `cenaId`, `parteId`, `numero`): pill **"CENA N"** + botão **"+"** (adiciona cena no fim da parte) e **"−"** (exclui cena + texto, com `confirm`).
+- **O documento é a fonte única**. Save com debounce de 1,2s: `coletarCenas(editor)` percorre `doc.forEach` agrupando os parágrafos de cada cena; serializa o HTML por cena (`DOMSerializer.serializeFragment`); compara hash e faz **`PATCH` somente nas cenas que mudaram**. Cenas novas (`tmp-*`) são criadas via `POST /api/cenas{parteId}` e a marca é re-escrita com o id real (`setNodeMarkup`).
+- `renumerarMarcas`: mantém **"CENA N" 1..N em cada parte** após inserir/excluir (transação única com `setNodeMarkup` — só muda attrs, posições estáveis).
+- Grade 3×3 (`EditorCapitulo`) permanece default; `VisorCapitulo` mantido.
+- CSS em `globals.css`: `.documento-folha` (papel com linhas a cada 2,25rem), `.marca-parte`, `.marca-cena`, `.marca-btn`, `.documento-rodape` — usando apenas variáveis existentes (`--text-body-sm`, `--text-caption`; `--accent-rgb` não existe → `color-mix`).
+
+### Testes
+`npm run build` passa. Teste visual/runtime é do usuário (regra): escrever entre as anotações, usar "+"/"−", autosave, recarregar o capítulo.
+
+### Pendência técnica anotada
+A marca é protegida no nível da UI (nodeView `contenteditable=false`, `selectable:false`, `stopEvent:true`); exclusão em massa via seleção múltipla + delete ainda pode remover a marca. Se incomodar no teste, implementar `filterTransaction` bloqueando o range das marcas.
+
+---
+
 ## 2026-09-08 - Editor de documento contínuo (TipTap) + cenas livres por parte (Autoria: VIBECODE)
+
+> ⚠️ Agora superseded pela entrada acima: `EditorDocumento` virou documento único com anotações fixas no texto.
 
 ### Decisão
 O usuário pediu um botão **"editar documento"** no capítulo: uma visão alternativa que mostra as cenas em **documento contínuo** (uma após a outra) com **formatação rica de texto** e **delimitadores visuais** entre cenas. A visão atual (grade 3×3) **permanece** como opção (default). No capítulo, estrutura foi flexibilizada para **3 partes × N cenas (default 3)** — o autor pode adicionar/remover cenas por parte.

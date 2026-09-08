@@ -1,9 +1,10 @@
 # Pedidos
 
 ## 2026-09-08 - Editar documento no capítulo (editor contínuo TipTap)
-- **Commit**: *(este commit)*
+- **Commit**: `1fd6a9b` (+ revisão no commit seguinte, push ok)
 - **Descrição**: Botão/aba para editar o capítulo como **documento contínuo** (cenas em sequência com formatação rica e delimitadores); grade 3×3 permanece como opção. Parte fixa (INICIO/MEIO/FIM) × **N cenas por parte** (default 3).
 - **Solução**: Schema `Cena.ordem` + unique `(parteId, ordem)` (migração autorizada; cenas antigas INICIO/MEIO/FIM = ordens 1/2/3); `conteudo` vira HTML (TipTap) com helper `htmlParaTexto`/`textoParaHtml` em todos os consumidores; ordenação por `ordem`; geração IA por `numeroCena`; rotas `POST /api/cenas` e `DELETE /api/cenas/[id]` com checagem de dono; componentes `EditorDocumento` e `VisorCapitulo` (abas).
+- **Revisão (1ª versão reprovada: "não como documento Word")**: `EditorDocumento` **reescrito** como **documento único** — as anotações **INÍCIO/MEIO/FIM** e **CENA N** ficam **escritas dentro do texto** via nós custom `marcaParte`/`marcaCena` (atom, não-editáveis, não-apagáveis por teclado) com botão **"+"** (adiciona cena no fim da parte) e "−" (exclui). Save com debounce 1,2s lê o documento, serializa o HTML de cada cena e dá `PATCH` apenas nas que mudaram; cenas novas (`tmp-*`) criadas via `POST` e re-identificadas na marca automaticamente.
 - **Arquivos**: `prisma/schema.prisma`, migração `20260908002410_cena_ordem`, `src/lib/html.ts` (novo), `auth-obras.ts` (+`obterParteDoUsuario`), `gerarCapitulo.ts`, `validators/index.ts`, `contexto.ts`, `exportarObra.ts`, `promptImagem.ts`, `extrair/revisar/gerarCena`, `corrigirAchado.ts`, `capitulos.ts`, `importar/route.ts`, `ler/[obraId]/page.tsx`, `capitulos/[capituloId]/{page,route}.tsx`, `EditorCapitulo.tsx`, `EditorDocumento.tsx` (novo), `VisorCapitulo.tsx` (novo), `api/cenas/{route, [id]/route}.ts`, `globals.css`
 - **Testes**: build passa. Pendente teste visual/runtime do usuário.
 

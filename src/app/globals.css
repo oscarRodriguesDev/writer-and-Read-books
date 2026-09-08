@@ -750,3 +750,135 @@
   pointer-events: none;
   color: var(--muted);
 }
+
+/* Folha única (papel) em que o documento é escrito de ponta a ponta */
+.documento-folha {
+  background-color: var(--surface);
+  background-image: linear-gradient(
+    180deg,
+    var(--line) 0,
+    var(--line) 1px,
+    transparent 1px
+  );
+  background-size: 100% 2.25rem;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.documento-folha .tiptap {
+  padding: 1.25rem 2rem 3rem;
+  min-height: 24rem;
+}
+
+/* Anotações travadas escritas dentro do documento */
+.documento-folha .marca-parte,
+.documento-folha .marca-cena {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  user-select: none;
+  cursor: default;
+}
+
+.documento-folha .marca-parte .marca-rotulo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.22em;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--text-body-sm);
+  color: var(--accent);
+}
+
+.documento-folha .marca-parte::before,
+.documento-folha .marca-parte::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.45;
+}
+
+.documento-folha .marca-parte {
+  margin: 1rem 0 0.5rem;
+}
+
+.documento-folha .marca-cena {
+  margin: 1.25rem 0 0.5rem;
+}
+
+.documento-folha .marca-cena .marca-rotulo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.16em;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--text-caption);
+  color: var(--soft);
+  border: 1px solid var(--line);
+  background: var(--chipbg);
+  border-radius: 9999px;
+  padding: 0.2rem 0.9rem;
+}
+
+.documento-folha .marca-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.documento-folha .marca-btn-add {
+  background: var(--accent);
+  color: var(--onaccent);
+}
+
+.documento-folha .marca-btn-add:hover {
+  filter: brightness(1.1);
+}
+
+.documento-folha .marca-btn-del {
+  background: transparent;
+  color: var(--muted);
+  opacity: 0;
+}
+
+.documento-folha .marca-cena:hover .marca-btn-del {
+  opacity: 1;
+}
+
+.documento-folha .marca-btn-del:hover {
+  background: var(--danger);
+  color: var(--onaccent);
+}
+
+.documento-folha .marca-parte [contenteditable="false"],
+.documento-folha .marca-cena [contenteditable="false"] {
+  outline: none;
+}
+
+.documento-folha .tiptap::selection {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.documento-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem 0;
+}
+
+.documento-dica {
+  font-size: var(--text-body-sm);
+  color: var(--muted);
+}
