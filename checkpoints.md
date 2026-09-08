@@ -1,5 +1,20 @@
 # Checkpoints
 
+## 2026-09-08 (Revisão 4) - Sessão: Leitor — setas, cliques laterais e primeira/última página
+
+### Estado final
+- **Pedido**: no leitor, navegar com **setas direita/esquerda**, **clique com o mouse** no lado direito (avança) / esquerdo (retrocede) e **ir para a primeira e a última página**.
+- `LeitorLivro.tsx`: `navegar(delta)` → **`navegar(alvo absoluto)`** (índice plano 0..total-1); guardas `animando`, fora dos limites, mesma página; `fase` derivada da direção.
+- **Teclado**: listener único no `window` (ArrowRight/ArrowLeft), estado lido por refs (`navegarRef`/`flatAtualRef`); ignora foco em input/textarea/select/contentEditable e com o painel de configurações aberto (`aria-expanded`); `preventDefault`.
+- **Clique**: `onClick` na `livro-vitrine` (getBoundingClientRect) — esquerda = anterior, direita = próxima; setas `‹`/`›` como dica no hover (`group-hover`, pointer-events-none); `cursor-pointer`.
+- **Primeira/última**: botões "« Primeira" (`navegar(0)`) e "Última »" (`navegar(totalPaginas-1)`) sempre visíveis na barra, `disabled` nas bordas (antes Anterior/Próximo sumiam no limite).
+- Build **passa** (generate + migrate deploy + compile + TS).
+
+### Próximos passos
+- Teste visual/runtime do usuário: setas, cliques nas metades, Primeira/Última, limite do documento, foco em input/painel aberto (não deve virar página).
+
+---
+
 ## 2026-09-08 (Revisão 3) - Sessão: Documento corrido em texto puro com marcas {parte} [bloco] (cena)
 
 ### Estado final

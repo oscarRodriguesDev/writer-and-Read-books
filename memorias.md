@@ -1,5 +1,22 @@
 # Memórias do Projeto
 
+## 2026-09-08 (Revisão 4) - Leitor: navegação por teclado, cliques laterais e primeira/última página (Autoria: VIBECODE)
+
+### Pedido do usuário
+"No modo leitor, além das opções de botões quero poder usar as setas para direita para avançar para próxima página, e esquerda para a página anterior, clicando com o mouse no lado direito avançar uma página, clicando com o mouse no lado esquerdo retroceder uma página, além de possibilidade de ir para a primeira e última página."
+
+### Implementação (tudo em `src/components/leitor/LeitorLivro.tsx`)
+- **`navegar(delta)` virou `navegar(alvo absoluto)`**: navegação absoluta por índice de página plana (0..total-1). `fase` da animação derivada da direção; guardas: `animando`, fora dos limites e mesma página (no-op). Botões Anterior/Próximo passam a chamar `navegar(flatAtual ∓ 1)`.
+- **Teclado**: `useEffect` único escuta `window` `keydown` — `ArrowRight` → próxima, `ArrowLeft` → anterior. Estado lido via refs (`navegarRef`, `flatAtualRef`) para não ficar registrando/desregistrando listener. Ignora quando o foco está em `INPUT/TEXTAREA/SELECT`/contentEditable e quando o painel de configurações está aberto (verifica `aria-expanded` da engrenagem); `preventDefault()` nas setas.
+- **Clique nas laterais**: `onClick` na vitrine (`livro-vitrine`) calcula a posição do clique (`getBoundingClientRect`) — metade esquerda retrocede, metade direita avança (zona neutra não existe; usa a página inteira). Dica visual: setas `‹`/`›` aparecem nas bordas no hover (`group-hover`), `pointer-events-none`, sem sobrepor o texto; `cursor-pointer` na vitrine. `animando` bloqueia durante a animação.
+- **Primeira/última página**: botões novos na barra de navegação — "« Primeira" (`navegar(0)`) e "Última »" (`navegar(totalPaginas - 1)`), com `title` e `disabled` nos limites (antes, os botões Anterior/Próximo sumiam quando no limite; agora os 4 ficam sempre visíveis, desabilitados na borda).
+- Arrows/teclado não interferem no painel de configurações (que usa radio buttons e Escape).
+
+### Testes
+`npm run build` passa (generate + migrate deploy + compile + TS). Teste visual/runtime é do usuário (regra): setas no leitor, cliques nas metades, Primeira/Última, comportamento no limite e com o painel de configurações aberto.
+
+---
+
 ## 2026-09-08 (Revisão 3) - Documento corrido em texto puro com marcas {parte} [bloco] (cena) (Autoria: VIBECODE)
 
 ### Contexto

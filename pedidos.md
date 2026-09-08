@@ -1,7 +1,14 @@
 # Pedidos
 
-## 2026-09-08 - Documento contínuo 3ª versão: texto corrido puro com marcas {parte} [bloco] (cena)
+## 2026-09-08 - Leitor: setas, cliques laterais e primeira/última página
 - **Commit**: *(este commit)*
+- **Descrição**: No modo leitor, além dos botões: **setas** direita/esquerda para avançar/retroceder página, **clique com o mouse** no lado direito (avança) / esquerdo (retrocede) e opção de **ir para a primeira e a última página**.
+- **Solução**: `LeitorLivro.tsx` — `navegar` passou a receber **alvo absoluto** (índice plano), com guardas (animando/limite/mesma página); listener de teclado único (ArrowRight/ArrowLeft) lendo estado via refs e ignorando foco em inputs/painel de configurações aberto; `onClick` na vitrine dividindo em metade esquerda/direita (com dicas `‹`/`›` no hover); botões "« Primeira" e "Última »" sempre visíveis na barra (disabled nas bordas), que antes ocultavam Anterior/Próximo no limite.
+- **Arquivos**: `src/components/leitor/LeitorLivro.tsx`
+- **Testes**: build passa (generate + migrate deploy + compile + TS). Teste visual/runtime é do usuário.
+
+## 2026-09-08 - Documento contínuo 3ª versão: texto corrido puro com marcas {parte} [bloco] (cena)
+- **Commit**: `6d2a458`
 - **Descrição**: 2ª versão do editor de documento (TipTap com anotações fixas) reprovada: "não gostei, vamos mudar abordagem". Novo formato: **texto corrido 100% do escritor** marcando `{inicio}/{meio}/{fim}` (partes), `[inicio]/[meio]/[fim]` (organização da escrita) e `(cena <id>)` (cenas; id = número/letra/palavra). Sem delimitadores visuais.
 - **Solução**: interpretação adotada (pergunta respondida "4" + "nome = palavra cena + identificador") → `{}` persiste na Parte atual; `[]` no campo já existente `Cena.tipo`; `(cena X)` em `Cena.titulo` e o texto seguinte em `Cena.conteudo`. Parser/montador em `src/lib/documentoCapitulo.ts`; nova rota atômica `PUT /api/partes/[parteId]` (cria/atualiza/deleta/reordena em transação, dono checado); `EditorDocumento` reescrito como textarea + autosave 1,3s + botões de inserção no cursor; TipTap e `textoParaHtml` removidos. Grade 3×3 permanece default.
 - **Arquivos**: `src/lib/documentoCapitulo.ts` (novo), `src/app/api/partes/[parteId]/route.ts` (novo), `src/lib/validators/index.ts` (`sincronizarParteSchema`), `src/components/EditorDocumento.tsx`, `src/components/VisorCapitulo.tsx` (comentário), `src/lib/html.ts`, `src/app/globals.css`, `package.json`/`package-lock.json` (sem @tiptap)

@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
   type AnimationEvent,
+  type MouseEvent,
 } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -161,12 +162,12 @@ export default function LeitorLivro({
   );
 
   const navegar = useCallback(
-    (delta: 1 | -1) => {
+    (alvo: number) => {
       if (animando) return;
-      const novo = flatAtual + delta;
-      if (novo < 0 || novo >= totalPaginas) return;
+      if (alvo < 0 || alvo >= totalPaginas || alvo === flatAtual) return;
 
-      const { c, p } = decomporFlat(novo);
+      const faseDir: FaseAnimacao = alvo > flatAtual ? "frente" : "voltar";
+      const { c, p } = decomporFlat(alvo);
       router.replace(`/ler/${obraId}?cap=${c}&pag=${p}`, { scroll: false });
 
       if (animacao === "nenhuma") {
@@ -176,8 +177,8 @@ export default function LeitorLivro({
         return;
       }
 
-      setFlatAlvo(novo);
-      setFase(delta > 0 ? "frente" : "voltar");
+      setFlatAlvo(alvo);
+      setFase(faseDir);
       setAnimando(true);
     },
     [animacao, animando, decomporFlat, flatAtual, obraId, rolarParaTopo, router, totalPaginas],
@@ -238,6 +239,55 @@ export default function LeitorLivro({
   const temAnterior = flatAtual > 0;
   const temProximo = flatAtual < totalPaginas - 1;
 
+  // Navegação por teclado (setas) — handler único, lê o estado por refs
+  const navegarRef = useRef(navegar);
+  useEffect(() => {
+    navegarRef.current = navegar;
+  }, [navegar]);
+
+  const flatAtualRef = useRef(flatAtual);
+  useEffect(() => {
+    flatAtualRef.current = flatAtual;
+  }, [flatAtual]);
+
+  useEffect(() => {
+    const aoTeclado = (e: KeyboardEvent) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      const alvo = e.target as HTMLElement | null;
+      if (
+        alvo &&
+        (alvo.tagName === "INPUT" ||
+          alvo.tagName === "TEXTAREA" ||
+          alvo.tagName === "SELECT" ||
+          alvo.isContentEditable)
+      )
+        return;
+      // Com o painel de configurações aberto, deixa o teclado livre
+      if (
+        document
+          .querySelector('button[aria-label="Configurações do leitor"]')
+          ?.getAttribute("aria-expanded") === "true"
+      )
+        return;
+      e.preventDefault();
+      const atual = flatAtualRef.current;
+      navegarRef.current(e.key === "ArrowRight" ? atual + 1 : atual - 1);
+    };
+    window.addEventListener("keydown", aoTeclado);
+    return () => window.removeEventListener("keydown", aoTeclado);
+  }, []);
+
+  // Clique no lado direito avança; no esquerdo retrocede
+  const aoClicarVitrine = useCallback(
+    (e: MouseEvent<HTMLDivElement>) => {
+      if (animando) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      navegar(flatAtual + (x < rect.width / 2 ? -1 : 1));
+    },
+    [animando, flatAtual, navegar],
+  );
+
   return (
     <div className="mx-auto w-full max-w-3xl">
       <header className="mb-5 flex items-center justify-between gap-3">
@@ -264,15 +314,34 @@ export default function LeitorLivro({
 
       <div
         className={cn(
-          "livro-vitrine relative",
+          "livro-vitrine group relative cursor-pointer",
           animando && fase === "frente" && "livro-virar-frente",
           animando && fase === "voltar" && "livro-virar-voltar",
           animando && animacao === "suave" && "livro-suave",
         )}
         style={alturaVitrine ? { height: alturaVitrine } : undefined}
+        onClick={aoClicarVitrine}
       >
         {/* âncora do topo da leitura (scroll pós-animação respeita a TopBar fixa) */}
         <div ref={ancoraRef} className="scroll-mt-20" aria-hidden />
+
+        {/* dicas laterais de clique (aparecem no hover) */}
+        {temAnterior && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-2 top-1/2 z-20 -translate-y-1/2 text-3xl text-faint opacity-0 transition-opacity duration-fast group-hover:opacity-60"
+          >
+            ‹
+          </span>
+        )}
+        {temProximo && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute right-2 top-1/2 z-20 -translate-y-1/2 text-3xl text-faint opacity-0 transition-opacity duration-fast group-hover:opacity-60"
+          >
+            ›
+          </span>
+        )}
 
         {flipAtivo && baseDecomp && (
           <div
@@ -337,30 +406,44 @@ export default function LeitorLivro({
       </div>
 
       <nav className="mt-8 flex items-center justify-between gap-3">
-        {temAnterior ? (
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => navegar(-1)}
-            disabled={animando}
+            onClick={() => navegar(0)}
+            disabled={!temAnterior || animando}
+            title="Ir para a primeira página"
+            className={cn(btnSecundario, "disabled:pointer-events-none disabled:opacity-50")}
+          >
+            « Primeira
+          </button>
+          <button
+            type="button"
+            onClick={() => navegar(flatAtual - 1)}
+            disabled={!temAnterior || animando}
             className={cn(btnSecundario, "disabled:pointer-events-none disabled:opacity-50")}
           >
             ← Anterior
           </button>
-        ) : (
-          <span />
-        )}
-        {temProximo ? (
+        </div>
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => navegar(1)}
-            disabled={animando}
+            onClick={() => navegar(flatAtual + 1)}
+            disabled={!temProximo || animando}
             className={cn(btnSecundario, "disabled:pointer-events-none disabled:opacity-50")}
           >
             Próximo →
           </button>
-        ) : (
-          <span />
-        )}
+          <button
+            type="button"
+            onClick={() => navegar(totalPaginas - 1)}
+            disabled={!temProximo || animando}
+            title="Ir para a última página"
+            className={cn(btnSecundario, "disabled:pointer-events-none disabled:opacity-50")}
+          >
+            Última »
+          </button>
+        </div>
       </nav>
     </div>
   );
