@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { ErroAplicacao } from "@/lib/erros";
-import { PARTES_TIPOS, CENAS_TIPOS, type ParteTipo, type CenaTipo } from "@/lib/constants";
+import { PARTES_TIPOS, type ParteTipo } from "@/lib/constants";
+import { htmlParaTexto } from "@/lib/html";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -82,11 +83,7 @@ export async function carregarObraParaExportacao(obraId: string): Promise<ObraEx
         PARTES_TIPOS.indexOf(b.tipo as ParteTipo),
     );
     for (const parte of capitulo.partes) {
-      parte.cenas.sort(
-        (a, b) =>
-          CENAS_TIPOS.indexOf(a.tipo as CenaTipo) -
-          CENAS_TIPOS.indexOf(b.tipo as CenaTipo),
-      );
+      parte.cenas.sort((a, b) => a.ordem - b.ordem);
     }
   }
 
@@ -98,7 +95,7 @@ export async function carregarObraParaExportacao(obraId: string): Promise<ObraEx
       .map((parte) => ({
         tipo: parte.tipo,
         texto: parte.cenas
-          .map((cena) => cena.conteudo.trim())
+          .map((cena) => htmlParaTexto(cena.conteudo))
           .filter(Boolean)
           .join("\n\n"),
       }))
@@ -111,8 +108,10 @@ export async function carregarObraParaExportacao(obraId: string): Promise<ObraEx
     select: { conteudo: true },
   });
   const totalPalavras = cenas.reduce(
-    (total, cena) =>
-      total + (cena.conteudo.trim() ? cena.conteudo.trim().split(/\s+/).length : 0),
+    (total, cena) => {
+      const texto = htmlParaTexto(cena.conteudo);
+      return total + (texto ? texto.split(/\s+/).length : 0);
+    },
     0,
   );
 

@@ -2,7 +2,8 @@ import { prisma } from "@/lib/db";
 import { ErroAplicacao } from "@/lib/erros";
 import { respostaPromptImagemSchema } from "@/lib/validators";
 import { criarProviderNvidia } from "@/lib/ia/nvidia";
-import { CENAS_TIPOS, PARTES_TIPOS } from "@/lib/constants";
+import { PARTES_TIPOS } from "@/lib/constants";
+import { htmlParaTexto } from "@/lib/html";
 
 export type TipoPrompt = "capitulo" | "personagem" | "ambiente";
 
@@ -55,12 +56,17 @@ export async function gerarPromptImagem(
     });
     if (!capitulo) throw new ErroAplicacao("Capítulo não encontrado", 404);
 
-    const ordemParte = (t: string) => PARTES_TIPOS.indexOf(t as (typeof PARTES_TIPOS)[number]);
-    const ordemCena = (t: string) => CENAS_TIPOS.indexOf(t as (typeof CENAS_TIPOS)[number]);
     const cenas = capitulo.partes
-      .sort((a, b) => ordemParte(a.tipo) - ordemParte(b.tipo))
-      .flatMap((p) => p.cenas.sort((a, b) => ordemCena(a.tipo) - ordemCena(b.tipo)))
-      .map((c) => c.conteudo)
+      .sort(
+        (a, b) =>
+          PARTES_TIPOS.indexOf(a.tipo as (typeof PARTES_TIPOS)[number]) -
+          PARTES_TIPOS.indexOf(b.tipo as (typeof PARTES_TIPOS)[number]),
+      )
+      .flatMap((p) =>
+        p.cenas
+          .sort((a, b) => a.ordem - b.ordem)
+          .map((c) => htmlParaTexto(c.conteudo)),
+      )
       .filter((t) => t.trim());
 
     const texto = cenas.join("\n\n").slice(0, 15_000);

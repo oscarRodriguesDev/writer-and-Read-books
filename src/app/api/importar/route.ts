@@ -8,7 +8,7 @@ import {
   distribuirEmCenas,
   tituloPorNomeArquivo,
 } from "@/lib/services/importar";
-import { PARTES_TIPOS, CENAS_TIPOS, type ParteTipo, type CenaTipo } from "@/lib/constants";
+import { PARTES_TIPOS, type ParteTipo } from "@/lib/constants";
 import { obterUsuarioId } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
@@ -100,9 +100,7 @@ export async function POST(req: NextRequest) {
         await prisma.$transaction(async (tx) => {
           for (const parte of partesOrdenadas) {
             const cenasOrdenadas = [...parte.cenas].sort(
-              (a, b) =>
-                CENAS_TIPOS.indexOf(a.tipo as CenaTipo) -
-                CENAS_TIPOS.indexOf(b.tipo as CenaTipo),
+              (a, b) => a.ordem - b.ordem,
             );
             for (const cena of cenasOrdenadas) {
               await tx.cena.update({

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { PARTES_TIPOS, CENAS_TIPOS, type ParteTipo, type CenaTipo } from "@/lib/constants";
-import { EditorCapitulo } from "@/components/EditorCapitulo";
+import { PARTES_TIPOS, type ParteTipo } from "@/lib/constants";
+import { VisorCapitulo } from "@/components/VisorCapitulo";
 import { btnSecundario } from "@/components/ui";
 import { obterObraDoUsuario } from "@/lib/auth-obras";
 
@@ -51,11 +51,7 @@ export default async function EditorCapituloPage({
       PARTES_TIPOS.indexOf(b.tipo as ParteTipo),
   );
   for (const parte of capitulo.partes) {
-    parte.cenas.sort(
-      (a, b) =>
-        CENAS_TIPOS.indexOf(a.tipo as CenaTipo) -
-        CENAS_TIPOS.indexOf(b.tipo as CenaTipo),
-    );
+    parte.cenas.sort((a, b) => a.ordem - b.ordem);
   }
 
   return (
@@ -65,7 +61,7 @@ export default async function EditorCapituloPage({
           📖 Modo leitor
         </Link>
       </div>
-      <EditorCapitulo
+      <VisorCapitulo
         obraId={obraId}
         capitulo={{
           id: capitulo.id,
@@ -77,6 +73,7 @@ export default async function EditorCapituloPage({
             cenas: parte.cenas.map((cena) => ({
               id: cena.id,
               tipo: cena.tipo,
+              ordem: cena.ordem,
               titulo: cena.titulo,
               conteudo: cena.conteudo,
               objetivo: cena.objetivo,

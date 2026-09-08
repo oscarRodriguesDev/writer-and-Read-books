@@ -1,5 +1,23 @@
 # Checkpoints
 
+## 2026-09-08 - Sessão: Editor de documento contínuo (TipTap) + cenas livres por parte
+
+### Estado final
+- **Pedido**: "editar documento" no capítulo — documento contínuo com formatação rica e delimitadores; grade 3×3 permanece como opção.
+- **Migração `20260908002410_cena_ordem` aplicada** (autorizada pelo usuário): `Cena.ordem` + `@@unique([parteId, ordem])`; SQL editado para preencher ordem por tipo (INICIO=1/MEIO=2/FIM=3) antes do índice único.
+- `Cena.conteudo` virou **HTML do TipTap**; `src/lib/html.ts` (`htmlParaTexto`/`textoParaHtml`) aplicado em leitor, exportação, prompt de imagem, `contexto.ts`, extrair/revisar/gerar/corrigir cena e gerar capítulo.
+- Ordenação por `ordem` em todos os pontos (criação, leitura, geração, importação, editor).
+- Geração de capítulo IA: contrato `{parteTipo, numeroCena, texto}` sem `.length(9)`; prompt fala a estrutura; mapeamento client por `numeroCena`.
+- Novas rotas: `POST /api/cenas` (`{parteId}` → `ordem=max+1`, tipo `CENA`, dono via `obterParteDoUsuario`) e `DELETE /api/cenas/[id]` (delete + renumera 1..N).
+- Componentes: `EditorDocumento.tsx` (TipTap por cena + toolbar + autosave 1.2s + criar/excluir) e `VisorCapitulo.tsx` (abas Grade × Documento); CSS de `.tiptap` no `globals.css`.
+- Pacotes TipTap instalados; build **passa**.
+
+### Próximos passos
+- Teste visual/runtime do usuário (regra): alternar Grade/Documento, editar com formatação, autosave, adicionar/remover cena, gerar capítulo IA com N cenas, leitura/exportação de conteúdo antigo (texto puro) e novo (HTML).
+- Se o usuário testar com conteúdo antigo: confirmar que `textoParaHtml`/`htmlParaTexto` não perdem texto.
+
+---
+
 ## 2026-09-07 - Sessão: Exclusão de conta na página de perfil
 
 ### Estado final

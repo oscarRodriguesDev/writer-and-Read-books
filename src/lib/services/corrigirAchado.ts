@@ -3,6 +3,7 @@ import { ErroAplicacao } from "@/lib/erros";
 import { respostaGeracaoCenaSchema } from "@/lib/validators";
 import { montarContextoCena } from "@/lib/ia/contexto";
 import { criarProviderNvidia } from "@/lib/ia/nvidia";
+import { htmlParaTexto } from "@/lib/html";
 
 const PROMPT_SISTEMA_CORRECAO = `Você é um editor literário sênior especializado em consistência narrativa. Sua tarefa é CORRIGIR uma cena para resolver um problema apontado pela análise, aplicando a instrução do autor quando houver.
 
@@ -38,7 +39,7 @@ export async function corrigirPorAchado(
     where: { id: achado.cenaId },
     select: { conteudo: true },
   });
-  if (!cena || !cena.conteudo.trim())
+  if (!cena || !htmlParaTexto(cena.conteudo).trim())
     throw new ErroAplicacao(
       "A cena vinculada está vazia — não há o que corrigir.",
       400,

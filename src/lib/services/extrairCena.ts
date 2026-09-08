@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { ErroAplicacao } from "@/lib/erros";
 import { respostaExtracaoCenaSchema } from "@/lib/validators";
 import { criarProviderNvidia } from "@/lib/ia/nvidia";
+import { htmlParaTexto } from "@/lib/html";
 
 /**
  * Prompt de extração de entidades da cena (RF-18/19/21/74).
@@ -59,7 +60,7 @@ export async function extrairEntidadesCena(cenaId: string): Promise<ResumoExtrac
     },
   });
   if (!cena) throw new ErroAplicacao("Cena não encontrada", 404);
-  if (!cena.conteudo.trim())
+  if (!htmlParaTexto(cena.conteudo))
     throw new ErroAplicacao("Escreva o conteúdo da cena antes de extrair entidades.", 400);
 
   const [personagensObra, ambientesObra] = await Promise.all([
@@ -92,7 +93,7 @@ ${lista}
 </LISTA>
 
 <SCENA>
-${cena.conteudo.slice(0, 20_000)}
+${htmlParaTexto(cena.conteudo).slice(0, 20_000)}
 </SCENA>
 
 Extraia as entidades conforme instruído.`,

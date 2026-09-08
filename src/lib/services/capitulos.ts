@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db";
-import { PARTES_TIPOS, CENAS_TIPOS, type ParteTipo, type CenaTipo } from "@/lib/constants";
+import { PARTES_TIPOS, CENAS_TIPOS, type ParteTipo } from "@/lib/constants";
 import type { CriarCapituloInput } from "@/lib/validators";
 
 /**
  * RN-01..03: cria o capítulo e, em transação, as 3 partes fixas com
- * 3 cenas cada. ordemEscrita é incremental por obra; ordemNarrativa
- * permanece null até o autor posicionar o capítulo.
+ * 3 cenas cada (ordens 1..N). ordemEscrita é incremental por obra;
+ * ordemNarrativa permanece null até o autor posicionar o capítulo.
  */
 export async function criarCapituloComEstrutura(
   obraId: string,
@@ -29,9 +29,9 @@ export async function criarCapituloComEstrutura(
       const parte = await tx.parte.create({
         data: { capituloId: capitulo.id, tipo: parteTipo },
       });
-      for (const cenaTipo of CENAS_TIPOS) {
+      for (const [i, cenaTipo] of CENAS_TIPOS.entries()) {
         await tx.cena.create({
-          data: { parteId: parte.id, tipo: cenaTipo },
+          data: { parteId: parte.id, tipo: cenaTipo, ordem: i + 1 },
         });
       }
     }
@@ -46,11 +46,7 @@ export async function criarCapituloComEstrutura(
         PARTES_TIPOS.indexOf(b.tipo as ParteTipo),
     );
     for (const parte of resultado.partes) {
-      parte.cenas.sort(
-        (a, b) =>
-          CENAS_TIPOS.indexOf(a.tipo as CenaTipo) -
-          CENAS_TIPOS.indexOf(b.tipo as CenaTipo),
-      );
+      parte.cenas.sort((a, b) => a.ordem - b.ordem);
     }
     return resultado;
   });

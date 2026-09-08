@@ -4,6 +4,7 @@ import { respostaGeracaoCenaSchema } from "@/lib/validators";
 import { montarContextoCena } from "@/lib/ia/contexto";
 import { criarProviderNvidia } from "@/lib/ia/nvidia";
 import { ROTULO_PARTE, type ParteTipo } from "@/lib/constants";
+import { htmlParaTexto } from "@/lib/html";
 
 /**
  * Prompt de geração assistida de cena (RF-46).
@@ -68,7 +69,7 @@ export async function gerarTextoCena(
       `Objetivo do capítulo: ${cena.parte.capitulo.objetivo}`,
     `Parte do capítulo: ${rotuloParte}`,
     `RESUMO DA CENA (espinha dorsal obrigatória): ${resumo}`,
-    cena.conteudo.trim() &&
+    htmlParaTexto(cena.conteudo).trim() &&
       `A cena já possui conteúdo (aparece no contexto abaixo); gere uma nova versão completa.`,
     cena.personagens.length > 0 &&
       `Personagens que participam desta cena: ${cena.personagens

@@ -59,6 +59,22 @@ export async function obterCenaDoUsuario<T extends Prisma.CenaInclude>(
 }
 
 /**
+ * Busca uma parte garantindo que a obra do capítulo pertence ao usuário logado
+ * (parte → capítulo → obra). Retorna `null` caso contrário.
+ */
+export async function obterParteDoUsuario<T extends Prisma.ParteInclude>(
+  parteId: string,
+  include?: T,
+): Promise<Prisma.ParteGetPayload<{ include: T }> | null> {
+  const usuarioId = await obterUsuarioId();
+  if (!usuarioId) return null;
+  return prisma.parte.findFirst({
+    where: { id: parteId, capitulo: { obra: { usuarioId } } },
+    include,
+  }) as Promise<Prisma.ParteGetPayload<{ include: T }> | null>;
+}
+
+/**
  * Busca uma relação entre personagens garantindo que a obra do personagem
  * de origem pertence ao usuário logado. Retorna `null` caso contrário.
  */

@@ -40,3 +40,34 @@ export async function PATCH(req: Request, { params }: Ctx) {
     return tratarErroDesconhecido(e);
   }
 }
+
+/**
+ * DELETE — remove a cena e renumera as cenas restantes da mesma parte
+ * (ordens contíguas 1..N).
+ */
+export async function DELETE(_req: Request, { params }: Ctx) {
+  try {
+    const { id } = await params;
+    const cena = await obterCenaDoUsuario(id);
+    if (!cena) return respostaErro("Cena não encontrada", 404);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.cena.delete({ where: { id } });
+      const irmaos = await tx.cena.findMany({
+        where: { parteId: cena.parteId },
+        orderBy: { ordem: "asc" },
+        select: { id: true },
+      });
+      for (const [i, irmao] of irmaos.entries()) {
+        await tx.cena.update({
+          where: { id: irmao.id },
+          data: { ordem: i + 1 },
+        });
+      }
+    });
+
+    return Response.json({ ok: true });
+  } catch (e) {
+    return tratarErroDesconhecido(e);
+  }
+}

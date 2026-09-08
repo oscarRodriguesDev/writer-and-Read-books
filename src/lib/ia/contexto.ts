@@ -1,12 +1,11 @@
 import { prisma } from "@/lib/db";
 import {
-  CENAS_TIPOS,
   PARTES_TIPOS,
   ROTULO_ESCALA_TEMPORAL,
   ROTULO_PARTE,
-  type CenaTipo,
   type ParteTipo,
 } from "@/lib/constants";
+import { htmlParaTexto } from "@/lib/html";
 import { ErroAplicacao } from "@/lib/erros";
 
 /** Mapa cenaId → vínculos estruturais, para ligar achados às entidades certas. */
@@ -209,11 +208,7 @@ async function carregarCapitulosComCenas(obraId: string) {
         PARTES_TIPOS.indexOf(b.tipo as ParteTipo),
     );
     for (const parte of cap.partes) {
-      parte.cenas.sort(
-        (a, b) =>
-          CENAS_TIPOS.indexOf(a.tipo as CenaTipo) -
-          CENAS_TIPOS.indexOf(b.tipo as CenaTipo),
-      );
+      parte.cenas.sort((a, b) => a.ordem - b.ordem);
     }
   }
   return capitulos;
@@ -240,7 +235,7 @@ function blocoCapituloComCenas(
       });
 
       // Cenas totalmente vazias são ruído — só entram no mapa de vínculos
-      if (!cena.conteudo.trim() && !(cena.titulo ?? "").trim()) continue;
+      if (!htmlParaTexto(cena.conteudo).trim() && !(cena.titulo ?? "").trim()) continue;
       temConteudo = true;
 
       const linhas = [
@@ -249,7 +244,7 @@ function blocoCapituloComCenas(
         cena.objetivo && `Objetivo: ${cena.objetivo}`,
       ].filter(Boolean);
 
-      const conteudo = truncar(cena.conteudo, maxConteudo);
+      const conteudo = truncar(htmlParaTexto(cena.conteudo), maxConteudo);
       linhas.push(conteudo ? `CONTEÚDO:\n${conteudo}` : "(cena vazia)");
       secoes.push(linhas.join("\n"));
     }
@@ -314,11 +309,7 @@ export async function montarContextoCena(cenaId: string): Promise<ContextoAnalis
   const irmaos = await prisma.cena.findMany({
     where: { parteId: cena.parteId },
   });
-  irmaos.sort(
-    (a, b) =>
-      CENAS_TIPOS.indexOf(a.tipo as CenaTipo) -
-      CENAS_TIPOS.indexOf(b.tipo as CenaTipo),
-  );
+  irmaos.sort((a, b) => a.ordem - b.ordem);
 
   const idx = irmaos.findIndex((c) => c.id === cenaId);
   const anterior = idx > 0 ? irmaos[idx - 1] : null;
@@ -336,18 +327,18 @@ export async function montarContextoCena(cenaId: string): Promise<ContextoAnalis
   ]);
 
   const secoes: string[] = [];
-  if (anterior?.conteudo.trim())
+  if (htmlParaTexto(anterior?.conteudo ?? "").trim())
     secoes.push(
-      `#### CENA ANTERIOR (contexto, não analisar isoladamente)\n${truncar(anterior.conteudo, MAX_VIZINHA)}`,
+      `#### CENA ANTERIOR (contexto, não analisar isoladamente)\n${truncar(htmlParaTexto(anterior?.conteudo ?? ""), MAX_VIZINHA)}`,
     );
   secoes.push(
     `#### CENA EM ANÁLISE [cena ${cena.id}]${
       cena.titulo ? ` — ${cena.titulo}` : ""
-    }\nCONTEÚDO:\n${truncar(cena.conteudo, MAX_CENA_CAPITULO) || "(cena vazia)"}`,
+    }\nCONTEÚDO:\n${truncar(htmlParaTexto(cena.conteudo), MAX_CENA_CAPITULO) || "(cena vazia)"}`,
   );
-  if (proxima?.conteudo.trim())
+  if (htmlParaTexto(proxima?.conteudo ?? "").trim())
     secoes.push(
-      `#### PRÓXIMA CENA (contexto, não analisar isoladamente)\n${truncar(proxima.conteudo, MAX_VIZINHA)}`,
+      `#### PRÓXIMA CENA (contexto, não analisar isoladamente)\n${truncar(htmlParaTexto(proxima?.conteudo ?? ""), MAX_VIZINHA)}`,
     );
 
   const rotuloParte = ROTULO_PARTE[cena.parte.tipo as ParteTipo] ?? cena.parte.tipo;

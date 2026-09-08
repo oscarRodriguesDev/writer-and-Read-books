@@ -3,6 +3,7 @@ import { ErroAplicacao } from "@/lib/erros";
 import { respostaGeracaoCenaSchema } from "@/lib/validators";
 import { montarContextoCena } from "@/lib/ia/contexto";
 import { criarProviderNvidia } from "@/lib/ia/nvidia";
+import { htmlParaTexto } from "@/lib/html";
 
 /**
  * Prompt de revisão dirigida da cena (RF-49 / RIA-19 / RNF: nunca alterar
@@ -34,7 +35,7 @@ export async function revisarTextoCena(
     select: { conteudo: true, objetivo: true },
   });
   if (!cena) throw new ErroAplicacao("Cena não encontrada", 404);
-  if (!cena.conteudo.trim())
+  if (!htmlParaTexto(cena.conteudo).trim())
     throw new ErroAplicacao(
       "A cena está vazia — escreva ou gere o conteúdo antes de revisar.",
       400,

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { PARTES_TIPOS, CENAS_TIPOS, type ParteTipo, type CenaTipo } from "@/lib/constants";
+import { PARTES_TIPOS, type ParteTipo } from "@/lib/constants";
 import { btnSecundario } from "@/components/ui";
+import { htmlParaTexto } from "@/lib/html";
 import LeitorLivro from "@/components/leitor/LeitorLivro";
 import type { CapituloLeitura } from "@/lib/leitor";
 import { obterObraDoUsuario } from "@/lib/auth-obras";
@@ -46,12 +47,8 @@ export default async function LerPage({
         .map((parte) => ({
           tipo: parte.tipo,
           paragrafos: parte.cenas
-            .sort(
-              (a, b) =>
-                CENAS_TIPOS.indexOf(a.tipo as CenaTipo) -
-                CENAS_TIPOS.indexOf(b.tipo as CenaTipo),
-            )
-            .map((cena) => cena.conteudo.trim())
+            .sort((a, b) => a.ordem - b.ordem)
+            .map((cena) => htmlParaTexto(cena.conteudo))
             .filter(Boolean)
             .join("\n\n")
             .split("\n\n"),

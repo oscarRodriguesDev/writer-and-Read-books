@@ -134,7 +134,10 @@ model Parte {
 model Cena {
   id           String   @id @default(cuid())
   parteId      String
-  // INICIO | MEIO | FIM
+  // 1..N — posição da cena dentro da parte (a estrutura original cria 3).
+  ordem        Int      @default(1)
+  // Rótulo herdado (INICIO | MEIO | FIM) das cenas da estrutura original;
+  // cenas adicionadas depois recebem "CENA" — o rótulo exibido vem de `ordem`.
   tipo         String
   titulo       String?
   conteudo     String   @default("")
@@ -147,7 +150,7 @@ model Cena {
   achados     AchadoIA[]       @relation("AchadoCena")
   versoes     VersaoCena[]
 
-  @@unique([parteId, tipo])
+  @@unique([parteId, ordem])
 }
 
 model Personagem {

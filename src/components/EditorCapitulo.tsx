@@ -18,6 +18,7 @@ import { PainelAchadosCena } from "@/components/PainelAchadosCena";
 export type CenaDados = {
   id: string;
   tipo: string;
+  ordem: number;
   titulo: string | null;
   conteudo: string;
   objetivo: string | null;
@@ -575,7 +576,7 @@ export function EditorCapitulo({
         body: JSON.stringify({ promptUsuario: prompt, incluirCenasPreenchidas: false }),
       });
       const corpo = (await res.json().catch(() => null)) as
-        | { cenas?: Array<{ parteTipo: string; cenaTipo: string; texto: string }>; erro?: string }
+        | { cenas?: Array<{ parteTipo: string; numeroCena: number; texto: string }>; erro?: string }
         | null;
       if (!res.ok || !corpo?.cenas)
         throw new Error(corpo?.erro ?? "Falha na geração do capítulo.");
@@ -584,12 +585,12 @@ export function EditorCapitulo({
       const idsPorTipo: Record<string, string> = {};
       capitulo.partes.forEach((parte) => {
         parte.cenas.forEach((cena) => {
-          const key = `${parte.tipo}-${cena.tipo}`;
+          const key = `${parte.tipo}-${cena.ordem}`;
           idsPorTipo[key] = cena.id;
         });
       });
       for (const c of corpo.cenas) {
-        const key = `${c.parteTipo}-${c.cenaTipo}`;
+        const key = `${c.parteTipo}-${c.numeroCena}`;
         const cenaId = idsPorTipo[key];
         if (cenaId) previewMap[cenaId] = c.texto;
       }

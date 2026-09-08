@@ -1,5 +1,32 @@
 # Memórias do Projeto
 
+## 2026-09-08 - Editor de documento contínuo (TipTap) + cenas livres por parte (Autoria: VIBECODE)
+
+### Decisão
+O usuário pediu um botão **"editar documento"** no capítulo: uma visão alternativa que mostra as cenas em **documento contínuo** (uma após a outra) com **formatação rica de texto** e **delimitadores visuais** entre cenas. A visão atual (grade 3×3) **permanece** como opção (default). No capítulo, estrutura foi flexibilizada para **3 partes × N cenas (default 3)** — o autor pode adicionar/remover cenas por parte.
+
+### Decisões fechadas com o usuário
+- **TipTap** como editor rico (salva **HTML** no `Cena.conteudo` — antes era texto puro).
+- Delimitação por **partes fixas (INICIO/MEIO/FIM)** e cenas **numeradas por ordem (1..N)** dentro de cada parte.
+- **Migração autorizada**: `Cena.ordem Int @default(1)` + `@@unique([parteId, ordem])` (substitui `@@unique([parteId, tipo])`); cenas antigas preservadas (INICIO=1, MEIO=2, FIM=3).
+
+### Implementação
+- **Migração `20260908002410_cena_ordem`**: editada manualmente — o `INSERT` copia sem `ordem` (todas com default 1), então foi adicionado `UPDATE "new_Cena" SET "ordem" = CASE "tipo" WHEN 'INICIO' THEN 1 WHEN 'MEIO' THEN 2 WHEN 'FIM' THEN 3 ELSE 1 END` antes do `DROP`/índice único.
+- **`Cena.conteudo` agora é HTML do editor**: helper novo `src/lib/html.ts` com `htmlParaTexto(html)` (remove marcação preservando parágrafos/listas/headings) e `textoParaHtml(texto)` (texto puro antigo → parágrafos, no load do editor). Aplicado em TODOS os consumidores de prosa: leitor (`ler/[obraId]`), exportação (EPUB/PDF/DOCX + contagem de palavras), `promptImagem`, `contexto.ts` (obra/capítulo/cena + vizinhas), `extrairCena`, `revisarCena`, `gerarCena`, `corrigirAchado`, `gerarCapitulo`.
+- **Ordenação por `ordem`** (substituiu `CENAS_TIPOS.indexOf(tipo)`): `capitulos.ts` (criação com `ordem: i+1`), `importar`, `ler`, `exportar`, `promptImagem`, `contexto` (2 pontos), `gerarCapitulo`, página do capítulo e `EditorCapitulo` (novos campos `ordem` em `CenaDados`; chave do preview de geração `${parte.tipo}-${cena.ordem}`).
+- **Geração de capítulo IA remodelada**: `respostaGeracaoCapituloSchema` saiu de `.length(9)` fixo → `{ parteTipo, numeroCena, texto }` (sem quantidade fixa); prompt sistema FALA a estrutura (uma entrada de "cenas" por cena da lista, mesmo `parteTipo`/`numeroCena`); mapeamento no client por `numeroCena`.
+- **Rotas de cena novas**: `POST /api/cenas` (body `{parteId}`, checa dono via novo helper `obterParteDoUsuario` em `auth-obras.ts`, cria com `ordem = max+1` e `tipo: "CENA"` — sem papel INICIO/MEIO/FIM); `DELETE /api/cenas/[id]` (via `obterCenaDoUsuario`, transação da transação: delete + renumera ordens 1..N da parte).
+- **`EditorDocumento.tsx`** (client): TipTap por cena (`@tiptap/react`, `starter-kit`, `placeholder`, `underline`, `link`, `text-align`) com toolbar (B/I/U/S, código, link, H2/H3, listas, citação, alinhamentos, desfazer/refazer), delimitador "CENA N" + rótulo legado (Início/Meio/Fim) + objetivo em tooltip, autosave debounce (1.2s via `PATCH /api/cenas/[id]` com HTML), botões "+ Adicionar cena" e "Excluir". CSS TipTap em `globals.css` (`@layer` → `.editor-documento .tiptap`).
+- **`VisorCapitulo.tsx`**: abas "Grade 3×3" (default, `EditorCapitulo` inalterado) × "Documento contínuo" (`EditorDocumento`); integrado na página do capítulo.
+
+### Pacotes instalados
+`@tiptap/react`, `@tiptap/pm`, `@tiptap/starter-kit`, `@tiptap/extension-placeholder`, `@tiptap/extension-underline`, `@tiptap/extension-link`, `@tiptap/extension-text-align` (+ 53 dependências).
+
+### Testes
+`npm run build` passa (generate + migrate deploy + compila + TS). Teste de runtime/visual é do usuário (regra). **Atenção**: como `conteudo` virou HTML, conteúdo antigo (texto puro) continua visível no leitor/IA (via `htmlParaTexto`) e é normalizado no editor (via `textoParaHtml`).
+
+---
+
 ## 2026-09-07 - Perfil: exclusão de conta (zona de perigo) (Autoria: VIBECODE)
 
 ### Decisão
