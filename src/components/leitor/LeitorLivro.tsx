@@ -33,6 +33,15 @@ type Props = {
   capitulos: CapituloLeitura[];
   capInicial: number;
   pagInicial: number;
+  /** Ativa proteção de conteúdo (sem copiar/colar/imprimir/baixar imagens).
+   *  Usado para leitura pública de obras compartilhadas. */
+  protegido?: boolean;
+  /** Link do botão "←" no topo (padrão: área privada da obra). */
+  voltarHref?: string;
+  /** Rótulo do botão "←" no topo. */
+  voltarLabel?: string;
+  /** Base das URLs de navegação (padrão: /ler/[obraId]). */
+  rotaBase?: string;
 };
 
 type FaseAnimacao = "frente" | "voltar";
@@ -76,6 +85,10 @@ export default function LeitorLivro({
   capitulos,
   capInicial,
   pagInicial,
+  protegido = false,
+  voltarHref,
+  voltarLabel = "Obra",
+  rotaBase,
 }: Props) {
   const router = useRouter();
 
@@ -168,7 +181,7 @@ export default function LeitorLivro({
 
       const faseDir: FaseAnimacao = alvo > flatAtual ? "frente" : "voltar";
       const { c, p } = decomporFlat(alvo);
-      router.replace(`/ler/${obraId}?cap=${c}&pag=${p}`, { scroll: false });
+      router.replace(`${rotaBase ?? `/ler/${obraId}`}?cap=${c}&pag=${p}`, { scroll: false });
 
       if (animacao === "nenhuma") {
         setCapituloIdx(c);
@@ -277,6 +290,47 @@ export default function LeitorLivro({
     return () => window.removeEventListener("keydown", aoTeclado);
   }, []);
 
+  // ---- Proteção de conteúdo (obras compartilhadas) ----
+  // Bloqueia copiar/colar/recortar, menu de contexto, Ctrl+P (imprimir) e
+  // arrastar imagens. É uma proteção client-side: impede o uso casual.
+  useEffect(() => {
+    if (!protegido) return;
+
+    const bloquearCopiar = (e: ClipboardEvent) => {
+      e.preventDefault();
+    };
+    const bloquearContexto = (e: globalThis.MouseEvent) => {
+      e.preventDefault();
+    };
+    const bloquearTecla = (e: KeyboardEvent) => {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        ["c", "p", "x", "s", "a"].includes(e.key.toLowerCase())
+      ) {
+        e.preventDefault();
+      }
+    };
+    const bloquearDrag = (e: DragEvent) => {
+      e.preventDefault();
+    };
+
+    // Cobre toda a página (imagens fora do componente também ficam seguras)
+    document.addEventListener("copy", bloquearCopiar);
+    document.addEventListener("cut", bloquearCopiar);
+    document.addEventListener("paste", bloquearCopiar);
+    document.addEventListener("contextmenu", bloquearContexto);
+    document.addEventListener("keydown", bloquearTecla);
+    document.addEventListener("dragstart", bloquearDrag);
+    return () => {
+      document.removeEventListener("copy", bloquearCopiar);
+      document.removeEventListener("cut", bloquearCopiar);
+      document.removeEventListener("paste", bloquearCopiar);
+      document.removeEventListener("contextmenu", bloquearContexto);
+      document.removeEventListener("keydown", bloquearTecla);
+      document.removeEventListener("dragstart", bloquearDrag);
+    };
+  }, [protegido]);
+
   // Clique no lado direito avança; no esquerdo retrocede
   const aoClicarVitrine = useCallback(
     (e: MouseEvent<HTMLDivElement>) => {
@@ -289,13 +343,18 @@ export default function LeitorLivro({
   );
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div
+      className={cn(
+        "mx-auto w-full max-w-3xl",
+        protegido && "livro-protegido select-none",
+      )}
+    >
       <header className="mb-5 flex items-center justify-between gap-3">
         <Link
-          href={`/obras/${obraId}`}
+          href={voltarHref ?? `/obras/${obraId}`}
           className={cn(btnSecundario, "px-3 py-2 text-sm")}
         >
-          ← Obra
+          ← {voltarLabel}
         </Link>
         <div className="flex items-center gap-3">
           <p className="text-sm text-muted">

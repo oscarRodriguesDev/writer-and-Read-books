@@ -1,5 +1,27 @@
 # Checkpoints
 
+## 2026-09-08 - Sessão: Feed de obras compartilhadas + interações + leitor protegido
+
+### Estado final
+- **Pedido**: área onde autores compartilham obras; feed para usuários lerem, comentarem, votarem, curtirem e darem sugestões; obra só é exibida se o autor compartilhar. **Sem download/cópia/colagem/impressão** no leitor público.
+- **Decisão do usuário**: **feed público** (navegar sem login); **ler e interagir exigem cadastro**.
+- **Migração `20260908021259_feed_compartilhamento` aplicada** (autorizada): `Obra.compartilhada` + models `Comentario` (thread), `Curtida` (unique obra+usuário), `Sugestao` (status PENDENTE/ACEITA/RECUSADA/IMPLEMENTADA).
+- **Toggle**: `CompartilharObra` na visão geral da obra + `PATCH /api/obras/[obraId]/compartilhar`.
+- **Feed**: `/feed` público (busca/gênero/ordem/paginação client-side via `GET /api/feed` — liberada no proxy, rota valida sessão internamente) + `/feed/[obraId]` exige login (leitor público + `PainelInteracoes`).
+- **Interações** (exigem login): curtir (toggle, 401 sem login; card anônimo → `/login?callbackUrl=/feed/[obraId]`), comentários (thread + replies + excluir autor/dono), sugestões (dono vê todas e muda status; leitor vê as próprias).
+- **Leitor protegido**: `LeitorLivro protegedo={!dono}` — `select-none`, bloqueio copy/cut/paste/contextmenu/drag, Ctrl/Cmd+C/P/X/S/A, `img pointer-events:none`, `@media print display:none`. Dono lê sem proteção.
+- **UX anônima**: TopBar mostra 👤 com "🔑 Entrar / Cadastrar" no dropdown para deslogados.
+- **Fix**: `<script>` cru do tema no `layout.tsx` → `next/script strategy="beforeInteractive"` (elimina warning React em páginas dinâmicas como o leitor).
+- Build **passa** (generate + migrate deploy + compile + TS).
+- **Commit feito** (branch `vibecode`) — verificar push remoto.
+
+### Próximos passos
+- Teste visual/runtime do usuário: navegar o `/feed` **deslogado** (deve abrir) → clicar obra (vai pro login) → ler com proteção (copiar/imprimir devem falhar) → curtir/comentar/sugerir logado → dono alterando status → excluir comentário.
+- Commit realizado nesta sessão (autorizado) — aguarda push remoto confirmado (branch `vibecode`).
+- Sugestões sem notificação ao autor (futuro: badge na visão geral).
+
+---
+
 ## 2026-09-08 (Revisão 5) - Sessão: leitor não exibe o id da obra no breadcrumb
 
 ### Estado final

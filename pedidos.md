@@ -1,5 +1,22 @@
 # Pedidos
 
+## 2026-09-08 - Feed público (navegação) + ler/interagir exige cadastro
+- **Commit**: *(este commit)*
+- **Descrição**: Navegar o feed **sem login**; **para ler** obra e **comentar/curtir/etc** é preciso **cadastrar/entrar**.
+- **Solução**: `proxy.ts` — `ROTAS_PUBLICAS` ganhou `"/feed"` (rota exata: só a listagem; `/feed/[obraId]` continua protegida) + liberação de `/api/feed*` (rotas validam sessão internamente; interações retornam 401 deslogado). `TopBar` dropdown mostra "🔑 Entrar / Cadastrar" para anônimos. `FeedCard` sem login → `router.push("/login?callbackUrl=/feed/[obraId]")`.
+- **Arquivos**: `src/proxy.ts`, `src/components/layout/TopBar.tsx`, `src/components/feed/FeedCard.tsx`
+- **Testes**: build passa. Teste visual/runtime é do usuário (navegar /feed deslogado → ler pede login → interagir pede login).
+
+## 2026-09-08 - Feed de obras compartilhadas + interações + leitor protegido
+- **Commit**: *(este commit)*
+- **Descrição**: Área onde autores compartilham obras (opt-in); feed para usuários **lerem, comentarem, votarem, curtirem e darem sugestões**; no leitor público **não é possível baixar a obra, baixar imagens, copiar ou colar texto**.
+- **Solução**: migração `20260908021259_feed_compartilhamento` (autorizada): `Obra.compartilhada` + `Comentario` (thread), `Curtida` (toggle 1 p/ usuário), `Sugestao` (status). Toggle `CompartilharObra` na visão geral. `GET /api/feed` (busca/gênero/ordem/paginação). Página `/feed` (grid + filtros client-side). Página `/feed/[obraId]` (leitor público + `PainelInteracoes`: curtir, comentários em thread com replies/exclusão autor-dono, sugestões — dono vê todas e muda status; leitor vê as próprias). `LeitorLivro` com prop `protegido` (sem copiar/colar/imprimir/baixar imagens; dono isento) + props `voltarHref`/`rotaBase`. Fix: script de tema no `layout.tsx` virou `next/script beforeInteractive` (warning React em páginas dinâmicas).
+- **Arquivos**: `prisma/schema.prisma` + migração; `src/lib/feed.ts` (novo); `src/lib/constants.ts`; `src/lib/validators/index.ts`; `src/app/api/feed/**` (novo); `src/app/api/obras/[obraId]/compartilhar/route.ts` (novo); `src/app/feed/{page.tsx, [obraId]/page.tsx}` (novos); `src/components/feed/{FeedCard,FeedExplorar,PainelInteracoes}.tsx` (novos); `src/components/CompartilharObra.tsx` (novo); `src/components/leitor/LeitorLivro.tsx`; `src/app/globals.css` (`.livro-protegido`); `src/app/layout.tsx`; `src/components/layout/{Sidebar,TopBar}.tsx`; `src/app/obras/[obraId]/page.tsx`.
+- **Testes**: build passa. Teste visual/runtime é do usuário.
+- **Decisão em aberto**: feed público ou restrito a usuários logados?
+
+---
+
 ## 2026-09-08 - Ocultar id da obra no breadcrumb do leitor
 - **Commit**: *(este commit)*
 - **Descrição**: O id da obra (`/ler/cmt…`) é irrelevante para o usuário — deve aparecer **apenas na URL**, não em texto na tela.

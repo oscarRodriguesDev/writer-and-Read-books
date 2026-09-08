@@ -26,6 +26,8 @@ model Obra {
   // PLANEJAMENTO | ESCRITA | REVISAO | CONCLUIDA
   status       String   @default("PLANEJAMENTO")
   arquivada    Boolean  @default(false)
+  // Compartilhamento público (feed)
+  compartilhada Boolean  @default(false)
   // Metadados de publicação
   isbn         String?  @unique
   isbn13       String?  @unique
@@ -53,6 +55,9 @@ model Obra {
   autores         AutorObra[]
   categorias      CategoriaObra[]
   palavrasChave   PalavraChaveObra[]
+  comentarios     Comentario[]
+  curtidas        Curtida[]
+  sugestoes       Sugestao[]
 
   @@index([usuarioId])
 }
@@ -446,4 +451,67 @@ model Usuario {
   atualizadoEm      DateTime  @updatedAt
 
   obras Obra[] // obras da qual este usuário é dono
+
+  comentarios Comentario[]
+  curtidas    Curtida[]
+  sugestoes   Sugestao[]
+}
+
+// ===== INTERAÇÕES SOCIAIS (feed público) =====
+
+/**
+ * Comentário de um leitor em uma obra compartilhada (thread).
+ * `comentarioPaiId` permite respostas (replies) em árvore.
+ */
+model Comentario {
+  id          String    @id @default(cuid())
+  obraId      String
+  usuarioId   String
+  conteudo    String
+  // Comentário pai (null = comentário raiz). Excluir o pai remove os replies.
+  comentarioPaiId String?
+  criadoEm    DateTime  @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  obra    Obra        @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  usuario Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  pai     Comentario? @relation("ComentarioRespostas", fields: [comentarioPaiId], references: [id], onDelete: Cascade)
+  respostas Comentario[] @relation("ComentarioRespostas")
+
+  @@index([obraId])
+  @@index([usuarioId])
+  @@index([comentarioPaiId])
+}
+
+/** Like de um usuário em uma obra compartilhada (1 por usuário — toggle). */
+model Curtida {
+  id        String   @id @default(cuid())
+  obraId    String
+  usuarioId String
+  criadoEm  DateTime @default(now())
+
+  obra    Obra    @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([obraId, usuarioId])
+  @@index([obraId])
+  @@index([usuarioId])
+}
+
+/** Sugestão de um leitor para o autor — visível apenas ao dono da obra. */
+model Sugestao {
+  id         String   @id @default(cuid())
+  obraId     String
+  usuarioId  String
+  conteudo   String
+  // PENDENTE | ACEITA | RECUSADA | IMPLEMENTADA
+  status     String   @default("PENDENTE")
+  criadoEm   DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  obra    Obra    @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([obraId])
+  @@index([usuarioId])
 }

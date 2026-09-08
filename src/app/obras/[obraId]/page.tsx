@@ -5,6 +5,7 @@ import { CabecalhoObra } from "@/components/CabecalhoObra";
 import { FormEditarObra } from "@/components/FormEditarObra";
 import { btnSecundario, cardCls } from "@/components/ui";
 import { BotaoExportar } from "@/components/BotaoExportar";
+import { CompartilharObra } from "@/components/CompartilharObra";
 import { obterObraDoUsuario } from "@/lib/auth-obras";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +42,12 @@ export default async function ObraPage({
         obraId={obra.id}
         titulo={obra.titulo}
         subtitulo={`${obra.genero ?? "Sem gênero"} · Criada em ${formatarData(obra.criadoEm)}`}
-        acoes={<BotaoExportar obraId={obra.id} />}
+        acoes={
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <CompartilharObra obraId={obra.id} inicial={obra.compartilhada} />
+            <BotaoExportar obraId={obra.id} />
+          </div>
+        }
       />
       <section className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className={`${cardCls} flex flex-col items-center justify-center`}>

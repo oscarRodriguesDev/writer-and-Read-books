@@ -1,5 +1,47 @@
 # Memórias do Projeto
 
+## 2026-09-08 - Feed de obras compartilhadas + interações + leitor protegido + fix script tema (Autoria: VIBECODE)
+
+### Pedido
+"vamos começar a construir uma área onde os autores podem compartilhar suas obras, um feed onde usuários podem ler obras de autores, podem comentar, votar, curtir, dar sugestões para o escritor etc, no lado do autor a obra só poderá ser exibida se o autor quiser compartilhar". Reforço: **não é possível baixar a obra, baixar imagens, nem copiar/colar o texto** (proteção de conteúdo).
+
+### Decisões
+- **Compromisso**: obra só aparece no feed se `Obra.compartilhada = true` (opt-in do autor). Arquivo `arquivada` também bloqueia.
+- **Migração `20260908021259_feed_compartilhamento`** (autorizada): `Obra.compartilhada Boolean @default(false)` + models **`Comentario`** (thread com `comentarioPaiId` + replies em cascata), **`Curtida`** (`@@unique([obraId, usuarioId])` — toggle), **`Sugestao`** (`status`: PENDENTE/ACEITA/RECUSADA/IMPLEMENTADA). Relações adicionadas em `Obra` e `Usuario`.
+- **Feed exige login** por enquanto (consistente com o app 100% autenticado). Decisão em aberto: tornar `/feed` público (visível sem conta).
+- **Sugestões**: visíveis apenas ao dono (todas) ou a quem enviou (as próprias). Comentários são públicos.
+- **Leitor protegido** (`LeitorLivro` com prop `protegido`): client-side — `user-select:none` (CSS + listeners), bloqueio de `copy/cut/paste/contextmenu/dragstart`, bloqueio de `Ctrl/Cmd+C/P/X/S/A`, `img { pointer-events:none }`, `@media print { display:none }`. Aplicado para leitores (não-dono); o dono lê sem proteção (`/ler` intacto; `/feed/[obraId]` com `protegido={!dono}`).
+- **Fix bônus**: `layout.tsx` usava `<script dangerouslySetInnerHTML>` cru no `<head>` → warning do React 19 "script tag while rendering" em páginas dinâmicas (leitor). Trocado por `<Script strategy="beforeInteractive">` do `next/script`.
+
+### Implementação
+- **Schema**: campo + 3 models novos; `Prisma generate` ok.
+- **Validadors/constantes**: `comentarioSchema`, `sugestaoSchema`, `atualizarSugestaoSchema` (+ tipos) em `validators/index.ts`; `STATUS_SUGESTAO` + `ROTULO_STATUS_SUGESTAO` em `constants.ts`.
+- **Rotas novas**:
+  - `PATCH /api/obras/[obraId]/compartilhar` — toggle (dono via `obterObraDoUsuario`).
+  - `GET /api/feed` — obras compartilhadas (não arquivadas) com paginação/limite, `?q=` (busca), `?genero=`, `?ordem=recentes|curtidas`, incui autor, capa, `_count` de curtidas/comentários e flag `curtidaDoUsuario`.
+  - `POST /api/feed/[obraId]/curtir` — toggle de curtida (login; 401); responde `{curtido, total}`.
+  - `GET|POST /api/feed/[obraId]/comentarios` — listar (thread, público) / criar (login, valida `comentarioPaiId` pertence à obra).
+  - `DELETE /api/feed/[obraId]/comentarios/[comentarioId]` — autor do comentário OU dono da obra (403 caso contrário).
+  - `GET|POST /api/feed/[obraId]/sugestoes` — GET: dono vê todas / outro usuário vê as próprias; POST: login.
+  - `PATCH /api/feed/[obraId]/sugestoes/[sugestaoId]` — status da sugestão (dono apenas; 403).
+- **Helper `src/lib/feed.ts`**: `obterObraCompartilhada` (pública + não arquivada, com autor), `obterSessaoUsuarioId`, `ehDonoDaObra`.
+- **Páginas**: `/feed` (server: busca inicial + `FeedExplorar` client com busca/gênero/ordem/paginação) e `/feed/[obraId]` (reader público: header com título/autor/descrição, `LeitorLivro protegido={!dono}`, `PainelInteracoes`).
+- **Componentes**: `CompartilharObra` (toggle na visão geral da obra), `FeedCard` (capa + curtida otimista), `FeedExplorar` (filtros), `PainelInteracoes` (abas Comentários/Sugestões; curtir; comentários em thread com responder/excluir; sugestões com status para o dono).
+- **Leitor**: `LeitorLivro` ganhou props `protegido`, `voltarHref`, `voltarLabel`, `rotaBase` (para o reader do feed não apontar para `/obras/[id]` nem navegar com `/ler/`). CSS `.livro-protegido` em `globals.css`.
+- **Nav**: Sidebar com item "Feed" (🌍); breadcrumbs no TopBar para `/feed` e `/feed/[obraId]` ("Feed / Obra").
+
+### Testes
+`npm run build` passa (generate + migrate deploy + compile + TS). Teste visual/runtime é do usuário (regra): compartilhar obra → ver no feed → abrir → ler com proteção (tentar copiar/imprimir) → curtir/comentar/sugerir (logado) → dono vendo sugestões e alterando status → excluir comentário.
+
+### Pendências anotadas
+- **Decidida**: o **feed é público** (navegar a listagem **sem login**); **ler obra** (`/feed/[obraId]`) e **interagir** (curtir/comentar/sugerir) **exigem conta** — proxy libera `/feed` (exato) e `/api/feed*` (rotas validam sessão internamente, devolvendo 401 nas interações); TopBar mostra "Entrar/Cadastrar" para anônimos; curtir no card anônimo vai para `/login?callbackUrl=/feed/[obraId]`.
+- Proteção é client-side (avisado): usuário avançado pode contornar via dev tools.
+- Sugestões não têm notificação ao autor (futuro: badge na visão geral).
+- `CompartilharObra` aparece na visão geral; se o usuário quiser, mostrar também no dashboard/cards.
+- Commit feito nesta sessão (feed completo + decisão de público).
+
+---
+
 ## 2026-09-08 (Revisão 5) - Leitor: id da obra não aparece no breadcrumb (Autoria: VIBECODE)
 
 ### Pedido

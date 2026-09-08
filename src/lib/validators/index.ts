@@ -6,6 +6,7 @@ import {
   ESCALAS_TEMPORAIS,
   STATUS_ACHADO,
   TIPOS_RELACAO,
+  STATUS_SUGESTAO,
 } from "@/lib/constants";
 
 /** String que vira null quando vazia (campos opcionais de formulário). */
@@ -501,6 +502,36 @@ export type VerificarTextoInput = z.infer<typeof verificarTextoSchema>;
 export type CorrigirTextoInput = z.infer<typeof corrigirTextoSchema>;
 
 export type RespostaAnaliseIa = z.infer<typeof respostaAnaliseIaSchema>;
+
+// ---- Feed / interações sociais ----
+
+/** POST /api/feed/[obraId]/comentarios — comentário de um leitor (thread). */
+export const comentarioSchema = z.object({
+  conteudo: z
+    .string()
+    .trim()
+    .min(1, "Digite um comentário")
+    .max(5000, "Comentário muito longo"),
+  comentarioPaiId: z.string().trim().max(50).nullish(),
+});
+
+/** PATCH /api/feed/[obraId]/sugestoes/[id] — status da sugestão (só o autor). */
+export const atualizarSugestaoSchema = z.object({
+  status: z.enum(STATUS_SUGESTAO),
+});
+
+/** POST /api/feed/[obraId]/sugestoes — sugestão do leitor ao autor. */
+export const sugestaoSchema = z.object({
+  conteudo: z
+    .string()
+    .trim()
+    .min(1, "Escreva sua sugestão")
+    .max(5000, "Sugestão muito longa"),
+});
+
+export type ComentarioInput = z.infer<typeof comentarioSchema>;
+export type SugestaoInput = z.infer<typeof sugestaoSchema>;
+export type AtualizarSugestaoInput = z.infer<typeof atualizarSugestaoSchema>;
 
 // Exportados para tipagem dos services
 export type CriarObraInput = z.infer<typeof criarObraSchema>;

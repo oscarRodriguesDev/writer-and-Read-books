@@ -1,13 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/auth";
 
-const ROTAS_PUBLICAS = ["/login", "/cadastro"];
+const ROTAS_PUBLICAS = ["/login", "/cadastro", "/feed"];
 
 /**
  * Proteção de rotas (Next 16: proxy.ts, antigo middleware.ts).
- * Navegação exige login; /login e /cadastro são públicas; APIs do Auth.js
- * sempre liberadas. APIs próprias também chamam auth() internamente
- * (defesa em profundidade — não confiar só no proxy).
+ * Navegação exige login; /login e /cadastro são públicas; o **feed** é público
+ * para navegar (listagem), mas /feed/[obraId] (leitura) exige login — a rota
+ * exata "/feed" casa só a listagem. APIs do Auth.js sempre liberadas. As APIs
+ * do feed são liberadas (a rota valida sessão internamente: leitura/lista sem
+ * login; interações devolvem 401 quando deslogado). APIs próprias também
+ * chamam auth() internamente (defesa em profundidade).
  */
 export async function proxy(req: NextRequest) {
   const { nextUrl } = req;
@@ -16,6 +19,9 @@ export async function proxy(req: NextRequest) {
 
   // Fluxo do Auth.js (signIn/signOut/callback) e upload de assets
   if (nextUrl.pathname.startsWith("/api/auth")) return NextResponse.next();
+
+  // Feed: listagem pública (a rota decide o que exige login)
+  if (nextUrl.pathname.startsWith("/api/feed")) return NextResponse.next();
 
   // Já logado não vê páginas de login/cadastro
   if (logado && ROTAS_PUBLICAS.includes(nextUrl.pathname)) {

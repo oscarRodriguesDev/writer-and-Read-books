@@ -7,6 +7,7 @@ import { GRAFIC } from "@/lib/grafic";
 
 const NAV_ITEMS = [
   { href: "/", label: "Obras", icon: GRAFIC.iconeLivros },
+  { href: "/feed", label: "Feed", icon: "🌍" },
   { href: "/obras/nova", label: "Nova Obra", icon: "➕" },
   { href: "/importar", label: "Importar", icon: "📥" },
   { href: "/perfil", label: "Perfil", icon: "👤" },

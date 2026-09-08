@@ -146,6 +146,24 @@ export const ROTULO_PAPEL: Record<string, string> = {
   COADJUVANTE: "Coadjuvante",
 };
 
+// ---- Feed / interações sociais ----
+
+/** Status de uma sugestão de leitor para o autor (Sugestao.status). */
+export const STATUS_SUGESTAO = [
+  "PENDENTE",
+  "ACEITA",
+  "RECUSADA",
+  "IMPLEMENTADA",
+] as const;
+export type StatusSugestao = (typeof STATUS_SUGESTAO)[number];
+
+export const ROTULO_STATUS_SUGESTAO: Record<string, string> = {
+  PENDENTE: "Pendente",
+  ACEITA: "Aceita",
+  RECUSADA: "Recusada",
+  IMPLEMENTADA: "Implementada",
+};
+
 /** Gêneros literários do perfil/autor (chips no cadastro e no perfil). */
 export const GENEROS_LITERARIOS = [
   "Fantasia",

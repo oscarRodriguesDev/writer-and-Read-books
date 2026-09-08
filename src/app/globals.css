@@ -593,6 +593,27 @@
     perspective: 2400px;
   }
 
+  /* Obra compartilhada: impede seleção de texto e download de imagens.
+     `user-select: none` + `-webkit-user-drag: none` desativam o arrasto nativo
+     além dos listeners em LeitorLivro. */
+  .livro-protegido {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+  }
+  .livro-protegido img {
+    pointer-events: none;
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  /* Imprimir: página protegida some do papel */
+  @media print {
+    .livro-protegido {
+      display: none !important;
+    }
+  }
+
   /* Camada que gira (página do topo) */
   .livro-topo {
     transform-style: preserve-3d;

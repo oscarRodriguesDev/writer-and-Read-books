@@ -74,12 +74,17 @@ export default function TopBar({
         "obras/nova": "Nova Obra",
         importar: "Importar",
         perfil: "Perfil",
+        feed: "Feed",
       };
       if (pathMap[pathname]) {
         crumbs.push({ label: pathMap[pathname], href: pathname });
       } else if (pathname.startsWith("/ler/")) {
         // O id da obra fica só na URL; no breadcrumb aparece apenas "Ler"
         crumbs.push({ label: "Ler" });
+      } else if (pathname.startsWith("/feed/")) {
+        // Obra pública do feed: "Feed / Título" (o id fica só na URL)
+        crumbs.push({ label: "Feed", href: "/feed" });
+        crumbs.push({ label: "Obra" });
       } else {
         crumbs.push({ label: pathname, href: pathname });
       }
@@ -185,44 +190,55 @@ export default function TopBar({
               aria-label="Opções do usuário"
               className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-line fundo-papel shadow-lg"
             >
-              {usuarioAtual && (
-                <div className="flex items-center gap-3 border-b border-line px-4 py-3">
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-chipbg text-sm font-bold text-accent">
-                    {usuarioAtual.fotoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={usuarioAtual.fotoUrl} alt="Foto do usuário" className="h-full w-full object-cover" />
-                    ) : (
-                      inicial
-                    )}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold text-foreground">{usuarioAtual.nome}</span>
-                    <span className="block truncate text-xs text-muted">
-                      {usuarioAtual.username ? `@${usuarioAtual.username}` : ""}
+              {usuarioAtual ? (
+                <>
+                  <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-chipbg text-sm font-bold text-accent">
+                      {usuarioAtual.fotoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={usuarioAtual.fotoUrl} alt="Foto do usuário" className="h-full w-full object-cover" />
+                      ) : (
+                        inicial
+                      )}
                     </span>
-                  </span>
-                </div>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-foreground">{usuarioAtual.nome}</span>
+                      <span className="block truncate text-xs text-muted">
+                        {usuarioAtual.username ? `@${usuarioAtual.username}` : ""}
+                      </span>
+                    </span>
+                  </div>
+                  <Link
+                    href="/perfil"
+                    role="menuitem"
+                    onClick={() => setMenuUsuarioAberto(false)}
+                    className="flex items-center gap-2 px-4 py-3 text-sm text-foreground transition-colors hover:bg-hoverbg"
+                  >
+                    👤 Meu perfil
+                  </Link>
+                  <div role="separator" className="border-t border-line" />
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuUsuarioAberto(false);
+                      signOut({ callbackUrl: "/login" });
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-danger transition-colors hover:bg-hoverbg"
+                  >
+                    🚪 Sair
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  role="menuitem"
+                  onClick={() => setMenuUsuarioAberto(false)}
+                  className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-hoverbg"
+                >
+                  🔑 Entrar / Cadastrar
+                </Link>
               )}
-              <Link
-                href="/perfil"
-                role="menuitem"
-                onClick={() => setMenuUsuarioAberto(false)}
-                className="flex items-center gap-2 px-4 py-3 text-sm text-foreground transition-colors hover:bg-hoverbg"
-              >
-                👤 Meu perfil
-              </Link>
-              <div role="separator" className="border-t border-line" />
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setMenuUsuarioAberto(false);
-                  signOut({ callbackUrl: "/login" });
-                }}
-                className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-danger transition-colors hover:bg-hoverbg"
-              >
-                🚪 Sair
-              </button>
             </div>
           )}
         </div>
