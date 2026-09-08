@@ -1,5 +1,30 @@
 # Memórias do Projeto
 
+## 2026-09-08 - Leitor público: anúncios mock + abas mock da plataforma (Autoria: VIBECODE)
+
+### Pedido
+"coloque uns anuncions mock por enquanto" + "invente tambem algumas abas da plataforma mock só pra não ficar vazio"
+
+### Decisões
+- **Direita — Anúncios MOCK**: seção "📣 Anúncios" com `MOCK_ANUNCIOS` (3 cards fictícios: Audiolivros Já, Clube de Leitura Semanal, Oficina de Escrita Criativa), selo "• Anúncio", `onClick preventDefault` (não levam a lugar algum). Futuro: anúncios reais de outras plataformas.
+- **Esquerda — Abas MOCK**: `MOCK_ABAS` em `feed/[obraId]/page.tsx` (🔥 Em alta [ativa], 🆕 Novidades, 🏅 Mais curtidos, 🏷️ Gêneros, 📚 Coleções, ⭐ Favoritos), não funcionais, com nota "(abas de demonstração)". Aguarda definição do usuário.
+- Colunas só aparecem em `lg`/`xl`; mobile segue só a leitura.
+
+---
+
+## 2026-09-08 - Leitor público editorial: coluna direita (sugestões) + esquerda reservada (Autoria: VIBECODE)
+
+### Pedido
+"nesse editor na lateral direita deve aparecer sugestoes de livros da plataforma, autores, e no futuro anuncio de outras plataformas na lateral esquerda vai ter coisas abas que vamos definir ainda"
+
+### Decisões
+- **Leitor `/feed/[obraId]`** virou layout editorial em grade: `lg: grid-cols[1fr_320px]` (leitura + direita), `xl: grid-cols[220px_1fr_320px]` (esquerda reservada + leitura + direita); em telas menores as colunas somem (leitura limpa).
+- **`ColunaSugestoes`** (server): 📚 **Livros da plataforma** — 5 obras compartilhadas mais **curtidas** (exclui a atual), com capa mini/título/autor/❤️; ✍️ **Autores em destaque** — 5 autores com obra compartilhada (avatar/nome/nº de obras). **Anúncios de outras plataformas**: lugar reservado (comentado) — futuro.
+- **Esquerda**: placeholder tracejado "🗂️ Abas e seções em definição" (aguarda definição do usuário).
+- **Pendências**: (1) página pública de autor não existe (sem link no autor); (2) definir abas da esquerda.
+
+---
+
 ## 2026-09-08 - Leitor público: visitante sem configurações + animação sempre flip (Autoria: VIBECODE)
 
 ### Pedido

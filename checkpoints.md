@@ -1,5 +1,39 @@
 # Checkpoints
 
+## 2026-09-08 - Sessão: Anúncios mock (direita) + abas mock da plataforma (esquerda)
+
+### Estado final
+- **Direita**: "📣 Anúncios" com 3 anúncios **mock** (Audiolivros Já, Clube de Leitura Semanal, Oficina de Escrita — selo "Anúncio", sem navegação). "📚 Livros da plataforma" (5 mais curtidas) e "✍️ Autores em destaque" reais do banco.
+- **Esquerda**: cartão "Explorar" com abas **mock** (🔥 Em alta, 🆕 Novidades, 🏅 Mais curtidos, 🏷️ Gêneros, 📚 Coleções, ⭐ Favoritos), primeira destacada, nota "(abas de demonstração)".
+- Layout: `xl` 3 colunas (220px|leitura|320px), `lg` 2 colunas (leitura|320px), mobile só leitura. Leitor segue isolado (sem sidebar/topbar), DRM, visitante sem config/flip→suave, modal login a cada página, interações só logado.
+- Build **passa**.
+- **Commit feito** (branch `vibecode`) — verificar push remoto.
+
+### Próximos passos
+- Definir abas reais da esquerda (usuário) — hoje mock.
+- Página pública do autor (link nos autores).
+- Anúncios reais (substituir os mock).
+- Teste visual/runtime do usuário.
+
+---
+
+## 2026-09-08 - Sessão: Leitor editorial — coluna direita de sugestões + esquerda reservada
+
+### Estado final
+- **Pedido**: lateral **direita** do leitor com **sugestões de livros da plataforma + autores** (reserva futura p/ anúncios); lateral **esquerda** reservada para abas a definir.
+- **Solução**: grade no `/feed/[obraId]` (`lg`: leitura+320px; `xl`: 220px+leitura+320px; mobile = só leitura). `ColunaSugestoes.tsx` (server): livros mais curtidos (exclui atual) + autores com obra compartilhada. Anúncios comentados. Esquerda: placeholder "em definição".
+- **Regras anteriores mantidas**: leitor isolado (sem sidebar/topbar do app), visitante sem config e com animação suave, DRM, sugestão de login a cada página, interações exigem login.
+- Build **passa**.
+- **Commit feito** (branch `vibecode`) — verificar push remoto.
+
+### Próximos passos
+- Definir as **abas da lateral esquerda** (usuário).
+- Página pública do autor (link nos autores) — futura.
+- Anúncios de outras plataformas — futuro.
+- Teste visual/runtime do usuário.
+
+---
+
 ## 2026-09-08 - Sessão: Visitante sem configurações no leitor + animação sempre flip
 
 ### Estado final

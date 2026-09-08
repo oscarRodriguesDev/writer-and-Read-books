@@ -6,6 +6,7 @@ import { htmlParaTexto } from "@/lib/html";
 import LeitorLivro from "@/components/leitor/LeitorLivro";
 import type { CapituloLeitura } from "@/lib/leitor";
 import { PainelInteracoes, type ComentarioDTO } from "@/components/feed/PainelInteracoes";
+import { ColunaSugestoes } from "@/components/feed/ColunaSugestoes";
 import { obterObraCompartilhada, obterSessaoUsuarioId, ehDonoDaObra } from "@/lib/feed";
 
 export const dynamic = "force-dynamic";
@@ -98,10 +99,41 @@ export default async function FeedObraPage({
   const autor = obra.usuario?.nomeAutor ?? obra.usuario?.nome ?? obra.usuario?.username ?? "Autor";
   const semCapitulos = capitulos.length === 0;
 
+  // Sugestões da lateral direita: livros compartilhados (+curtidos) e autores
+  const [sugestoesLivros, autoresSugeridos] = await Promise.all([
+    prisma.obra.findMany({
+      where: { compartilhada: true, arquivada: false, id: { not: obra.id } },
+      orderBy: [{ curtidas: { _count: "desc" } }, { atualizadoEm: "desc" }],
+      take: 5,
+      select: {
+        id: true,
+        titulo: true,
+        genero: true,
+        subgenero: true,
+        capaUrl: true,
+        usuario: { select: { nomeAutor: true, nome: true, username: true } },
+        _count: { select: { curtidas: true } },
+      },
+    }),
+    prisma.usuario.findMany({
+      where: { obras: { some: { compartilhada: true, arquivada: false } } },
+      orderBy: { obras: { _count: "desc" } },
+      take: 5,
+      select: {
+        id: true,
+        nome: true,
+        nomeAutor: true,
+        username: true,
+        fotoUrl: true,
+        _count: { select: { obras: { where: { compartilhada: true, arquivada: false } } } },
+      },
+    }),
+  ]);
+
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
+    <main className="mx-auto w-full max-w-screen-2xl flex-1 px-4 py-8">
       {/* Cabeçalho da obra pública */}
-      <header className="mb-6 space-y-3">
+      <header className="mb-6 space-y-3 lg:mx-auto lg:max-w-4xl">
         <Link
           href="/feed"
           className="inline-block rounded-lg border border-line fundo-papel px-3 py-1.5 text-sm text-foreground shadow-sm transition-colors hover:bg-hoverbg"
@@ -126,33 +158,108 @@ export default async function FeedObraPage({
         </div>
       </header>
 
-      {semCapitulos ? (
-        <div className="rounded-xl border border-line fundo-papel p-10 text-center shadow-sm">
-          <p className="text-sm text-muted">Esta obra ainda não publicou capítulos.</p>
-        </div>
-      ) : (
-        <LeitorLivro
-          obraId={obra.id}
-          capitulos={capitulos}
-          capInicial={0}
-          pagInicial={0}
-          protegido={!dono}
-          visitante={!usuarioId}
-          voltarHref="/feed"
-          voltarLabel="Feed"
-          rotaBase={`/feed/${obra.id}`}
-        />
-      )}
+      {/* Grade editorial: esquerda (abas futuras) · leitura · esquerda-direita
+          (sugestões de livros/autores + futuro anúncios) */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[220px_minmax(0,1fr)_320px]">
+        {/* Lateral esquerda: abas/seções da plataforma — MOCK por enquanto
+            (não funcionais: apenas visual, aguardando definição do usuário) */}
+        <aside className="hidden xl:block" aria-label="Seções da plataforma">
+          <div className="sticky top-20 space-y-5">
+            <nav
+              aria-label="Seções da plataforma"
+              className="rounded-xl border border-line fundo-papel p-2 shadow-sm"
+            >
+              <h2 className="px-3 pt-2 pb-1 text-sm font-semibold text-foreground">
+                Explorar
+              </h2>
+              <ul className="space-y-0.5">
+                {MOCK_ABAS.map((aba, i) => (
+                  <li key={aba.rotulo}>
+                    <button
+                      type="button"
+                      onClick={(e) => e.preventDefault()}
+                      className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
+                        i === 0
+                          ? "bg-accent/10 font-medium text-accent"
+                          : "text-foreground hover:bg-hoverbg"
+                      }`}
+                    >
+                      <span aria-hidden>{aba.emoji}</span>
+                      {aba.rotulo}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-faint">
+                (abas de demonstração)
+              </p>
+            </nav>
+          </div>
+        </aside>
 
-      <PainelInteracoes
-        obraId={obra.id}
-        dono={dono}
-        logado={!!usuarioId}
-        usuarioId={usuarioId}
-        curtiuInicial={!!minhasCurtidas}
-        totalCurtidasInicial={totalCurtidas}
-        comentariosInicial={comentarios}
-      />
+        {/* Coluna central: leitura + interações */}
+        <div className="mx-auto w-full max-w-3xl">
+          {semCapitulos ? (
+            <div className="rounded-xl border border-line fundo-papel p-10 text-center shadow-sm">
+              <p className="text-sm text-muted">Esta obra ainda não publicou capítulos.</p>
+            </div>
+          ) : (
+            <LeitorLivro
+              obraId={obra.id}
+              capitulos={capitulos}
+              capInicial={0}
+              pagInicial={0}
+              protegido={!dono}
+              visitante={!usuarioId}
+              voltarHref="/feed"
+              voltarLabel="Feed"
+              rotaBase={`/feed/${obra.id}`}
+            />
+          )}
+
+          <PainelInteracoes
+            obraId={obra.id}
+            dono={dono}
+            logado={!!usuarioId}
+            usuarioId={usuarioId}
+            curtiuInicial={!!minhasCurtidas}
+            totalCurtidasInicial={totalCurtidas}
+            comentariosInicial={comentarios}
+          />
+        </div>
+
+        {/* Lateral direita: sugestões da plataforma */}
+        <ColunaSugestoes
+          obras={sugestoesLivros.map((o) => ({
+            id: o.id,
+            titulo: o.titulo,
+            genero: o.genero,
+            subgenero: o.subgenero,
+            capaUrl: o.capaUrl,
+            autor:
+              o.usuario?.nomeAutor ?? o.usuario?.nome ?? o.usuario?.username ?? "Autor",
+            curtidas: o._count.curtidas,
+          }))}
+          autores={autoresSugeridos.map((u) => ({
+            id: u.id,
+            nome: u.nome,
+            nomeAutor: u.nomeAutor,
+            username: u.username,
+            fotoUrl: u.fotoUrl,
+            obrasCompartilhadas: u._count.obras,
+          }))}
+        />
+      </div>
     </main>
   );
 }
+
+// Abas fictícias da plataforma (MOCK — esperando definição do usuário)
+const MOCK_ABAS = [
+  { emoji: "🔥", rotulo: "Em alta" },
+  { emoji: "🆕", rotulo: "Novidades" },
+  { emoji: "🏅", rotulo: "Mais curtidos" },
+  { emoji: "🏷️", rotulo: "Gêneros" },
+  { emoji: "📚", rotulo: "Coleções" },
+  { emoji: "⭐", rotulo: "Favoritos" },
+];

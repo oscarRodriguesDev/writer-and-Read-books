@@ -1,5 +1,19 @@
 # Pedidos
 
+## 2026-09-08 - Leitor público: anúncios mock (direita) + abas mock da plataforma (esquerda)
+- **Commit**: *(este commit)*
+- **Descrição**: preencher as colunas laterais do leitor público com conteúdo **mock** (não funcional) para o layout não ficar vazio: **anúncios** na direita e **abas da plataforma** na esquerda.
+- **Solução**: `ColunaSugestoes` ganhou seção "📣 Anúncios" com 3 anúncios fictícios (`MOCK_ANUNCIOS`: Audiolivros Já 🎧, Clube de Leitura Semanal 📖, Oficina de Escrita Criativa ✍️) — cards coloridos, selo "• Anúncio", clique bloqueado (`preventDefault`). Esquerda: abas mock (`MOCK_ABAS`: 🔥 Em alta, 🆕 Novidades, 🏅 Mais curtidos, 🏷️ Gêneros, 📚 Coleções, ⭐ Favoritos) com a primeira destacada e nota "(abas de demonstração)".
+- **Arquivos**: `src/components/feed/ColunaSugestoes.tsx`, `src/app/feed/[obraId]/page.tsx`
+- **Testes**: build passa. Teste visual/runtime é do usuário.
+
+## 2026-09-08 - Leitor público: lateral direita com sugestões (livros/autores + futuro anúncios); lateral esquerda reservada
+- **Commit**: *(este commit)*
+- **Descrição**: no editor/leitor, **lateral direita** exibe **sugestões de livros da plataforma** e **autores** (e ficará reservada para **anúncios de outras plataformas** no futuro); **lateral esquerda** reservada para **abas/seções a definir**.
+- **Solução**: layout em grade no `/feed/[obraId]` — `lg: 1fr+320px` (leitura + coluna direita), `xl: 220px+1fr+320px` (esquerda + leitura + direita); escondido no mobile. Novo componente server `ColunaSugestoes`: 📚 **Livros da plataforma** (5 obras compartilhadas mais curtidas, excluindo a atual — capa mini, título, autor, ❤️, link `/feed/[id]`) e ✍️ **Autores em destaque** (5 usuários com obra compartilhada, avatar, nome, nº de obras). Espaço de **anúncios** deixado comentado para o futuro. Esquerda: placeholder tracejado "Abas e seções em definição".
+- **Arquivos**: `src/components/feed/ColunaSugestoes.tsx` (novo), `src/app/feed/[obraId]/page.tsx`
+- **Testes**: build passa. Teste visual/runtime é do usuário. **Pendência**: página pública do autor ainda não existe (item de autor sem link).
+
 ## 2026-09-08 - Reforço: deslogado NÃO acessa configurações de leitura (já coberto)
 - **Commit**: *(este commit)*
 - **Descrição**: usuário deslogado **não pode** acessar as **configurações de leitura da obra**.
