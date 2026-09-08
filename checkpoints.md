@@ -1,5 +1,20 @@
 # Checkpoints
 
+## 2026-09-08 - Sessão: Fix do warning "Encountered a script tag" (React 19.2)
+
+### Estado final
+- **Problema**: erro de console apontando para `<Script>` do tema no layout (persistia mesmo com `beforeInteractive`).
+- **Solução**: `TemaInit` com `useServerInsertedHTML` — script injetado no SSR, não renderizado no client (fim do warning, sem FOUC). `layout.tsx` limpo (sem head/`<Script>` manual).
+- **Contexto mantido**: feed/leitura públicos, leitor isolado, colunas laterais (sugestões reais + anúncios/abas mock), DRM, visitante sem config e animação suave, modal de login a cada página, interações só logado.
+- Build **passa**.
+- **Commit feito** (branch `vibecode`) — verificar push remoto.
+
+### Próximos passos
+- **Teste visual/runtime do usuário (crítico)**: console sem o warning + tema claro/escuro continua aplicando antes do carregamento (sem flash).
+- Definir abas reais da esquerda; página pública do autor; anúncios reais.
+
+---
+
 ## 2026-09-08 - Sessão: Anúncios mock (direita) + abas mock da plataforma (esquerda)
 
 ### Estado final

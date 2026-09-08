@@ -1,5 +1,13 @@
 # Pedidos
 
+## 2026-09-08 - Fix definitivo: warning "Encountered a script tag" (React 19.2) no tema
+- **Commit**: *(este commit)*
+- **Descrição**: o console ainda acusava `Encountered a script tag while rendering React component` apontando para o `<Script>` do tema no layout.
+- **Causa raiz**: React 19.2+ (com Next 16.2+) passou a emitir o erro para **qualquer** `<script>` renderizado na árvore hidratada — incluso `next/script strategy="beforeInteractive"`. Problema conhecido (ver next-themes#387, shadcn#10104).
+- **Solução canônica**: novo componente `TemaInit` (client) que usa **`useServerInsertedHTML`** — injeta o script de tema direto no stream de SSR e **não renderiza nada no client**, eliminando o warning e mantendo execução pré-hidratação (sem FOUC). `layout.tsx` removido `<Script>`/`<head>` e renderiza `<TemaInit />` no body.
+- **Arquivos**: `src/components/TemaInit.tsx` (novo), `src/app/layout.tsx`
+- **Testes**: build passa. Verificação do console (sumiu o erro + tema continua funcionando) é visual/runtime do usuário.
+
 ## 2026-09-08 - Leitor público: anúncios mock (direita) + abas mock da plataforma (esquerda)
 - **Commit**: *(este commit)*
 - **Descrição**: preencher as colunas laterais do leitor público com conteúdo **mock** (não funcional) para o layout não ficar vazio: **anúncios** na direita e **abas da plataforma** na esquerda.

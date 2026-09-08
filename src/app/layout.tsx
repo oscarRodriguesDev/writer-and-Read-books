@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AppLayoutWrapper from "@/components/layout/AppLayoutWrapper";
+import TemaInit from "@/components/TemaInit";
 import { buscarUsuarioAtual } from "@/lib/usuario-atual";
 
 const geistSans = Geist({
@@ -20,8 +20,6 @@ export const metadata: Metadata = {
   description: "Escreva, estruture e leia suas obras narrativas",
 };
 
-const scriptTema = `(function(){try{var t=localStorage.getItem("tema");if(!t){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"escuro":"claro";}document.documentElement.classList.toggle("dark",t==="escuro");}catch(e){}})();`;
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const usuarioAtual = await buscarUsuarioAtual();
 
@@ -32,17 +30,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
-      <head>
-        {/* beforeInteractive: executa antes da hidratação (evita FOUC de tema)
-            e não gera o aviso do React de script não executado no client */}
-        <Script
-          id="script-tema"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: scriptTema }}
-        />
-      </head>
       <body className="min-h-full">
         <AppLayoutWrapper usuarioAtual={usuarioAtual}>{children}</AppLayoutWrapper>
+        {/* Script do tema injetado via useServerInsertedHTML (SSR, sem warning
+            do React 19.2 — ver TemaInit.tsx) */}
+        <TemaInit />
       </body>
     </html>
   );

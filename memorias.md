@@ -1,5 +1,19 @@
 # Memórias do Projeto
 
+## 2026-09-08 - Fix definitivo do warning de script do React 19.2 (Autoria: VIBECODE)
+
+### Pedido
+"dando erro ainda: Encountered a script tag while rendering React component" (layout.tsx, `<Script>` do tema).
+
+### Causa raiz (pesquisada)
+React 19.2 + Next 16.2+ emite esse erro para **qualquer `<script>` renderizado na árvore hidratada** — inclusive `next/script strategy="beforeInteractive"`. É uma mudança intencional do React (script inline nunca executa no client), que quebrou `next-themes` e padrões antigos (next-themes#387, shadcn#10104, next#34610).
+
+### Solução canônica adotada
+- **`TemaInit.tsx`** (client component) usa **`useServerInsertedHTML`** (`next/navigation`): devolve `<script dangerouslySetInnerHTML>` que o Next injeta no **stream de SSR**; no client o hook não renderiza nada → **sem warning** e com execução **antes da hidratação** (sem FOUC de tema).
+- `layout.tsx`: removidos `<head>` manual, `Script`/`next/script` e `scriptTema` (movido para o componente); renderiza `<TemaInit />` no body (mantido `suppressHydrationWarning` no `<html>`).
+
+---
+
 ## 2026-09-08 - Leitor público: anúncios mock + abas mock da plataforma (Autoria: VIBECODE)
 
 ### Pedido
