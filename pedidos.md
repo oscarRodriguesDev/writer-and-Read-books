@@ -1,5 +1,27 @@
 # Pedidos
 
+## 2026-09-08 - [PENDENTE] Papel do usuário (leitor/escritor/ambos) + termos legais + Supabase
+- **Commit**: *(pendente — registrar para próxima interação)*
+- **Descrição**: próximos passos combinados com o usuário para a próxima sessão:
+  1. **Papel do usuário no cadastro**: no momento do cadastro, o usuário deve escolher entre ser **leitor**, **escritor** ou **ambos** (perfil duplo).
+  2. **Documentos legais**: escrever **termos de uso**, **política de privacidade de dados** e **política de cookies**.
+  3. **Banco de dados**: **configurar o banco Supabase** (migrar da configuração atual — hoje SQLite local via `prisma`/`dev.db`).
+- **Observação**: a definição do papel de usuário pode se conectar à pendência já anotada nos checkpoints: vínculo `nomeAutor` ↔ model `Autor` de publicação e à distinção de experiência entre leitor (leitura do feed) e escritor (dashboard/escrita). A troca de banco para Supabase (PostgreSQL) terá impacto no schema Prisma (ex.: `generosLiterarios Json` pode virar `String[]`; datas `DateTime`; etc.), no `.env` (`DATABASE_URL`) e nas migrações — exigirá autorização para alterar schema/migrações e possivelmente revisar o proxy/rotas.
+
+## 2026-09-08 - Feed listagem (/feed) anônima sem sidebar/header + colunas de leitura
+- **Commit**: *(este commit)*
+- **Descrição**: o usuário deslogado ao acessar `/feed` (listagem) NÃO deve ver sidebar nem header do app — deve ser parecido com a página de leitura, inclusive com as laterais (abas à esquerda e sugestões à direita) seguindo a mesma métrica.
+- **Solução**: `AppLayoutWrapper` — `pathname === "/feed" && !usuarioAtual` renderiza `{children}` sem `<Layout>` (sem Sidebar/TopBar). `feed/page.tsx` — para deslogado adota a grade editorial do leitor (`xl: 220px+1fr+320px`, `lg: 1fr+320px`) com abas mock à esquerda e `ColunaSugestoes` (livros mais curtidos + autores em destaque) à direita, centralizando a listagem. Logado mantém layout da aplicação + largura total.
+- **Arquivos**: `src/components/layout/AppLayoutWrapper.tsx`, `src/app/feed/page.tsx`
+- **Testes**: build passa. Teste visual/runtime é do usuário.
+
+## 2026-09-08 - Fix: erro "Event handlers cannot be passed to Client Component props"
+- **Commit**: *(este commit)*
+- **Descrição**: runtime error de Server Components com event handlers sem `"use client"`.
+- **Solução**: UI interativos (`ui/Badge`, `ui/RadioGroup`, `ui/Table`) ganharam `"use client"`; mock sem interatividade (`ColunaSugestoes` anúncios, `feed/[obraId]` abas) trocados por elementos estáticos (`<div>`/`<span>`).
+- **Arquivos**: `src/components/ui/{Badge,RadioGroup,Table}.tsx`, `src/components/feed/ColunaSugestoes.tsx`, `src/app/feed/[obraId]/page.tsx`
+- **Testes**: build passa. Erro no console deve sumir.
+
 ## 2026-09-08 - Fix definitivo: warning "Encountered a script tag" (React 19.2) no tema
 - **Commit**: *(este commit)*
 - **Descrição**: o console ainda acusava `Encountered a script tag while rendering React component` apontando para o `<Script>` do tema no layout.

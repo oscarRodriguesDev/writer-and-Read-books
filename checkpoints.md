@@ -1,5 +1,30 @@
 # Checkpoints
 
+## 2026-09-08 - Sessão: Pedidos pendentes para a próxima interação (registro)
+
+### Registrado para a próxima sessão
+Combinado com o usuário (sem execução agora — só registro):
+1. **Papel do usuário no cadastro**: escolher entre **leitor / escritor / ambos**.
+2. **Documentos legais**: **termos de uso**, **política de privacidade de dados**, **política de cookies**.
+3. **Banco de dados**: **configurar Supabase** (hoje SQLite local).
+- Impactos a considerar: schema Prisma (Json→String[] no Postgres, entre outros), `DATABASE_URL`/`.env`, migrações (exigem autorização), possíveis ajustes de proxy/rotas; vínculo do papel com a experiência leitor (feed) × escritor (dashboard).
+
+---
+
+## 2026-09-08 - Sessão: Feed listagem anônima com métrica de leitura + fix handlers
+
+### Estado final
+- **Fix erro de runtime "Event handlers cannot be passed to Client Component props"**: 5 Server Components corrigidos. UI interativos (`Badge`, `RadioGroup`, `Table`) receberam `"use client"`; dados mock (`ColunaSugestoes` anúncios, `feed/[obraId]` abas) trocaram `<button>`/`<a>` por `<span>`/`<div>` estáticos.
+- **`/feed` (listagem) para visitante**: `AppLayoutWrapper` agora remove sidebar/header quando `pathname === "/feed"` **e** `!usuarioAtual`. `feed/page.tsx` adota a mesma grade editorial do leitor para deslogado (`lg: 1fr+320px`, `xl: 220px+1fr+320px`) com abas mock à esquerda e sugestões de livros/autores à direita, centralizando a listagem em `max-w-3xl`. Logado mantém layout da aplicação + largura total.
+- **Contexto mantido**: feed/leitura públicos, leitor isolado, DRM, visitante sem config/anim ação suave, modal de login a cada página, interações só logado.
+- Build **passa**.
+
+### Próximos passos
+- Teste visual/runtime do usuário: `/feed` deslogado (sem sidebar/header, colunas laterais iguais ao leitor) e logado (layout normal).
+- Definir abas reais da esquerda; página pública do autor; anúncios reais.
+
+---
+
 ## 2026-09-08 - Sessão: Fix do warning "Encountered a script tag" (React 19.2)
 
 ### Estado final

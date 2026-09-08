@@ -125,10 +125,8 @@ export function ColunaSugestoes({
             </span>
           </div>
           {MOCK_ANUNCIOS.map((anuncio) => (
-            <a
+            <div
               key={anuncio.nome}
-              href="#"
-              onClick={(e) => e.preventDefault()}
               className="block rounded-xl border border-line p-4 shadow-sm transition-shadow hover:shadow-md"
               style={{ backgroundColor: anuncio.cor }}
             >
@@ -144,7 +142,7 @@ export function ColunaSugestoes({
               <span className="mt-2 inline-block rounded-full bg-surface px-2.5 py-0.5 text-[11px] font-medium text-accent ring-1 ring-line">
                 Saiba mais
               </span>
-            </a>
+            </div>
           ))}
         </section>
       </div>

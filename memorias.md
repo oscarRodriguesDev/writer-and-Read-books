@@ -1,5 +1,56 @@
 # Memórias do Projeto
 
+## 2026-09-08 - Registro de pendências para a próxima interação (Autoria: VIBECODE)
+
+### Pedido
+Usuário pediu para registrar para a próxima interação:
+1. **Papel do usuário no cadastro** — escolher entre **leitor**, **escritor** ou **ambos** (perfil duplo).
+2. **Documentos legais** — **termos de uso**, **política de privacidade de dados**, **política de cookies**.
+3. **Banco de dados** — **configurar Supabase** (migrar do SQLite local para Postgres).
+
+### Notas (anotadas para execução futura)
+- O papel de usuário pode se conectar ao vínculo `nomeAutor` ↔ model `Autor` de publicação já anotado em pendências anteriores, e à distinção de experiência leitor (feed) × escritor (dashboard).
+- Migração para Supabase impacta: schema Prisma (ex.: `generosLiterarios Json` → `String[]`; datas; ids), `DATABASE_URL`/`.env`, migrações (exigem autorização e reverter local para nuvem), fluxo de build/migrate, possíveis ajustes de proxy/rotas.
+
+---
+
+## 2026-09-08 - Fix do erro "Event handlers cannot be passed to Client Component props" (Autoria: VIBECODE)
+
+### Pedido
+O usuário reportou erro de runtime: `Event handlers cannot be passed to Client Component props` apontando para um `<button onClick>`. Causa: 5 Server Components renderizando event handlers sem `"use client"`.
+
+### Correções
+- **Componentes UI (precisam de interatividade) → `"use client"`:**
+  - `src/components/ui/Badge.tsx` (`onClick` de remoção)
+  - `src/components/ui/RadioGroup.tsx` (`onChange` em `Radio`)
+  - `src/components/ui/Table.tsx` (onClick/onKeyDown/onChange em DataTable e paginação)
+- **Dados mock (sem interatividade) → trocados por elementos estáticos:**
+  - `src/components/feed/ColunaSugestoes.tsx`: anúncios mock `<a href="#" onClick>` → `<div>` (sem handler)
+  - `src/app/feed/[obraId]/page.tsx`: abas mock `<button onClick>` → `<span>` (sem handler)
+
+### Contexto mantido
+Feed/leitura públicos, leitor isolado, colunas laterais de sugestões, DRM, visitante sem config, modal de login a cada página.
+
+### Testes
+`npm run build` passa. Teste de runtime/console é do usuário (regra): o erro deve sumir.
+
+---
+
+## 2026-09-08 - Feed listagem (/feed) adota métrica de leitura para visitantes (Autoria: VIBECODE)
+
+### Pedido
+"caso o usuário não esteja logado também não deve apresentar opções de sidebar e header, deve ser mais parecido com a página de leitura, inclusive as laterais podem seguir a mesma métrica".
+
+### Decisões
+- **`AppLayoutWrapper`**: o path `/feed` (exato, listagem) quando **`!usuarioAtual`** (deslogado) passa a renderizar `{children}` **sem** `<Layout>` — sem Sidebar e sem TopBar, igual ao leitor público (`/feed/[obraId]`). Logado mantém o layout normal.
+- **`src/app/feed/page.tsx`**: quando **deslogado**, adota a **grade editorial** idêntica ao leitor — `lg: 1fr+320px` (coluna central + direita), `xl: 220px+1fr+320px` (abas mock à esquerda + central + sugestões à direita). Centraliza a listagem em `max-w-3xl`. Quando **logado**, mantém a listagem em largura total com o layout da aplicação.
+- Busca de sugestões da lateral direita (livros mais curtidos + autores em destaque) reaproveita a mesma lógica do leitor (novo helper `buscarSugestoes` no feed page).
+
+### Testes
+`npm run build` passa. Teste visual/runtime é do usuário (regra).
+
+---
+
 ## 2026-09-08 - Fix definitivo do warning de script do React 19.2 (Autoria: VIBECODE)
 
 ### Pedido

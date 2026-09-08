@@ -175,9 +175,7 @@ export default async function FeedObraPage({
               <ul className="space-y-0.5">
                 {MOCK_ABAS.map((aba, i) => (
                   <li key={aba.rotulo}>
-                    <button
-                      type="button"
-                      onClick={(e) => e.preventDefault()}
+                    <span
                       className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
                         i === 0
                           ? "bg-accent/10 font-medium text-accent"
@@ -186,7 +184,7 @@ export default async function FeedObraPage({
                     >
                       <span aria-hidden>{aba.emoji}</span>
                       {aba.rotulo}
-                    </button>
+                    </span>
                   </li>
                 ))}
               </ul>
