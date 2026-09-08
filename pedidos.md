@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-08 - Leitor público: visitante SEM configurações + animação sempre flip
+- **Commit**: *(este commit)*
+- **Descrição**: deslogado **não pode** acessar as **configurações de leitura** (⚙️) e a **troca de páginas é sempre "flip"** (independente de preferência salva).
+- **Solução**: prop `sugerirLogin` renomeada para **`visitante`** no `LeitorLivro` (agora cobre modal de login + sem config + flip forçado). Ao carregar config: `visitante ? "flip" : config.animacao` (densidade mantém a salva). Botão `LeitorConfiguracoes` só renderiza se `!visitante`; no lugar, selo "Leitura pública". `/feed/[obraId]` passa `visitante={!usuarioId}`.
+- **Arquivos**: `src/components/leitor/LeitorLivro.tsx`, `src/app/feed/[obraId]/page.tsx`
+- **Testes**: build passa. Teste visual/runtime é do usuário.
+
 ## 2026-09-08 - Leitor público do feed: página isolada, sem sidebar e sem header
 - **Commit**: *(este commit)*
 - **Descrição**: o leitor de obras do feed deve ser **diferente do leitor do escritor** — não pode exibir a **sidebar** do app nem o **header** (TopBar). Experiência de leitura isolada.

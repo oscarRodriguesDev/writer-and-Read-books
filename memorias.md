@@ -1,5 +1,19 @@
 # Memórias do Projeto
 
+## 2026-09-08 - Leitor público: visitante sem configurações + animação sempre flip (Autoria: VIBECODE)
+
+### Pedido
+"sem login tambem o usuairo não podera ter acesso as configurações de leitura, alem disso caso o usuairo não esteja logado a passagem de paginas sempre vai ser do tipo flip"
+
+### Decisões
+- **Prop `visitante`** (renomeada de `sugerirLogin`) no `LeitorLivro` — cobre 3 regras do leitor público:
+  1. **Sem configurações**: `LeitorConfiguracoes` (⚙️) só renderiza com `!visitante`; no lugar aparece selo "Leitura pública".
+  2. **Animação sempre "flip"**: no carregamento da config, `setAnimacao(visitante ? "flip" : config.animacao)` — densidade mantém a salva no navegador.
+  3. **Modal de login/cadastro** a cada avanço de página (regra anterior).
+- `/feed/[obraId]` passa `visitante={!usuarioId}`.
+
+---
+
 ## 2026-09-08 - Leitor público do feed isolado (sem sidebar e sem header) (Autoria: VIBECODE)
 
 ### Pedido

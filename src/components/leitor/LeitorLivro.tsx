@@ -42,8 +42,9 @@ type Props = {
   voltarLabel?: string;
   /** Base das URLs de navegação (padrão: /ler/[obraId]). */
   rotaBase?: string;
-  /** Visitante (deslogado): ao avançar páginas, sugere login/cadastro. */
-  sugerirLogin?: boolean;
+  /** Visitante (deslogado): sem configurações de leitura, animação sempre
+   *  "flip" e — ao avançar páginas — sugestão de login/cadastro. */
+  visitante?: boolean;
 };
 
 type FaseAnimacao = "frente" | "voltar";
@@ -91,7 +92,7 @@ export default function LeitorLivro({
   voltarHref,
   voltarLabel = "Obra",
   rotaBase,
-  sugerirLogin = false,
+  visitante = false,
 }: Props) {
   const router = useRouter();
 
@@ -110,12 +111,13 @@ export default function LeitorLivro({
   const ancoraRef = useRef<HTMLDivElement>(null);
   const configRef = useRef<ConfigLeitor>(CONFIG_LEITOR_PADRAO);
 
-  // Carrega as preferências só no cliente (evita mismatch de hidratação)
+  // Carrega as preferências só no cliente (evita mismatch de hidratação).
+  // Visitante: sem configurações — animação de página SEMPRE "flip".
   useEffect(() => {
     const config = lerConfigLeitor();
-    setAnimacao(config.animacao);
     setDensidade(config.densidade);
-  }, []);
+    setAnimacao(visitante ? "flip" : config.animacao);
+  }, [visitante]);
 
   useEffect(() => {
     configRef.current = { animacao, densidade };
@@ -184,7 +186,7 @@ export default function LeitorLivro({
       if (alvo < 0 || alvo >= totalPaginas || alvo === flatAtual) return;
 
       // Visitante deslogado: a cada avanço de página, sugere login/cadastro
-      if (sugerirLogin && alvo > flatAtual) setSugestaoLoginAberta(true);
+      if (visitante && alvo > flatAtual) setSugestaoLoginAberta(true);
 
       const faseDir: FaseAnimacao = alvo > flatAtual ? "frente" : "voltar";
       const { c, p } = decomporFlat(alvo);
@@ -201,7 +203,7 @@ export default function LeitorLivro({
       setFase(faseDir);
       setAnimando(true);
     },
-    [animacao, animando, decomporFlat, flatAtual, obraId, rolarParaTopo, router, sugerirLogin, totalPaginas],
+    [animacao, animando, decomporFlat, flatAtual, obraId, rolarParaTopo, router, visitante, totalPaginas],
   );
 
   // Redirect de visitante deslogado para login/cadastro, voltando ao leitor
@@ -380,12 +382,19 @@ export default function LeitorLivro({
             {paginasCapituloAtual.length > 1 &&
               ` · Página ${paginaSegura + 1} de ${paginasCapituloAtual.length}`}
           </p>
-          <LeitorConfiguracoes
-            animacao={animacao}
-            aoMudarAnimacao={salvarAnimacao}
-            densidade={densidade}
-            aoMudarDensidade={salvarDensidade}
-          />
+          {!visitante && (
+            <LeitorConfiguracoes
+              animacao={animacao}
+              aoMudarAnimacao={salvarAnimacao}
+              densidade={densidade}
+              aoMudarDensidade={salvarDensidade}
+            />
+          )}
+          {visitante && (
+            <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
+              Leitura pública
+            </span>
+          )}
         </div>
       </header>
 
@@ -524,7 +533,7 @@ export default function LeitorLivro({
       </nav>
 
       {/* Sugestão de login/cadastro para visitantes (aparece a cada avanço de página) */}
-      {sugerirLogin && sugestaoLoginAberta && (
+      {visitante && sugestaoLoginAberta && (
         <div
           role="dialog"
           aria-modal="true"

@@ -1,5 +1,20 @@
 # Checkpoints
 
+## 2026-09-08 - Sessão: Visitante sem configurações no leitor + animação sempre flip
+
+### Estado final
+- **Pedido**: deslogado **sem acesso às configurações de leitura**; **troca de páginas sempre "flip"** para visitante.
+- **Solução**: prop `sugerirLogin` → **`visitante`** no `LeitorLivro` (3 regras: **sem ⚙️** — `LeitorConfiguracoes` só com `!visitante`, selo "Leitura pública" no lugar; **flip forçado** — `setAnimacao(visitante ? "flip" : config.animacao)`; modal de login a cada avanço). `/feed/[obraId]` passa `visitante={!usuarioId}`.
+- **Contexto mantido**: feed e leitura públicos sem login; interações exigem login (401); leitor público em página isolada (sem sidebar/topbar); proteção de conteúdo (DRM) para não-donos.
+- Build **passa**.
+- **Commit feito** (branch `vibecode`) — verificar push remoto.
+
+### Próximos passos
+- Teste visual/runtime do usuário: deslogado abrir obra → sem ⚙️, selo "Leitura pública", avanço de página sempre com animação flip + modal de login a cada página; logado → ⚙️ disponível e animação conforme preferência salva.
+- Sugestões sem notificação ao autor (futuro: badge na visão geral).
+
+---
+
 ## 2026-09-08 - Sessão: Leitor público do feed isolado (sem sidebar/topbar)
 
 ### Estado final
