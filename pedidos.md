@@ -1,5 +1,19 @@
 # Pedidos
 
+## 2026-09-08 - Reforço: deslogado NÃO acessa configurações de leitura (já coberto)
+- **Commit**: *(este commit)*
+- **Descrição**: usuário deslogado **não pode** acessar as **configurações de leitura da obra**.
+- **Verificação**: regra já ativa desde `be35f5a` — `LeitorConfiguracoes` só renderiza com `!visitante`; `visitante={!usuarioId}` no `/feed/[obraId]`; `/ler/[obraId]` bloqueado pelo proxy para deslogado. Sem outra porta de acesso.
+- **Arquivos**: `src/components/leitor/LeitorLivro.tsx`
+- **Testes**: build passa. Teste visual/runtime é do usuário.
+
+## 2026-09-08 - Correção: animação padrão de página é "suave" (não flip)
+- **Commit**: *(este commit)*
+- **Descrição**: a animação padrão de troca de página é **suave** — o forçado do visitante também.
+- **Solução**: `CONFIG_LEITOR_PADRAO.animacao` já era `"suave"`; corrigido o forçado do visitante em `LeitorLivro` (`setAnimacao(visitante ? "suave" : config.animacao)` — antes "flip").
+- **Arquivos**: `src/components/leitor/LeitorLivro.tsx`
+- **Testes**: build passa. Teste visual/runtime é do usuário.
+
 ## 2026-09-08 - Leitor público: visitante SEM configurações + animação sempre flip
 - **Commit**: *(este commit)*
 - **Descrição**: deslogado **não pode** acessar as **configurações de leitura** (⚙️) e a **troca de páginas é sempre "flip"** (independente de preferência salva).

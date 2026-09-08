@@ -112,11 +112,11 @@ export default function LeitorLivro({
   const configRef = useRef<ConfigLeitor>(CONFIG_LEITOR_PADRAO);
 
   // Carrega as preferências só no cliente (evita mismatch de hidratação).
-  // Visitante: sem configurações — animação de página SEMPRE "flip".
+  // Visitante: sem configurações — animação de página SEMPRE "suave" (padrão).
   useEffect(() => {
     const config = lerConfigLeitor();
     setDensidade(config.densidade);
-    setAnimacao(visitante ? "flip" : config.animacao);
+    setAnimacao(visitante ? "suave" : config.animacao);
   }, [visitante]);
 
   useEffect(() => {
