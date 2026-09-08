@@ -1,5 +1,22 @@
 # Memórias do Projeto
 
+## 2026-09-08 (Revisão 5) - Leitor: id da obra não aparece no breadcrumb (Autoria: VIBECODE)
+
+### Pedido
+"essa informação é irrelevante para o usuário: `/ler/cmt…` — ela pode aparecer apenas na url".
+
+### Causa
+A rota `/ler/[obraId]` não é reconhecida como rota de obra pelo `AppLayoutWrapper` (que só captura `/obras/*`), então o `TopBar` caía no branch que exibe o **pathname bruto** no breadcrumb — mostrando o id da obra em texto visível ao usuário.
+
+### Implementação
+- `src/components/layout/TopBar.tsx` (`getBreadcrumbs`): para o branch fora de `/obras`, se o pathname começa com `/ler/`, o breadcrumb mostra só **"Ler"** (span sem link, `aria-current="page"`), sem o id. O id permanece apenas na URL (comportamento esperado).
+- Rotas conhecidas (`obras/nova`, `importar`, `perfil`) e demais paths mantêm o mapeamento anterior.
+
+### Testes
+`npm run build` passa. Teste visual/runtime é do usuário: abrir o leitor e conferir o breadcrumb (deve exibir apenas "Ler", sem o id).
+
+---
+
 ## 2026-09-08 (Revisão 4) - Leitor: navegação por teclado, cliques laterais e primeira/última página (Autoria: VIBECODE)
 
 ### Pedido do usuário

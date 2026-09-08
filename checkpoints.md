@@ -1,5 +1,18 @@
 # Checkpoints
 
+## 2026-09-08 (Revisão 5) - Sessão: leitor não exibe o id da obra no breadcrumb
+
+### Estado final
+- **Pedido**: o id da obra (`/ler/cmt…`) é irrelevante para o usuário; deve aparecer **apenas na URL**.
+- Causa: `AppLayoutWrapper` só reconhece `/obras/*` (não `/ler/*`); o `TopBar` exibia o pathname bruto no breadcrumb, mostrando o id em texto.
+- Fix em `TopBar.tsx`: fora de `/obras`, pathname `/ler/…` → breadcrumb mostra apenas **"Ler"** (sem link). Rota nova/id continuam na URL.
+- Build **passa**.
+
+### Próximos passos
+- Teste visual do usuário: abrir o leitor e conferir o breadcrumb (só "Ler", sem o id).
+
+---
+
 ## 2026-09-08 (Revisão 4) - Sessão: Leitor — setas, cliques laterais e primeira/última página
 
 ### Estado final

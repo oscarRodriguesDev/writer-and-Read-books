@@ -75,7 +75,14 @@ export default function TopBar({
         importar: "Importar",
         perfil: "Perfil",
       };
-      crumbs.push({ label: pathMap[pathname] || pathname, href: pathname });
+      if (pathMap[pathname]) {
+        crumbs.push({ label: pathMap[pathname], href: pathname });
+      } else if (pathname.startsWith("/ler/")) {
+        // O id da obra fica só na URL; no breadcrumb aparece apenas "Ler"
+        crumbs.push({ label: "Ler" });
+      } else {
+        crumbs.push({ label: pathname, href: pathname });
+      }
     }
 
     return crumbs;

@@ -1,5 +1,12 @@
 # Pedidos
 
+## 2026-09-08 - Ocultar id da obra no breadcrumb do leitor
+- **Commit**: *(este commit)*
+- **Descrição**: O id da obra (`/ler/cmt…`) é irrelevante para o usuário — deve aparecer **apenas na URL**, não em texto na tela.
+- **Solução**: `TopBar.getBreadcrumbs` — pathnames `/ler/…` fora de `/obras` agora mostram só o rótulo **"Ler"** (sem link), em vez do pathname bruto com o id.
+- **Arquivos**: `src/components/layout/TopBar.tsx`
+- **Testes**: build passa. Teste visual/runtime é do usuário.
+
 ## 2026-09-08 - Leitor: setas, cliques laterais e primeira/última página
 - **Commit**: *(este commit)*
 - **Descrição**: No modo leitor, além dos botões: **setas** direita/esquerda para avançar/retroceder página, **clique com o mouse** no lado direito (avança) / esquerdo (retrocede) e opção de **ir para a primeira e a última página**.
